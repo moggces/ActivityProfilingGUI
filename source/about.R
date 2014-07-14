@@ -7,14 +7,19 @@ function () {
     a('LinkedIn', href="http://www.linkedin.com/pub/jui-hua-hsieh/12/800/558", target="_blank")
   ),
   br(),
-  
+  strong('Assay Descriptions'),
+  p(style="text-align:justify", 'Please check descriptions in PubChem', 
+    a('PubChem:Tox21', href="https://www.ncbi.nlm.nih.gov/pcassay?term=%22tox21%22", target="_blank")
+  ),
+  br(),
+  br(),
   strong('Input'),
   p(style="text-align:justify", 'A tab-delimited file. Two columns are needed.', br(), 
     strong('CAS'), ' as the column name and CAS # as the column value. ', 'A ', strong('Cluster'), ' user-defined cluster (e.g., postive/negative in a particular experiment.' ),
   br(),
   
   strong('Parameters'),
-  p(style="text-align:justify", strong('signal'), ': The responses seen the assays. ', br(),
+  p(style="text-align:justify", strong('signal'), ': The responses observed the assays. ', br(),
     strong('activity'), ': The biologically relevant signal. The strigency setting affects the results in the antagonism assays. the associated value could be normalized wAUC, point-of-depature (POD), or AC50.'),
      br(),
     strong('wAUC threshold'), ": It only works in POD/AC50 mode. It classifis the POD/AC50 into two bins and color them respectively in the heat map. Brown: wAUC < threshold; Green: wAUC >= threshold.", br(),
@@ -24,15 +29,15 @@ function () {
   
   strong('Output'),
   p(style="text-align:justify", 
-    strong('Input chemicals'), br(), 'The table can show whether the compounds are included in Tox21 library.', br(),
+    strong('Input chemicals'), br(), 'The table can show whether the compounds are included in Tox21 library. A blank cell in Chemical.Name column means the compound is not included.', br(),
     strong('Heat map'), br(), 'The cell represents the normalized wAUC or POD or AC50.', br(), 
     'The color represents the strength. The darker color, the stronger the response. The gray color represents the inconclusive activity or untested.', br(),
     'The direction shows the direction (decreasing/increasing) of signal in the assay. Only positive direction is shown for the Heatmap of activity (except the mitochondrial toxicity assay).', br(),
-    'The * suggests the incongruent results between sources.', br(),
+    'The * suggests the incongruent results between sources (usually at least one source is inactive).', br(),
     'The first row of annotation shows the toxscore.', br(),
     'The second (first in signal plot) row of annotation shows the user\'s defined Cluster.', br(), 
-    'The third (second in signal plot) row of annotation shows cluster information by chemical similarity (cutoff=0.7) generated based on the input chemicals. 0 is for the singleton.', br(), 
-    'The heat map is clustered using Euclidean distance and average linkage.' ),
+    'The third (second in signal plot) row of annotation shows cluster information by chemical similarity (cutoff=0.7) automatically generated based on the input Tox21 chemicals. 0 is for the singleton.', br(), 
+    'The heat map is clustered using Euclidean distance and average linkage in hierachical clustering.' ),
   br(),
   strong('Note'),
   p(style="text-align:justify", 'For dna_damage pathway, due to the assay design, the analyis cannot generate POD/AC50, a pseudo 10uM (5) is used when AC50/POD heat map is used.')
