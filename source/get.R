@@ -175,3 +175,4 @@ get_heatmap_annotation_color <- function(annotation, actType='')
   }
   
 }
+

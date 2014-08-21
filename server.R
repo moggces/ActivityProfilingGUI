@@ -65,32 +65,41 @@ potency_leg_labels <- c("-9", "-7.5", "-5", "-4.5", "-4",  "0",  "4", "4.5", "5"
 shinyServer(function(input, output) {
    
   data_chemical <- reactive({
-    inFile <- input$file1
     
+    result <- NULL
+    inFile <- input$file1
     path <- switch(input$dataset,
                      "no selection" = NULL, 
                      "polycyclic aromatic hydrocarbons (PAHs)" = pah_file,
                      "flame retardants (FRs)" = fr_file)
-    if (is.null(path))
-    {
-      if (is.null(inFile))
-      {
-        return(NULL)
-      } else 
-      {
-        path <- inFile$datapath
-      }
-    } else
-    {
-      inFile <- NULL
-    }
-    load_input_file(path)
+    textdata <- input$cmpds
+    if (! is.null(inFile)) path <- inFile$datapath
+    if (textdata != '' ) result <- load_text_2_df(textdata)
+    if (! is.null(path)) result <- load_input_file(path) # as long as path or file has something it will override
+   
+    return(result)
+#     if (is.null(path))
+#     {
+#       if (is.null(inFile))
+#       {
+#         return(NULL)
+#       } else 
+#       {
+#         path <- inFile$datapath
+#       }
+#     } else
+#     {
+#       inFile <- NULL
+#     }
+#     load_input_file(path)
   })
   
   matrix_chemical <- reactive({
     partial <- NULL
     profile_type <- input$proftype
-    removeCyto <- input$recyto
+    #removeCyto <- input$recyto
+    reg_sel <- input$reg_sel
+    inv_sel <- input$inv_sel
     matid <- 'signal_wauc'
     activity_type <- ''
     nwauc_thres <- 0.0001
@@ -117,8 +126,8 @@ shinyServer(function(input, output) {
     
     partial <- get_input_mat(ip, full) #list output ## need to change while change input 
     partial <- rename_mat(partial, master, para, actType=activity_type) #list output
-    partial <- edit_mat_manual(partial, removeCytotoxic=removeCyto,  nwaucThres=nwauc_thres,  actType=activity_type)
-    
+    #partial <- edit_mat_manual(partial, removeCytotoxic=removeCyto,  nwaucThres=nwauc_thres,  actType=activity_type)
+    partial <- edit_mat_manual(partial, nwaucThres=nwauc_thres,  actType=activity_type, regSel=reg_sel, invSel=inv_sel)
     return(partial)
   })
   

@@ -41,3 +41,12 @@ load_struc_fp_file <- function (structure_fp_base, master=NULL)
   mat <- mat[order(rownames(mat)),]
   return(mat)
 }
+
+load_text_2_df <- function (textarea)
+{
+  rows <- lapply(unlist(strsplit(textarea, "\n")), function (x) unlist(strsplit(x, "\t")))
+  mat <- do.call("rbind", rows)
+  result <- data.frame(mat[-1,], stringsAsFactors=FALSE)
+  colnames(result) <- mat[1,]
+  return(result)
+}

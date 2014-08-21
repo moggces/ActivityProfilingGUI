@@ -20,6 +20,9 @@ shinyUI(pageWithSidebar(
     fileInput('file1', 'Import a list of chemcials', multiple=FALSE),
     helpText("Note: a tab-delimited file with two columns: CAS & Cluster"),
     h6('or'),
+    tags$textarea(id="cmpds", rows=3, cols=1, ""),
+    helpText("Note: copy & paste from excel file with two columns: CAS & Cluster"),
+    h6('or'),
     selectInput("dataset", "Choose a pre-defined set:", 
                 choices = c("no selection", "polycyclic aromatic hydrocarbons (PAHs)", "flame retardants (FRs)")),
     tags$hr(),
@@ -58,7 +61,12 @@ shinyUI(pageWithSidebar(
     tags$hr(),
     
     h4('Options'),
-    checkboxInput("recyto", "remove cytotoxicity assays", TRUE),
+    #checkboxInput("recyto", "remove cytotoxicity assays", TRUE),
+    textInput('reg_sel', 'select the assays (regular expression)', 'cytotoxicity'),
+    checkboxInput("inv_sel", "inverse your selection", TRUE),
+    
+    tags$hr(),
+    
     checkboxInput("showheat", "show the heatmap", TRUE),
     
     tags$br(),

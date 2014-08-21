@@ -26,7 +26,7 @@ convert_wauc_2logit <- function (select=c('nwauc', 'wauc'), nwauc, pathway, para
 }
 
 
-edit_mat_manual <- function (partial, removeCytotoxic=TRUE, nwaucThres=0.0001, actType='')
+edit_mat_manual <- function (partial, nwaucThres=0.0001, actType='', regSel='', invSel=FALSE)
 {
   
   partial[['nwauc']][is.na(partial[['nwauc']]) ] <- 0.0001  # for plotting
@@ -42,18 +42,22 @@ edit_mat_manual <- function (partial, removeCytotoxic=TRUE, nwaucThres=0.0001, a
     #partial[['nwauc']] <- partial[['nwauc']][,grep("are|hse|fxr_|pparg_antagonism|ppard_", colnames(partial[['nwauc']]), value = TRUE, invert = TRUE)]
     #partial[['cv']] <- partial[['cv']][,grep("are|hse|fxr_|pparg_antagonism|ppard_", colnames(partial[['cv']]), value = TRUE, invert = TRUE)]
     ###########################################
-    if (removeCytotoxic) partial[['cv']] <- partial[['cv']][,grep("cytotoxicity", colnames(partial[['cv']]), value = TRUE, invert = TRUE)]
+    #if (removeCytotoxic) partial[['cv']] <- partial[['cv']][,grep("cytotoxicity", colnames(partial[['cv']]), value = TRUE, invert = TRUE)]
+    partial[['cv']] <- partial[['cv']][,grep(regSel, colnames(partial[['cv']]), value = TRUE, invert = invSel)]
   }
   
   for (name in names(partial))
   {
     if (name != 'cv' & name != 'struct' ) 
     {
-      if (removeCytotoxic) partial[[name]] <- partial[[name]][,grep("cytotoxicity", colnames(partial[[name]]), value = TRUE, invert = TRUE)]
+      partial[[name]] <- partial[[name]][,grep(regSel, colnames(partial[[name]]), value = TRUE, invert = invSel)]
       partial[[name]][is.na(partial[[name]]) ] <- 0.0001  # for plotting
       if (actType == 'nwauc' & name == 'nwauc' )
       {
-        partial[['nwauc']][, -which(colnames(partial[['nwauc']]) ==  'mitotox')][partial[['nwauc']][, -which(colnames(partial[['nwauc']]) ==  'mitotox')] < 0 ] <- 0.0001
+        if (sum(colnames(partial[['nwauc']]) ==  'mitotox') > 0)
+        {
+          partial[['nwauc']][, -which(colnames(partial[['nwauc']]) ==  'mitotox')][partial[['nwauc']][, -which(colnames(partial[['nwauc']]) ==  'mitotox')] < 0 ] <- 0.0001
+        }
       } else if (actType != '')
       {
         partial[[name]][partial[[name]] < 0 ] <- 0.0001
@@ -66,12 +70,18 @@ edit_mat_manual <- function (partial, removeCytotoxic=TRUE, nwaucThres=0.0001, a
   {
     for (name in c('pod', 'ac50'))
     {
-      partial[[name]][, 'dna_damage(dsb)'] <- partial[['nwauc']][, 'dna_damage(dsb)']
-      partial[[name]][, 'dna_damage(srf)'] <- partial[['nwauc']][, 'dna_damage(srf)']
-      
-      partial[[name]][, 'dna_damage(dsb)'][partial[[name]][, 'dna_damage(dsb)'] > 0 ] <- 5
-      partial[[name]][, 'dna_damage(srf)'][partial[[name]][, 'dna_damage(srf)'] > 0 ] <- 5
-      
+      x <- TRUE
+      if (sum(colnames(partial[['nwauc']]) == 'dna_damage(dsb)') > 0)
+      {
+        partial[[name]][, 'dna_damage(dsb)'] <- partial[['nwauc']][, 'dna_damage(dsb)']
+        partial[[name]][, 'dna_damage(dsb)'][partial[[name]][, 'dna_damage(dsb)'] > 0 ] <- 5
+      }
+      #if (grepl('dna_damage(srf)', colnames(partial[[name]]), fixed=TRUE))
+      if (sum(colnames(partial[['nwauc']]) ==  'dna_damage(srf)') > 0)
+      {
+        partial[[name]][, 'dna_damage(srf)'] <- partial[['nwauc']][, 'dna_damage(srf)']
+        partial[[name]][, 'dna_damage(srf)'][partial[[name]][, 'dna_damage(srf)'] > 0 ] <- 5
+      }
       
     }
     
@@ -95,8 +105,6 @@ edit_mat_manual <- function (partial, removeCytotoxic=TRUE, nwaucThres=0.0001, a
     }
     
   }
-  
-  
   
   
   return(partial)
