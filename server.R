@@ -28,7 +28,7 @@ source(paste(getwd(), "/source/mis.R", sep=""), local=TRUE)
 environment(pheatmap_new_label) <- environment(pheatmap)
 
 pah_file <- '/data/pah_60_lead_clust_v3.txt'
-fr_file <- '/data/flame_retardant_clusters_selected_v3.txt'
+fr_file <- '/data/flame_retardant_clusters_selected_v4.txt'
 
 
 logit_para_file <- '/data/logit_para_file.txt'  #logit_para_file call_match_pathway_name
@@ -226,7 +226,7 @@ shinyServer(function(input, output) {
     }
     return(p)
   })
-  
+
   output$contents <- renderDataTable({
     if ( ! is.null(data_chemical()) ) get_lookup_list(data_chemical(), master)
   })
@@ -271,82 +271,79 @@ shinyServer(function(input, output) {
       write.table(result, file, row.names = FALSE, col.names = TRUE, sep="\t", quote=FALSE, append=FALSE)
     }
   )
+
+output$downloadPlot <- downloadHandler(
+       filename = function() { 
+         if (input$proftype == 'profile')
+        {
+           paste(input$proftype, '_', input$sigtype, '.pdf', sep='')
+         } else
+         {
+           paste(input$proftype, '_', input$acttype, '.pdf', sep='')
+         } 
+         },
+       content = function(file) {
+         #png(file, width=9, height=6.5, units="in", res=600)
+         pdf(file, width=9, height=6.5)
+         select_plot2()
+         dev.off()
+       }
+)
+
+select_plot2 <- function () {
+  showHeatmap <- input$showheat
+  profile_type <- input$proftype
+  sort_meth <- input$sort_method
+  fsize <- input$fontsize
+  color <- wauc_colors
+  breaks <- wauc_breaks
+  leg_labels <- wauc_leg_labels
+  leg_breaks <- wauc_leg_breaks
   
-#   output$downloadPlot <- downloadHandler(
-#     filename = function() { 
-#       if (input$proftype == 'profile')
-#       {
-#         paste(input$proftype, '_', input$sigtype, '.pdf', sep='')
-#       } else
-#       {
-#         paste(input$proftype, '_', input$acttype, '.pdf', sep='')
-#       } 
-#       },
-#     content = function(file) {
-#       showHeatmap <- input$showheat
-#       profile_type <- input$proftype
-#       sort_meth <- input$sort_method
-#       fsize <- input$fontsize
-#       color <- wauc_colors
-#       breaks <- wauc_breaks
-#       leg_labels <- wauc_leg_labels
-#       leg_breaks <- wauc_leg_breaks
-#       
-#       if (profile_type == 'activity')
-#       {
-#         activity_type <- input$acttype
-#         if (activity_type != 'nwauc')
-#         {
-#           color <- potency_colors
-#           breaks <- potency_breaks
-#           leg_labels <- potency_leg_labels
-#           leg_breaks <- potency_leg_breaks
-#         }
-#       }
-#       
-#       if (! is.null(data_chemical()) )
-#       {
-#         # note pheatmap input has to have the same order!!!
-#         para <- plotting_paras()
-#         act <- para[['act']]
-#         cv <- para[['cv']]
-#         dcols <- para[['dcols']]
-#         drows <- para[['drows']]
-#         annotation <- para[['annotation']]
-#         annt_colors <- para[['annt_colors']]
-#         
-#         if (showHeatmap)
-#         {
-#           if (profile_type == 'signal')
-#           {
-#             pdf(file, width=9, height=6.5)
-#             #print(select_plot())
-#             pheatmap(t(act), fontsize=fsize,annotation=annotation,annotation_colors=annt_colors,legend_labels=leg_labels,legend_breaks=leg_breaks, breaks=breaks, color=color, clustering_distance_rows = drows, clustering_distance_cols = dcols, clustering_method = "average")
-#             dev.off()
-#           } else if (sort_meth == 'toxscore')
-#           {
-#             pdf(file, width=9, height=6.5)
-#             pheatmap_new_label(t(act), t(cv), fontsize=fsize,annotation=annotation,annotation_colors=annt_colors,legend_labels=leg_labels,legend_breaks=leg_breaks,breaks=breaks, color=color, display_numbers=TRUE, clustering_distance_rows = drows, clustering_distance_cols = dcols,  clustering_method = "average")
-#             dev.off()
-#           } else
-#           {
-#             pdf(file, width=9, height=6.5)
-#             pheatmap_new_label(t(act), t(cv), fontsize=fsize,annotation=annotation,annotation_colors=annt_colors,legend_labels=leg_labels,legend_breaks=leg_breaks, breaks=breaks, color=color, display_numbers=TRUE, clustering_distance_rows = drows, cluster_cols = FALSE, clustering_method = "average")
-#             dev.off()
-#           }
-#         } else
-#         {
-#           pdf(file, width=9, height=6.5)
-#           plot(hclust(dcols, method="average"), hang=-1)
-#           dev.off()
-#         }
-#       }
-#       
-#      
-#     }
-#           
-#   )
+  if (profile_type == 'activity')
+  {
+    activity_type <- input$acttype
+    if (activity_type != 'nwauc')
+    {
+      color <- potency_colors
+      breaks <- potency_breaks
+      leg_labels <- potency_leg_labels
+      leg_breaks <- potency_leg_breaks
+    }
+  }
   
+  if (! is.null(data_chemical()) )
+  {
+    # note pheatmap input has to have the same order!!!
+    para <- plotting_paras()
+    act <- para[['act']]
+    cv <- para[['cv']]
+    dcols <- para[['dcols']]
+    drows <- para[['drows']]
+    annotation <- para[['annotation']]
+    annt_colors <- para[['annt_colors']]
+    
+    if (showHeatmap)
+    {
+      if (profile_type == 'signal')
+      {
+        p <- pheatmap(t(act), fontsize=fsize,annotation=annotation,annotation_colors=annt_colors,legend_labels=leg_labels,legend_breaks=leg_breaks, breaks=breaks, color=color, clustering_distance_rows = drows, clustering_distance_cols = dcols, clustering_method = "average")
+      } else if (sort_meth != 'toxscore')
+      {
+        p <- pheatmap_new_label(t(act), t(cv), fontsize=fsize,annotation=annotation,annotation_colors=annt_colors,legend_labels=leg_labels,legend_breaks=leg_breaks,breaks=breaks, color=color, display_numbers=TRUE, clustering_distance_rows = drows, clustering_distance_cols = dcols,  clustering_method = "average")
+      } else
+      {
+        p <- pheatmap_new_label(t(act), t(cv), fontsize=fsize,annotation=annotation,annotation_colors=annt_colors,legend_labels=leg_labels,legend_breaks=leg_breaks, breaks=breaks, color=color, display_numbers=TRUE, clustering_distance_rows = drows, cluster_cols = FALSE, clustering_method = "average")
+      }
+    } else
+    {
+      p <- plot(hclust(dcols, method="average"), hang=-1)
+    }
+  }
+  return(p)
+}
+  
+
     
   
   

@@ -82,8 +82,8 @@ shinyUI(pageWithSidebar(
   
     
     br(),
-    downloadButton('downloadData', 'Download')
-    #downloadButton('downloadPlot', 'Save Plot')
+    downloadButton('downloadData', 'Download'),
+    downloadButton('downloadPlot', 'Save Plot')
     
     
   ),

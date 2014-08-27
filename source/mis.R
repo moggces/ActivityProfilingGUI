@@ -36,7 +36,7 @@ edit_mat_manual <- function (partial, nwaucThres=0.0001, actType='', regSel='', 
   {
     partial[['cv']][is.na(partial[['cv']])] <- -0.1 # just to remove the na 
     partial[['cv']][partial[['nwauc']] < 0.1  ] <- -0.1 # if two small just let it be
-    partial[['cv']][partial[['cv']] > 1.4] <- "*"
+    partial[['cv']][partial[['cv']] > 1.4] <- "#"
     partial[['cv']][partial[['cv']] != "*"] <- ""
     ################################ temp for paper
     #partial[['nwauc']] <- partial[['nwauc']][,grep("are|hse|fxr_|pparg_antagonism|ppard_", colnames(partial[['nwauc']]), value = TRUE, invert = TRUE)]
