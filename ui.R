@@ -53,20 +53,23 @@ shinyUI(pageWithSidebar(
     h4('Sort columns by ...'),
     radioButtons("sort_method", "Method:",
                  list('structure similarity' = 'chemclust',
-                      'activity similiarty' = 'actclust',
+                      'activity similarity' = 'actclust',
                       'toxicity score (not for signal)' = 'toxscore')),
                  
     #checkboxInput("chemclust", "chemical similarity", TRUE),
     
     tags$hr(),
     
-    h4('Options'),
-    #checkboxInput("recyto", "remove cytotoxicity assays", TRUE),
-    textInput('reg_sel', 'select the assays (regular expression)', 'cytotoxicity'),
+    h4('Select assays by names'), 
+    textInput('reg_sel', 'names(regular expression)', 'cytotoxicity'),
     checkboxInput("inv_sel", "inverse your selection", TRUE),
+    helpText("e.g. to view only assays used Tox21 Library version#1: cytotoxicity|pparg_antagonism|ppard|are|hse plus inverse"),
+    
     
     tags$hr(),
     
+    h4('Options'),
+    #checkboxInput("recyto", "remove cytotoxicity assays", TRUE),
     checkboxInput("showheat", "show the heatmap", TRUE),
     
     tags$br(),
