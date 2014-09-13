@@ -176,3 +176,43 @@ get_heatmap_annotation_color <- function(annotation, actType='')
   
 }
 
+get_output_df <- function (act, annotation)
+{
+  
+  act$Chemical.Name <- rownames(act)
+  annotation$Chemical.Name <- rownames(annotation)
+  result <- join(annotation, act)
+  result <- join(subset(master, select=c(CAS, Chemical.Name)), result, type = "inner")
+  return(result)
+}
+
+get_pod_boxplot <- function (pod, fontsize, sortby, dcols)
+{
+  # order the chemical.name 
+  h <- hclust(dcols, method='average')
+  pod[, 'Chemical.Name'] <- ordered(pod$Chemical.Name, levels=h$label[h$order])
+ 
+  if (sortby == 'toxscore') pod[, 'Chemical.Name'] <- ordered(pod$Chemical.Name, levels=pod$Chemical.Name[order(pod$toxScore)])
+  
+  # melt the data and exclude the all inactives
+  pod_m <-  melt(pod, id.vars = c( 'CAS', 'Chemical.Name', 'chemClust', 'userClust', 'toxScore'), value.name = "pod_value", variable.name = 'pathway')
+  pod_m <- subset(pod_m, pod_value > 1)
+  
+  mat <- pod_m
+  let <- LETTERS[1:length(unique(mat$pathway))]
+  names(let) <- unique(mat$pathway)
+  
+  
+  
+  p <- ggplot(data=mat, aes(x=Chemical.Name, y=pod_value*-1+6)) + 
+    geom_boxplot(outlier.size = 0) +
+    geom_jitter(aes(shape=pathway, color=pathway), size=7) + 
+    scale_shape_manual("", values=let) +
+    scale_color_discrete("") + 
+    scale_x_discrete("") + 
+     theme(text=element_text(size=fontsize), 
+           axis.text.x = element_text( angle=90, color="black")) + 
+    scale_y_continuous('uM', breaks=seq(-10+6, -3+6, by=1), limits=c(-10+6, -3+6), labels = math_format(10^.x)) + 
+    annotation_logticks(sides = "l") 
+  return(p)
+}

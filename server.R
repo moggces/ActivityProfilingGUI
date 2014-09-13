@@ -16,6 +16,8 @@ library(plyr)
 library(reshape2)
 library(pheatmap)
 library(RColorBrewer)
+library(ggplot2)
+library(scales)
 
 
 #Sys.setlocale(locale="C")
@@ -33,7 +35,7 @@ fr_file <- '/data/flame_retardant_clusters_selected_v4.txt'
 
 logit_para_file <- '/data/logit_para_file.txt'  #logit_para_file call_match_pathway_name
 removeAbnormalDirection <- FALSE
-profile_file <- '/data/master_lookup.txt' # temp ;  bit redundent, just to get the mapping
+profile_file <- '/data/master_lookup2.txt' # v5 ;  bit redundent, just to get the mapping
 
 cv_mat_rdata <- '/data/cv_mat.RData'
 loose_logit_rdata <- '/data/loose.RData'
@@ -78,20 +80,7 @@ shinyServer(function(input, output) {
     if (! is.null(path)) result <- load_input_file(path) # as long as path or file has something it will override
    
     return(result)
-#     if (is.null(path))
-#     {
-#       if (is.null(inFile))
-#       {
-#         return(NULL)
-#       } else 
-#       {
-#         path <- inFile$datapath
-#       }
-#     } else
-#     {
-#       inFile <- NULL
-#     }
-#     load_input_file(path)
+
   })
   
   matrix_chemical <- reactive({
@@ -249,6 +238,30 @@ shinyServer(function(input, output) {
  
   }, width=getVarWidth)
   
+  output$box <- renderPlot({
+    profile_type <- input$proftype
+    fsize <- input$fontsize
+    sort_meth <- input$sort_method
+    
+    p <- NULL
+    if (profile_type == 'activity')
+    {
+      activity_type <- input$acttype
+      if (activity_type == 'pod')
+      {
+        para <- plotting_paras()
+        act <- para[['act']]
+        annotation <- para[['annotation']]
+        dcols <- para[['dcols']]
+        
+        result <- get_output_df(act, annotation)
+        p <- get_pod_boxplot(result, fontsize=fsize, sortby=sort_meth, dcols=dcols)
+      }
+    }
+    if (! is.null(p)) print(p)
+    
+  },  width=getVarWidth)
+
   output$downloadData <-  downloadHandler(
     filename = function() {
       if (input$proftype == 'profile')
@@ -263,11 +276,7 @@ shinyServer(function(input, output) {
       para <- plotting_paras()
       act <- para[['act']]
       annotation <- para[['annotation']]
-      
-      act$Chemical.Name <- rownames(act)
-      annotation$Chemical.Name <- rownames(annotation)
-      result <- join(annotation, act)
-      result <- join(subset(master, select=c(CAS, Chemical.Name)), result, type = "inner")
+      result <- get_output_df(act, annotation)
       write.table(result, file, row.names = FALSE, col.names = TRUE, sep="\t", quote=FALSE, append=FALSE)
     }
   )
