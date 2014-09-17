@@ -186,7 +186,7 @@ get_output_df <- function (act, annotation)
   return(result)
 }
 
-get_pod_boxplot <- function (pod, fontsize, sortby, dcols)
+get_pod_boxplot <- function (pod, fontsize, sortby, dcols, global_para)
 {
   # order the chemical.name 
   h <- hclust(dcols, method='average')
@@ -196,20 +196,23 @@ get_pod_boxplot <- function (pod, fontsize, sortby, dcols)
   
   # melt the data and exclude the all inactives
   pod_m <-  melt(pod, id.vars = c( 'CAS', 'Chemical.Name', 'chemClust', 'userClust', 'toxScore'), value.name = "pod_value", variable.name = 'pathway')
-  pod_m <- subset(pod_m, pod_value > 1)
+  pod_m <- subset(pod_m, pod_value > 1)  # Chemical.Name is a factor. So if completely inactve. it won't be removed
   
   mat <- pod_m
-  let <- LETTERS[1:length(unique(mat$pathway))]
-  names(let) <- unique(mat$pathway)
   
-  
-  
+  #create conversion
+  let <- conversion(global_para, inp='pathway_name', out='pathway_abb')
+  let2 <- paste(let, names(let), sep="=") # color legend
+  names(let2) <- names(let)
+
+  #add a new column
+  mat[, 'path_abb'] <- let[as.character(mat$pathway)]
+
   p <- ggplot(data=mat, aes(x=Chemical.Name, y=pod_value*-1+6)) + 
     geom_boxplot(outlier.size = 0) +
-    geom_jitter(aes(shape=pathway, color=pathway), size=7) + 
-    scale_shape_manual("", values=let) +
-    scale_color_discrete("") + 
-    scale_x_discrete("") + 
+    geom_text(aes(label=path_abb, color=pathway), size=7, alpha=0.7, position="jitter") + 
+    scale_color_discrete("",labels=let2) + 
+    scale_x_discrete("", drop=FALSE) + # keep the no activity ones
      theme(text=element_text(size=fontsize), 
            axis.text.x = element_text( angle=90, color="black")) + 
     scale_y_continuous('uM', breaks=seq(-10+6, -3+6, by=1), limits=c(-10+6, -3+6), labels = math_format(10^.x)) + 

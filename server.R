@@ -249,13 +249,13 @@ shinyServer(function(input, output) {
       activity_type <- input$acttype
       if (activity_type == 'pod')
       {
-        para <- plotting_paras()
-        act <- para[['act']]
-        annotation <- para[['annotation']]
-        dcols <- para[['dcols']]
+        paras <- plotting_paras()
+        act <- paras[['act']]
+        annotation <- paras[['annotation']]
+        dcols <- paras[['dcols']]
         
         result <- get_output_df(act, annotation)
-        p <- get_pod_boxplot(result, fontsize=fsize, sortby=sort_meth, dcols=dcols)
+        p <- get_pod_boxplot(result, fontsize=fsize, sortby=sort_meth, dcols=dcols, global_para=para)
       }
     }
     if (! is.null(p)) print(p)
