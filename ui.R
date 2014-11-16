@@ -64,6 +64,7 @@ shinyUI(pageWithSidebar(
     textInput('reg_sel', 'names(regular expression)', 'cytotoxicity'),
     checkboxInput("inv_sel", "inverse your selection", TRUE),
     helpText("e.g. to view only assays used Tox21 Library version#1: cytotoxicity|pparg_antagonism|ppard|are|hse plus inverse"),
+    helpText("to select exact assays: \bmitotox\b|er_antagonism|ar_antagonism(mdakb2)|\baromatase\b|\bare\b"),
     
     
     tags$hr(),
