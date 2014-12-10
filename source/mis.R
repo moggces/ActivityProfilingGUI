@@ -110,6 +110,7 @@ edit_mat_manual <- function (partial, nwaucThres=0.0001, actType='', regSel='', 
   return(partial)
 }
 
+# by using the conversion function to rename the rowname of the matrix
 rename_mat <- function (partial, master, para, actType='')
 {
   chemical_name_ref <- conversion(master, inp='CAS', out='Chemical.Name')

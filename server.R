@@ -87,8 +87,8 @@ shinyServer(function(input, output) {
     partial <- NULL
     profile_type <- input$proftype
     #removeCyto <- input$recyto
-    reg_sel <- input$reg_sel
-    inv_sel <- input$inv_sel
+    reg_sel <- input$reg_sel # select the assays
+    inv_sel <- input$inv_sel # inverse the selection
     matid <- 'signal_wauc'
     activity_type <- ''
     nwauc_thres <- 0.0001
@@ -96,9 +96,9 @@ shinyServer(function(input, output) {
     if (profile_type == 'activity')
     {
       matid <- input$actstrict
-      activity_type <- input$acttype
+      activity_type <- input$acttype # ac50, pod, etc.
       nwauc_thres <- input$nwauc_thres
-      if (nwauc_thres == 0  ) nwauc_thres <- 0.0001
+      if (nwauc_thres == 0  ) nwauc_thres <- 0.0001 # to classify the pods
     }
     
     mat_list <- eval(as.name(matid))
