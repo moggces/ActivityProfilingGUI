@@ -1,9 +1,4 @@
 
-# This is the server logic for a Shiny web application.
-# You can find out more about building applications with Shiny here:
-# 
-# http://www.rstudio.com/shiny/
-#
 # shiny note: 1) it can't discriminate R vs. r in the r script file 
 # 2) the renderTable has trouble with encoding issue (cannot recognize ppp file iconv -t UTF-8 -f ISO-8859-1)
 # looks like the new read.table can automatically select best encoding
@@ -29,24 +24,28 @@ source(paste(getwd(), "/source/load.R", sep=""), local=TRUE)
 source(paste(getwd(), "/source/mis.R", sep=""), local=TRUE)
 environment(pheatmap_new_label) <- environment(pheatmap)
 
+# the example files
 pah_file <- '/data/pah_60_lead_clust_v3.txt'
 fr_file <- '/data/flame_retardant_clusters_selected_v4.txt'
 
-
+# todo: name map the lookup file to make assay name human friendly
 logit_para_file <- '/data/logit_para_file.txt'  #logit_para_file call_match_pathway_name
-removeAbnormalDirection <- FALSE
-profile_file <- '/data/master_lookup2.txt' # v5 ;  bit redundent, just to get the mapping
+para <- load_logit_para(logit_para_file) # global, dataframe output
 
+# todo: id map: the lookup file for chemical information; will include purity later
+profile_file <- '/data/master_lookup2.txt' # v5 ;  bit redundent, just to get the mapping
+master <- load_profile(profile_file) # global, dataframe output
+
+# ??
+removeAbnormalDirection <- FALSE
+
+# todo: load the "activities" list
 cv_mat_rdata <- '/data/cv_mat.RData'
 loose_logit_rdata <- '/data/loose.RData'
 medium_logit_rdata <- '/data/medium.RData'
 tight_logit_rdata <- '/data/tight.RData'
 struct_mat_rdata <- '/data/struct_mat.RData'
 signal_logit_rdata <- '/data/signal_wauc.RData'
-
-
-master <- load_profile(profile_file) # global, dataframe output
-para <- load_logit_para(logit_para_file) # global, dataframe output
 
 load(paste(getwd(), loose_logit_rdata, sep="")) #global, list output, loose
 load(paste(getwd(), medium_logit_rdata, sep="")) #global, list output, medium 
@@ -55,6 +54,7 @@ load(paste(getwd(),  cv_mat_rdata, sep="")) # global, matrix output, cv_mat
 load(paste(getwd(),  struct_mat_rdata, sep="")) # global, matrix output, struct_mat
 load(paste(getwd(),  signal_logit_rdata, sep="")) # global, list output, signal_wauc
 
+# heatmap settings
 wauc_breaks <- c( -1, -0.75, -0.5, -0.25, -0.1, -0.02, 0, 0.0001, 0.1, 0.25, 0.5, 0.75, 1) # upper is filled , lower is empty 
 wauc_colors <-  c("#053061" ,"#2166AC" ,"#4393C3" ,"#92C5DE", "#D1E5F0", "#F7F7F7", "gray", "#FDDBC7" ,"#F4A582" ,"#D6604D" ,"#B2182B", "#67001F"  ) #RdBu
 wauc_leg_breaks <- c(-1, -0.75, -0.5, -0.25,  0,   0.25, 0.5, 0.75, 1 )
@@ -63,6 +63,7 @@ potency_breaks <- c(-10, -9, -7.5, -5, -4.5, -4, -0.02, 0, 0.0001, 4, 4.5, 5, 7.
 potency_colors <- c("darkorange","#543005", "#8C510A", "#BF812D", "#DFC27D", "#F6E8C3", "#F5F5F5", "gray", "#C7EAE5", "#80CDC1", "#35978F", "#01665E", "#003C30", "chartreuse") #BrBG
 potency_leg_breaks <- c(-10, -9, -7.5, -5, -4.5, -4,  0,  4, 4.5, 5, 7.5, 9,10 )
 potency_leg_labels <- c("-10", "-9", "-7.5", "-5", "-4.5", "-4",  "0",  "4", "4.5", "5", "7.5", "9", "10")
+
 
 shinyServer(function(input, output) {
    
@@ -102,6 +103,8 @@ shinyServer(function(input, output) {
     }
     
     mat_list <- eval(as.name(matid))
+    
+    # todo: id map
     ip <- subset(get_lookup_list(data_chemical(), master), ! is.na(StructureID), select=c(CAS, Cluster)) 
     
     if (profile_type == 'activity')
@@ -116,6 +119,11 @@ shinyServer(function(input, output) {
     partial <- get_input_mat(ip, full) #list output ## need to change while change input 
     partial <- rename_mat(partial, master, para, actType=activity_type) #list output
     #partial <- edit_mat_manual(partial, removeCytotoxic=removeCyto,  nwaucThres=nwauc_thres,  actType=activity_type)
+    
+    # todo: need to split into small functions
+    # filter the assays by regular expression
+    # order the columns and rows
+    # other small issues
     partial <- edit_mat_manual(partial, nwaucThres=nwauc_thres,  actType=activity_type, regSel=reg_sel, invSel=inv_sel)
     return(partial)
   })

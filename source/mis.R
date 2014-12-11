@@ -31,7 +31,8 @@ edit_mat_manual <- function (partial, nwaucThres=0.0001, actType='', regSel='', 
   
   partial[['nwauc']][is.na(partial[['nwauc']]) ] <- 0.0001  # for plotting
   
-  
+  # cv: na -> -0.1 , nwauc < 0.1 (change to 0.05) -> -0.1 , cv > 1.4 -> # , clean CV
+  # filter the pathways
   if ( ! is.null( partial[['cv']] ))
   {
     partial[['cv']][is.na(partial[['cv']])] <- -0.1 # just to remove the na 
@@ -46,6 +47,7 @@ edit_mat_manual <- function (partial, nwaucThres=0.0001, actType='', regSel='', 
     partial[['cv']] <- partial[['cv']][,grep(regSel, colnames(partial[['cv']]), value = TRUE, invert = invSel)]
   }
   
+  # nwauc and mitotox 
   for (name in names(partial))
   {
     if (name != 'cv' & name != 'struct' ) 
@@ -65,7 +67,7 @@ edit_mat_manual <- function (partial, nwaucThres=0.0001, actType='', regSel='', 
     }
   }
   
-  
+  # the dt40 assays issue
   if (actType != '')
   {
     for (name in c('pod', 'ac50'))
@@ -131,5 +133,22 @@ rename_mat <- function (partial, master, para, actType='')
     }
   }
   return(partial)
+}
+
+# split the master file into a list of matrices
+split_master_2_matrix <- function(master, props, id='CAS')
+{
+  id_data <- master[, id]
+  result <- lapply(as.list(props), function (x)
+    {
+      col_ids <- grepl(x, colnames(master))
+      mat <- master[,col_ids]
+      rownames(mat) <- id_data
+      colnames(mat) <- sub(paste(x, '.', sep=""), "", colnames(mat))
+      return(mat)
+    }
+  )
+  names(result) <- props
+  return(result)
 }
 

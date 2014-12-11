@@ -77,3 +77,11 @@ master <- load_profile(profile_file) # global, dataframe output
 structure_fp_base <- '/tox21_8598_fp' # tox21_8598_fp tox21_8306_fp
 struct_mat <- load_struc_fp_file(structure_fp_base,master) #global, mat output
 save(struct_mat, file='struct_mat.RData')
+
+# split the text file into pieces
+profile_file <- 'U:/Projects/TOX21/report/tox21_qHTS_all_111014.txt'
+master <- load_profile(profile_file) # the function is modified
+props <- get_property_name(master)
+activities <- split_master_2_matrix(master, 
+      props=grep('label|cc2|cv\\.wauc|pod_med_diff|a_normal|hitcall|nwauc|npod|nemax|nwauc\\.logit|wauc\\.logit)', props, value=TRUE), id='CAS')
+save(activities, file='activity.RData')

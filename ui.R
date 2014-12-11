@@ -1,21 +1,16 @@
-
-# This is the user-interface definition of a Shiny web application.
-# You can find out more about building applications with Shiny here:
-# 
-# http://www.rstudio.com/shiny/
-#
-
 library(shiny)
 
-#setwd("~/ShinyApps/profiling/")
+# todo: need to be replaced by markdown page
 tabPanelAbout <- source(paste(getwd(), "/source/about.R", sep=""))$value
 
 shinyUI(pageWithSidebar(
   
-  # Application title
-  headerPanel("Tox21 qHTS assays: signal/activity profiling"),
+  # application title
+  headerPanel("Compound signal/activity profiling (by Tox21 qHTS assays)"),
   
   sidebarPanel(
+    
+    # input control
     h4('Input'),
     fileInput('file1', 'Import a list of chemcials', multiple=FALSE),
     helpText("Note: a tab-delimited file with two columns: CAS & Cluster"),
@@ -27,64 +22,87 @@ shinyUI(pageWithSidebar(
                 choices = c("no selection", "polycyclic aromatic hydrocarbons (PAHs)", "flame retardants (FRs)")),
     tags$hr(),
     
+    # profiling options
     h4('Profiling'),
     
     radioButtons("proftype", "Profile type:", 
                  list("signal", "activity")),
     tags$hr(),
     
+    # todo: wauc matrix
     conditionalPanel(
       condition = "input.proftype == 'signal'",
       radioButtons("sigtype", "Signal type:",
                    list("wAUC" = "signal_wauc"))
     ),
-      
-    conditionalPanel(
-      condition = "input.proftype == 'activity'",
-      radioButtons("acttype", "Activity type:",
-                   list("wAUC" = "nwauc",  "POD" = "pod", "AC50" = "ac50")),
-      radioButtons("actstrict", "Activity stringency:",
-                   list("loose" = "loose",  "medium" = "medium", "tight" = "tight"), selected = "medium")
-    ),
-    
-    
-    tags$hr(),
-    
-    h4('Sort columns by ...'),
-    radioButtons("sort_method", "Method:",
-                 list('structure similarity' = 'chemclust',
-                      'activity similarity' = 'actclust',
-                      'toxicity score (not for signal)' = 'toxscore')),
-                 
-    #checkboxInput("chemclust", "chemical similarity", TRUE),
-    
-    tags$hr(),
-    
-    h4('Select assays by names'), 
-    textInput('reg_sel', 'names(regular expression)', 'cytotoxicity'),
-    checkboxInput("inv_sel", "inverse your selection", TRUE),
-    helpText("e.g. to view only assays used Tox21 Library version#1: cytotoxicity|pparg_antagonism|ppard|are|hse plus inverse"),
-    helpText("to select exact assays: \bmitotox\b|er_antagonism|ar_antagonism(mdakb2)|\baromatase\b|\bare\b"),
-    
-    
-    tags$hr(),
-    
-    h4('Options'),
-    #checkboxInput("recyto", "remove cytotoxicity assays", TRUE),
-    checkboxInput("showheat", "show the heatmap", TRUE),
     
     tags$br(),
     
+    # todo: nwauc, pod, ac50 matrix
+    conditionalPanel(
+      condition = "input.proftype == 'activity'",
+      radioButtons("acttype", "Activity type:",
+                   list("wAUC" = "nwauc",  "POD" = "pod", "AC50" = "ac50"))
+    ),
+    
+    tags$br(),
+    
+    # todo: nwauc, emax, pod, ac50, pod_med_diff, call matrix
+    conditionalPanel(
+      condition = "(input.acttype == 'pod' || input.acttype == 'ac50') && input.proftype == 'activity'",
+      sliderInput("nwauc_thres", 
+                  "wAUC threshold", min=0, max=1, value=0.05, step=0.05),
+      tags$br(),
+      sliderInput("emax_thres", 
+                  "Emax threshold", min=0, max=100, value=0, step=5),
+      tags$br(),
+      sliderInput("pod_thres", 
+                  "POD threshold",  min=3, max=10, value=3, step=0.5),
+      tags$br(),
+      sliderInput("ac50_thres", 
+                  "AC50 threshold", min=3, max=10, value=3, step=0.5),
+      tags$br(),
+      sliderInput("pod_diff_thres", 
+                  "ratio of signal to cytotoxicity", min=0, max=5, value=0, step=0.5),
+      tags$br(),
+      checkboxInput("isstrong", "wauc above the median of least potent (10 uM)", FALSE)
+    ),
+    
+    tags$hr(),
+    
+    # arrange the compounds
+    h4('Sort compounds by ...'),
+    radioButtons("sort_method", "Method:",
+                 list('structure similarity' = 'chemclust',
+                      'activity similarity' = 'actclust',
+                      'toxicity score (only for activity)' = 'toxscore')),
+    
+    tags$hr(),
+    
+    # filter the assays
+    h4('Filter assays'), 
+    textInput('reg_sel', 'names (regular expression)', 'cytotoxicity'),
+    checkboxInput("inv_sel", "invert your selection", TRUE),
+#    helpText("e.g. to view only assays used Tox21 Library version#1: cytotoxicity|pparg_antagonism|ppard|are|hse plus inverse"),
+#    helpText("to select exact assays: \bmitotox\b|er_antagonism|ar_antagonism(mdakb2)|\baromatase\b|\bare\b"),
+    
+    tags$hr(),
+    
+    # miscellaneous functions
+    h4('Others'),
+
+    # todo: adjust the variable
+    # to show the dendrogram
+    checkboxInput("showheat", "show compound similarity dendrogram ", FALSE),
+    
+    tags$br(),
+    
+    # fontsize
     sliderInput("fontsize", 
                 "fontsize", min = 2,max = 28, value = 18, step=2),
-    
-    conditionalPanel(
-      condition = "input.acttype == 'pod' || input.acttype == 'ac50'" ,
-      sliderInput("nwauc_thres", 
-                  "wAUC threshold for plotting", min=0, max=1, value=0.1, step=0.05)
-    ),
+    helpText("tip: lower the fontsize when saving the plot"),
   
-    
+    # output functions
     br(),
     downloadButton('downloadData', 'Download'),
     downloadButton('downloadPlot', 'Save Plot')

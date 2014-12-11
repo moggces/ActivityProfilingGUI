@@ -12,7 +12,8 @@ load_input_file <- function (input_file)
 
 load_profile <- function (profile_file)
 {
-  return ( read.table(paste(getwd(),  profile_file, sep=""), header = TRUE, sep = "\t", quote = '"', comment.char = "") )
+  #return ( read.table(paste(getwd(),  profile_file, sep=""), header = TRUE, sep = "\t", quote = '"', comment.char = "") )
+  return ( read.table( profile_file, header = TRUE, sep = "\t", quote = '', check.names=FALSE, comment.char = "") )
 }
 
 load_logit_para <- function (logit_para_file)

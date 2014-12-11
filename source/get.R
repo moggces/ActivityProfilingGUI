@@ -219,3 +219,21 @@ get_pod_boxplot <- function (pod, fontsize, sortby, dcols, global_para)
     annotation_logticks(sides = "l") 
   return(p)
 }
+
+get_property_name <- function (master)
+{
+  col_list <- strsplit(colnames(master), '.', fixed=TRUE)
+  #unique(unlist(lapply(col_list, function (x) x[[length(x)]]))) # get the unique assay name
+  names <- lapply(col_list, function (x)
+  {
+    
+    if (length(x) == 3)
+    {
+      return(paste(x[[1]], '.', x[[2]], sep=""))
+    } else {return(x[[1]])}
+    
+  }
+  )
+  names <- unique(unlist(names))
+  return(names)
+}
