@@ -25,6 +25,90 @@ convert_wauc_2logit <- function (select=c('nwauc', 'wauc'), nwauc, pathway, para
   return (result)
 }
 
+sort_matrix <- function (partial)
+{
+  for (name2 in names(partial))
+  {
+    if (name2 == 'struct' )
+    {
+      partial[[name2]] <- partial[[name2]][order(rownames(partial[[name2]])),]
+      
+    } else
+    {
+      partial[[name2]] <- partial[[name2]][order(rownames(partial[[name2]])),]
+      partial[[name2]] <- partial[[name2]][,order(colnames(partial[[name2]]))]
+    }
+  }
+  return(partial)
+}
+
+
+filter_activity_by_type <- function(partial, type, thres=NULL, decision=FALSE, act_mat_names=c('npod', 'nac50', 'nwauc.logit'))
+{
+  if (type == 'nwauc.logit') 
+  {
+    if (thres == 0) thres <- 0.0001
+  }
+  for (name in act_mat_names)
+  {
+    ids <- matrix(FALSE, nrow(partial[[name]]), ncol(partial[[name]]))
+    if (type == 'pod_med_diff')
+    {
+      ant_ids <- grepl('antagonism|inhibition', colnames(partial[[name]]))
+      ids <- (partial[[type]][, ant_ids]*-1) < thres & ! is.na(partial[[type]][, ant_ids]) & ! is.na(partial[[name]][, ant_ids]) & partial[[name]][, ant_ids] > 0.0001
+      partial[[name]][, ant_ids][ids] <- (partial[[name]][, ant_ids][ids])*-1
+      
+    } else
+    {
+      if (type == 'nwauc.logit' | type == 'npod' | type == 'nac50') ids <- partial[[type]] < thres & ! is.na(partial[[type]]) & ! is.na(partial[[name]]) & partial[[name]] > 0.0001
+      if (type == 'nemax') ids <- abs(partial[[type]]) < thres & ! is.na(partial[[type]]) & ! is.na(partial[[name]]) & partial[[name]] > 0.0001
+      if (type == 'hitcall' & isTRUE(decision)) ids <- partial[[type]] == 1 & ! is.na(partial[[name]]) & partial[[name]] > 0.0001
+      if (type == 'cc2' & isTRUE(decision)) ids <- ( abs(partial[[type]] == 1.1) | abs(partial[[type]] == 1.2) | abs(partial[[type]] == 2.1)) & ! is.na(partial[[type]]) & ! is.na(partial[[name]]) & partial[[name]] > 0.0001
+      partial[[name]][ids] <- (partial[[name]][ids])*-1
+    }
+  }
+  return(partial)
+}
+
+fix_mitotox_reverse <- function(partial, act_mat_names=c('npod', 'nac50', 'nwauc.logit'))
+{
+  for (name in act_mat_names)
+  {
+    mitotox_id <- grepl('mitotox', colnames(partial[[name]]))
+    if (sum(mitotox_id) > 0)
+    {
+      rev_ids <- partial[[name]][, mitotox_id] < 0 &  ! is.na(partial[[name]][, mitotox_id])
+      partial[[name]][rev_ids, mitotox_id] <- (partial[[name]][rev_ids, mitotox_id])*-1
+    }
+  }
+  return(partial)
+}
+
+assign_reverse_na_number <- function (partial, act_mat_names=c('npod', 'nac50', 'nwauc.logit'))
+{
+  for (name in act_mat_names)
+  {
+    partial[[name]][partial[[name]] < 0 | is.na(partial[[name]]) ] <- 0.0001
+  }
+  return(partial)
+}
+
+rename_mat_col_row <- function (partial, master, assay_names)
+{
+  chemical_name_ref <- conversion(master, inp='GSID', out='Chemical.Name')
+  
+  for (name in names(partial))
+  {
+    rownames(partial[[name]]) <-  chemical_name_ref[as.character(rownames(partial[[name]])) ]
+    if (  name != 'struct')
+    {
+      
+      pathway_ref <- conversion(assay_names, inp='assay', out='common_name')
+      colnames(partial[[name]]) <-  pathway_ref[as.character(colnames(partial[[name]])) ]
+    }
+  }
+  return(partial)
+}
 
 edit_mat_manual <- function (partial, nwaucThres=0.0001, actType='', regSel='', invSel=FALSE)
 {
@@ -101,6 +185,7 @@ edit_mat_manual <- function (partial, nwaucThres=0.0001, actType='', regSel='', 
       }
     }
     
+    # for nwauc_threshold , activity filter
     for (name in c('pod', 'ac50'))
     {
       partial[[name]][partial[['nwauc']] < nwaucThres & partial[[name]]  != 0.0001 ] <- (partial[[name]][partial[['nwauc']] < nwaucThres & partial[[name]]  != 0.0001 ])*-1
@@ -141,7 +226,7 @@ split_master_2_matrix <- function(master, props, id='CAS')
   id_data <- master[, id]
   result <- lapply(as.list(props), function (x)
     {
-      col_ids <- grepl(x, colnames(master))
+      col_ids <- grepl(paste('^',x, sep=""), colnames(master))
       mat <- master[,col_ids]
       rownames(mat) <- id_data
       colnames(mat) <- sub(paste(x, '.', sep=""), "", colnames(mat))

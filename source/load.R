@@ -32,13 +32,13 @@ load_logit_para <- function (logit_para_file)
 
 load_struc_fp_file <- function (structure_fp_base, master=NULL)
 {
-  d <- readXAfile(paste(getwd(),  structure_fp_base, sep=""), sep="\t")
+  d <- readXAfile(structure_fp_base, sep="\t")
   mat <- d$x
   if (! is.null(master))
   {
     cas_ref <- conversion(master, inp='StructureID', out='CAS')
+    rownames(mat) <- cas_ref[as.character(rownames(mat))]
   }
-  rownames(mat) <- cas_ref[as.character(rownames(mat))]
   mat <- mat[order(rownames(mat)),]
   return(mat)
 }

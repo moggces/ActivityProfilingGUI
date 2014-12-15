@@ -83,5 +83,18 @@ profile_file <- 'U:/Projects/TOX21/report/tox21_qHTS_all_111014.txt'
 master <- load_profile(profile_file) # the function is modified
 props <- get_property_name(master)
 activities <- split_master_2_matrix(master, 
-      props=grep('label|cc2|cv\\.wauc|pod_med_diff|a_normal|hitcall|nwauc|npod|nemax|nwauc\\.logit|wauc\\.logit)', props, value=TRUE), id='CAS')
-save(activities, file='activity.RData')
+      props=grep('label|cc2|cv\\.wauc|pod_med_diff|a_normal|hitcall|npod|nemax|nac50|n?wauc\\.logit|wauc\\.logit)', props, value=TRUE), id='Chemical.ID.GSID')
+activities[['label']][, 'label'] <- NULL
+lapply(activities, ncol)
+save(activities, file='activities.RData')
+
+# load the structure fingerprint
+structure_fp_base <- 'U:/Projects/TOX21/Chemical_Curation_from_Ann/20140722/tox21_v5a_leadscope_fp' # tox21_8598_fp tox21_8306_fp
+struct_mat <- load_struc_fp_file(structure_fp_base,NULL) #global, mat output
+read.excel <- function(header=TRUE,...) {
+  read.table("clipboard",sep="\t",header=header,...)
+}
+dd <- read.excel()
+v <- conversion(dd, inp='DSSTox_CID', out='DSSTox_GSID')
+v[as.character(rownames(struct_mat))]
+save(struct_mat, file='struct_mat.RData')

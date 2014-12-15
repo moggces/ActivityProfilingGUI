@@ -33,7 +33,7 @@ shinyUI(pageWithSidebar(
     conditionalPanel(
       condition = "input.proftype == 'signal'",
       radioButtons("sigtype", "Signal type:",
-                   list("wAUC" = "signal_wauc"))
+                   list("wAUC" = "wauc.logit"))
     ),
     
     tags$br(),
@@ -42,30 +42,33 @@ shinyUI(pageWithSidebar(
     conditionalPanel(
       condition = "input.proftype == 'activity'",
       radioButtons("acttype", "Activity type:",
-                   list("wAUC" = "nwauc",  "POD" = "pod", "AC50" = "ac50"))
+                   list("wAUC" = "nwauc.logit",  "POD" = "npod", "AC50" = "nac50"))
     ),
     
     tags$br(),
     
     # todo: nwauc, emax, pod, ac50, pod_med_diff, call matrix
     conditionalPanel(
-      condition = "(input.acttype == 'pod' || input.acttype == 'ac50') && input.proftype == 'activity'",
+      condition = "(input.acttype == 'npod' || input.acttype == 'nac50' || input.acttype == 'nwauc.logit'  ) && input.proftype == 'activity'",
       sliderInput("nwauc_thres", 
                   "wAUC threshold", min=0, max=1, value=0.05, step=0.05),
       tags$br(),
-      sliderInput("emax_thres", 
+      sliderInput("nemax_thres", 
                   "Emax threshold", min=0, max=100, value=0, step=5),
       tags$br(),
-      sliderInput("pod_thres", 
+      sliderInput("npod_thres", 
                   "POD threshold",  min=3, max=10, value=3, step=0.5),
       tags$br(),
-      sliderInput("ac50_thres", 
+      sliderInput("nac50_thres", 
                   "AC50 threshold", min=3, max=10, value=3, step=0.5),
       tags$br(),
       sliderInput("pod_diff_thres", 
                   "ratio of signal to cytotoxicity", min=0, max=5, value=0, step=0.5),
       tags$br(),
-      checkboxInput("isstrong", "wauc above the median of least potent (10 uM)", FALSE)
+      checkboxInput("isstrong", "wauc above the median of least potent (10 uM)", FALSE),
+      
+      tags$br(),
+      checkboxInput("isgoodcc2", "only curve class 1.1, 1.2, 2.1", FALSE)
     ),
     
     tags$hr(),
@@ -93,7 +96,7 @@ shinyUI(pageWithSidebar(
 
     # todo: adjust the variable
     # to show the dendrogram
-    checkboxInput("showheat", "show compound similarity dendrogram ", FALSE),
+    checkboxInput("showdendro", "show compound similarity dendrogram ", FALSE),
     
     tags$br(),
     
@@ -116,6 +119,7 @@ shinyUI(pageWithSidebar(
       #tabPanel( 'Input chemicals', htmlOutput('contents')),
       tabPanel( "Profile", plotOutput("profiling", height=1000, width="500%")), # i think the height don't affect
       tabPanel( "POD boxplot", plotOutput("box",  height=1000, width="500%")),
+      tabPanel( 'Assays', dataTableOutput('assay_des')),
       tabPanelAbout()
     )
   )

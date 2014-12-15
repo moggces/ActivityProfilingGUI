@@ -79,30 +79,46 @@ get_mat <- function (master_df, para, select=c('nwauc', 'call', 'pod', 'ac50'), 
   return(list(act=nwauc_mat, call=call_mat, pod=pod_mat, ac50=ac_mat))
 }
 
-#output list
-get_input_mat <- function (input, full)
+# filter the matrix by chemical input 
+get_input_chemical_mat <- function (input, full)
 {
   partial <- list()
   for (name in names(full))
   {
-    partial[[name]] <- full[[name]][as.character(rownames(full[[name]])) %in% as.character(input[['CAS']]),] # CAS here
+    partial[[name]] <- full[[name]][as.character(rownames(full[[name]])) %in% as.character(input[['GSID']]),] # CAS here
     
   }
   
   return(partial)
 }
 
+# filter the matrix by assays regular expression
+get_assay_mat <- function (partial, regSel, invSel=FALSE)
+{
+  for (name in names(partial))
+  {
+    if (name != 'struct' ) 
+    {
+      partial[[name]] <- partial[[name]][,grep(regSel, colnames(partial[[name]]), value = TRUE, invert = invSel)]
+    }
+  }
+  return(partial)
+}
+
+
 
 get_lookup_list <- function (input, master)
 {
-  result <- subset(master, select=c(CAS, Chemical.Name, StructureID))
-  result <- merge(input,result, by='CAS', all.x=TRUE)
+  #result <- subset(master, select=c(CAS, Chemical.Name, StructureID))
+  #result <- merge(input,result, by='CAS', all.x=TRUE)
+  result <- join(input, master)
   return(result)
 }
 
 
 get_heatmap_annotation <- function (d, input, master, cutoff=0.7, method="average", dmat, actType='')
 {
+  # chemical structure clustering
   hc <- hclust(d, method=method)
   group <- cutree(hc, h=cutoff)
   group_cp <- group
@@ -119,16 +135,17 @@ get_heatmap_annotation <- function (d, input, master, cutoff=0.7, method="averag
     }
   }
   
+  # create annotations: chemClust
   annotation <- data.frame(chemClust = as.factor(group_cp))
   rownames(annotation) <- names(group_cp)
   
+  # create annoations: userClust
   annotation2 <- data.frame(userClust = as.factor(input[['Cluster']]))
-  
   
   if (nrow(annotation2) > 0)
   {
-    rownames(annotation2) <- as.character(input[['CAS']])
-    chemical_name_ref <- conversion(master, inp='CAS', out='Chemical.Name')
+    rownames(annotation2) <- as.character(input[['GSID']])
+    chemical_name_ref <- conversion(master, inp='GSID', out='Chemical.Name')
     rownames(annotation2) <- chemical_name_ref[as.character(rownames(annotation2))]
     
     annotation <- merge(annotation, annotation2, by="row.names")
@@ -136,19 +153,20 @@ get_heatmap_annotation <- function (d, input, master, cutoff=0.7, method="averag
     annotation <- annotation[,-which(colnames(annotation) == 'Row.names')]
   }
   
+  # create annotations: toxScore
   annotation3 <- data.frame()
   
-  if (actType == 'nwauc' )
+  if (actType == 'nwauc.logit' )
   {
     annotation3 <- data.frame(toxScore = rowSums(abs(dmat[[actType]]) ))                           
-  } else if (actType == 'pod' | actType == 'ac50' )
+  } else if (actType == 'npod' | actType == 'nac50' )
   {
     annotation3 <- data.frame(toxScore = unlist(lapply(1:nrow(dmat[[actType]]), function (x) sum(abs(dmat[[actType]][x,])*dmat[['nwauc']][x,]) )))
   }
   
   if (nrow(annotation3) > 0)
   {
-    rownames(annotation3) <- rownames(dmat[['nwauc']])
+    rownames(annotation3) <- rownames(dmat[['nwauc.logit']])
     annotation <- merge(annotation, annotation3, by="row.names")
     rownames(annotation) <- annotation$Row.names
     annotation <- annotation[,-which(colnames(annotation) == 'Row.names')]
@@ -157,14 +175,15 @@ get_heatmap_annotation <- function (d, input, master, cutoff=0.7, method="averag
   return(annotation)
 }
 
-get_heatmap_annotation_color <- function(annotation, actType='')
+get_heatmap_annotation_color <- function(annotation, actType=NULL)
 {
   user <- rainbow(length(unique(annotation[['userClust']])))
   names(user) <- levels(annotation[['userClust']])
   chem  <- rainbow(length(unique(annotation[['chemClust']])))
   names(chem) <- levels(annotation[['chemClust']])
   
-  if (actType != '')
+  #if (actType != '')
+  if (! is.null(actType))
   {
     tox <-  c("#F7F4F9", "#E7E1EF", "#D4B9DA", "#C994C7", "#DF65B0", "#E7298A", "#CE1256", "#980043", "#67001F") #PuRd
     return(list(userClust=user, chemClust=chem, toxScore=tox))
@@ -236,4 +255,12 @@ get_property_name <- function (master)
   )
   names <- unique(unlist(names))
   return(names)
+}
+
+get_cv_mark_mat <- function(cv)
+{
+  cv_mark <- cv
+  cv_mark <- ""
+  cv_mark[cv > 1.4] <- "#"
+  return(cv_mark)
 }

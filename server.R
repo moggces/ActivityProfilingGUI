@@ -13,6 +13,7 @@ library(pheatmap)
 library(RColorBrewer)
 library(ggplot2)
 library(scales)
+options(stringsAsFactors = FALSE)
 
 
 #Sys.setlocale(locale="C")
@@ -25,34 +26,39 @@ source(paste(getwd(), "/source/mis.R", sep=""), local=TRUE)
 environment(pheatmap_new_label) <- environment(pheatmap)
 
 # the example files
-pah_file <- '/data/pah_60_lead_clust_v3.txt'
-fr_file <- '/data/flame_retardant_clusters_selected_v4.txt'
+pah_file <- './data/pah_60_lead_clust_v3.txt'
+fr_file <- './data/flame_retardant_clusters_selected_v4.txt'
 
-# todo: name map the lookup file to make assay name human friendly
-logit_para_file <- '/data/logit_para_file.txt'  #logit_para_file call_match_pathway_name
-para <- load_logit_para(logit_para_file) # global, dataframe output
+# load assay related parameters
+logit_para_file <- './data/tox21_assay_collection.txt'  #logit_para_file call_match_pathway_name
+assay_names <- load_profile(logit_para_file) # global, dataframe output
 
-# todo: id map: the lookup file for chemical information; will include purity later
-profile_file <- '/data/master_lookup2.txt' # v5 ;  bit redundent, just to get the mapping
+# load chemical information (will include purity later)
+profile_file <- './data/tox21_compound_id_v5a.txt'
 master <- load_profile(profile_file) # global, dataframe output
 
 # ??
 removeAbnormalDirection <- FALSE
 
-# todo: load the "activities" list
-cv_mat_rdata <- '/data/cv_mat.RData'
-loose_logit_rdata <- '/data/loose.RData'
-medium_logit_rdata <- '/data/medium.RData'
-tight_logit_rdata <- '/data/tight.RData'
-struct_mat_rdata <- '/data/struct_mat.RData'
-signal_logit_rdata <- '/data/signal_wauc.RData'
+# load the activities (all data) and the structure fp matrix
+activities_rdata <- './data/activities.RData'
+struct_mat_rdata <- './data/struct_mat.RData'
+load(activities_rdata) # global, matrix output, activities
+load(struct_mat_rdata) # global, matrix output, struct_mat
 
-load(paste(getwd(), loose_logit_rdata, sep="")) #global, list output, loose
-load(paste(getwd(), medium_logit_rdata, sep="")) #global, list output, medium 
-load(paste(getwd(), tight_logit_rdata, sep="")) #global, list output, tight   
-load(paste(getwd(),  cv_mat_rdata, sep="")) # global, matrix output, cv_mat
-load(paste(getwd(),  struct_mat_rdata, sep="")) # global, matrix output, struct_mat
-load(paste(getwd(),  signal_logit_rdata, sep="")) # global, list output, signal_wauc
+# cv_mat_rdata <- '/data/cv_mat.RData'
+# loose_logit_rdata <- '/data/loose.RData'
+# medium_logit_rdata <- '/data/medium.RData'
+# tight_logit_rdata <- '/data/tight.RData'
+# struct_mat_rdata <- '/data/struct_mat.RData'
+# signal_logit_rdata <- '/data/signal_wauc.RData'
+# 
+# load(paste(getwd(), loose_logit_rdata, sep="")) #global, list output, loose
+# load(paste(getwd(), medium_logit_rdata, sep="")) #global, list output, medium 
+# load(paste(getwd(), tight_logit_rdata, sep="")) #global, list output, tight   
+# load(paste(getwd(),  cv_mat_rdata, sep="")) # global, matrix output, cv_mat
+# load(paste(getwd(),  struct_mat_rdata, sep="")) # global, matrix output, struct_mat
+# load(paste(getwd(),  signal_logit_rdata, sep="")) # global, list output, signal_wauc
 
 # heatmap settings
 wauc_breaks <- c( -1, -0.75, -0.5, -0.25, -0.1, -0.02, 0, 0.0001, 0.1, 0.25, 0.5, 0.75, 1) # upper is filled , lower is empty 
@@ -67,7 +73,7 @@ potency_leg_labels <- c("-10", "-9", "-7.5", "-5", "-4.5", "-4",  "0",  "4", "4.
 
 shinyServer(function(input, output) {
    
-  data_chemical <- reactive({
+  chemical_loader <- reactive({
     
     result <- NULL
     inFile <- input$file1
@@ -84,77 +90,155 @@ shinyServer(function(input, output) {
 
   })
   
-  matrix_chemical <- reactive({
+  matrix_subsetter <- reactive({
     partial <- NULL
-    profile_type <- input$proftype
-    #removeCyto <- input$recyto
     reg_sel <- input$reg_sel # select the assays
     inv_sel <- input$inv_sel # inverse the selection
-    matid <- 'signal_wauc'
-    activity_type <- ''
-    nwauc_thres <- 0.0001
     
-    if (profile_type == 'activity')
-    {
-      matid <- input$actstrict
-      activity_type <- input$acttype # ac50, pod, etc.
-      nwauc_thres <- input$nwauc_thres
-      if (nwauc_thres == 0  ) nwauc_thres <- 0.0001 # to classify the pods
-    }
+    # get all chemical information
+    chem_id_df <- get_lookup_list(chemical_loader(), master)
+    #ip <- subset(chem_id_df, ! is.na(StructureID), select=c(CAS, Cluster))
     
-    mat_list <- eval(as.name(matid))
+    # the basic identifies , GSID + Cluster
+    ip <- subset(chem_id_df, GSID != '' & CAS != '', select=c(GSID, Cluster))
     
-    # todo: id map
-    ip <- subset(get_lookup_list(data_chemical(), master), ! is.na(StructureID), select=c(CAS, Cluster)) 
+    # collect all the matrices
+    full <- activities
+    full[['struct']] <- struct_mat
     
-    if (profile_type == 'activity')
-    {
-     
-      full <- list(nwauc=mat_list[['act']], pod=mat_list[['pod']], ac50=mat_list[['ac50']], struct=struct_mat, cv=cv_mat)
-    } else
-    {
-      full <- list(nwauc=mat_list[['act']], struct=struct_mat)
-    }  
+    # subset the matrices by chemicals
+    partial <- get_input_chemical_mat(ip, full)
     
-    partial <- get_input_mat(ip, full) #list output ## need to change while change input 
-    partial <- rename_mat(partial, master, para, actType=activity_type) #list output
-    #partial <- edit_mat_manual(partial, removeCytotoxic=removeCyto,  nwaucThres=nwauc_thres,  actType=activity_type)
+    # rename the assays
+    partial <- rename_mat_col_row(partial,  master, assay_names)
     
-    # todo: need to split into small functions
-    # filter the assays by regular expression
-    # order the columns and rows
-    # other small issues
-    partial <- edit_mat_manual(partial, nwaucThres=nwauc_thres,  actType=activity_type, regSel=reg_sel, invSel=inv_sel)
+    # subset the matrices by assay names
+    partial <- get_assay_mat(partial, reg_sel, invSel=inv_sel)
+    
+    
     return(partial)
   })
   
-  plotting_paras <- reactive({
+  activity_filter <- reactive({
+    profile_type <- input$proftype
+    activity_type <- input$acttype
+    nwauc_thres <- input$nwauc_thres
+    nemax_thres <- input$nemax_thres
+    npod_thres <- input$npod_thres
+    nac50_thres <- input$nac50_thres
+    pod_diff_thres <- input$pod_diff_thres
+    isstrong <- input$isstrong
+    isgoodcc2 <- input$isgoodcc2
     
+    partial <- matrix_subsetter()
+   
+    act_mat_names <- c('npod', 'nac50', 'nwauc.logit')
+    # reverse direction of mitotox could be meaningful
+    partial <- fix_mitotox_reverse(partial,act_mat_names=act_mat_names )
+    
+    # sort the matrix
+    partial <- sort_matrix(partial)
+    
+    # filtering
+    partial <- filter_activity_by_type(partial, 'nwauc.logit', nwauc_thres, act_mat_names=act_mat_names)
+    partial <- filter_activity_by_type(partial, 'nemax', nemax_thres,act_mat_names=act_mat_names)
+    partial <- filter_activity_by_type(partial, 'npod', npod_thres,act_mat_names=act_mat_names)
+    partial <- filter_activity_by_type(partial, 'nac50', nac50_thres,act_mat_names=act_mat_names)
+    partial <- filter_activity_by_type(partial, 'pod_med_diff', pod_diff_thres,act_mat_names=act_mat_names)
+    partial <- filter_activity_by_type(partial, 'hitcall', thres=NULL, decision=isstrong,act_mat_names=act_mat_names)
+    partial <- filter_activity_by_type(partial, 'cc2', thres=NULL, decision=isgoodcc2,act_mat_names=act_mat_names)
+
+    return(partial)
+  })
+  
+  matrix_editor <- reactive({
+    
+    partial <- activity_filter()
+    
+    # create CV marks
+    cv_mark <- get_cv_mark_mat(partial[['cv.wauc']])
+    partial[['cv_mark']] <- cv_mark
+    
+    # make activities matrix as 0.0001
+    act_mat_names <- c('npod', 'nac50', 'nwauc.logit')
+    partial <- assign_reverse_na_number(partial, act_mat_names=act_mat_names)
+    acts <- partial[c( act_mat_names, 'wauc.logit', 'struct', 'cv_mark')]
+    return(acts)
+  })
+  
+  
+#   chemical_subsetter <- reactive({
+#     partial <- NULL
+#     profile_type <- input$proftype
+#     reg_sel <- input$reg_sel # select the assays
+#     inv_sel <- input$inv_sel # inverse the selection
+#     matid <- 'signal_wauc'
+#     activity_type <- ''
+#     nwauc_thres <- 0.0001
+#     
+#     if (profile_type == 'activity')
+#     {
+#       matid <- input$actstrict
+#       activity_type <- input$acttype # ac50, pod, etc.
+#       nwauc_thres <- input$nwauc_thres
+#       if (nwauc_thres == 0  ) nwauc_thres <- 0.0001 # to classify the pods
+#     }
+#     
+#     mat_list <- eval(as.name(matid))
+#     
+#     # todo: id map
+#     ip <- subset(get_lookup_list(chemical_loader(), master), ! is.na(StructureID), select=c(CAS, Cluster)) 
+#     
+#     if (profile_type == 'activity')
+#     {
+#      
+#       full <- list(nwauc=mat_list[['act']], pod=mat_list[['pod']], ac50=mat_list[['ac50']], struct=struct_mat, cv=cv_mat)
+#     } else
+#     {
+#       full <- list(nwauc=mat_list[['act']], struct=struct_mat)
+#     }  
+#     
+#     partial <- get_input_mat(ip, full) #list output ## need to change while change input 
+#     partial <- rename_mat(partial, master, para, actType=activity_type) #list output
+#     #partial <- edit_mat_manual(partial, removeCytotoxic=removeCyto,  nwaucThres=nwauc_thres,  actType=activity_type)
+#     
+#     # todo: need to split into small functions
+#     # filter the assays by regular expression
+#     # order the columns and rows
+#     # other small issues
+#     partial <- edit_mat_manual(partial, nwaucThres=nwauc_thres,  actType=activity_type, regSel=reg_sel, invSel=inv_sel)
+#     return(partial)
+#   })
+  
+  heatmap_para_generator <- reactive({
     sort_meth <- input$sort_method
     profile_type <- input$proftype
-    activity_type <- ''
-    partial <- matrix_chemical()
-    ip <- subset(get_lookup_list(data_chemical(), master), ! is.na(StructureID), select=c(CAS, Cluster))
+    activity_type <- input$acttype
     
-    if (profile_type == 'activity')
-    {
-      activity_type <- input$acttype
-      act <- partial[[activity_type]]
-      
-    } else
-    {
-      act <- partial[['nwauc']]
-    }
+    # get all chemical information
+    chem_id_df <- get_lookup_list(chemical_loader(), master)
+    #ip <- subset(chem_id_df, ! is.na(StructureID), select=c(CAS, Cluster))
     
-    cv <- partial[['cv']]
-    struct <- partial[['struct']]
+    # the basic identifies , GSID + Cluster
+    ip <- subset(chem_id_df, GSID != '' & CAS != '', select=c(GSID, Cluster))
     
+    # the cleaned matrices
+    dt <- matrix_editor() # c('npod', 'nac50', 'nwauc.logit','wauc.logit', 'cv_mark', 'struct') 
+    #dt <- rename_mat_col_row(dt,  master, assay_names)
+    
+    if (profile_type == 'signal') act <- dt[['wauc.logit']]
+    if (profile_type == 'activity') act <- dt[[activity_type]]
+    
+    cv <- dt[['cv_mark']]
+    struct <- dt[['struct']]
+    
+    # first, cluster the chemicals
     dcols <- dist(struct, method = "binary") ## chemicals
     
-    annotation <- get_heatmap_annotation(dcols, ip, master, dmat=partial, actType=activity_type) #data.frame output
+    annotation <- get_heatmap_annotation(dcols, ip, master, dmat=dt, actType=activity_type) #data.frame output
     annt_colors <- get_heatmap_annotation_color(annotation,  actType=activity_type)
     
-    
+    # cluster compounds by various methods
     if (sort_meth == 'actclust')
     {
       dcols <- dist(act, method = "euclidean") ## chemicals by assays
@@ -164,18 +248,64 @@ shinyServer(function(input, output) {
       tox_order <- rownames(annotation)[order(annotation$toxScore)]
       act <- act[tox_order, ]
       cv <- cv[tox_order, ]
-    } 
-    
+    }
+    # cluster assays by similarity 
     drows <- dist(t(act) , method = "euclidean") ## assays
     
     return(list(dcols=dcols, drows=drows, annotation=annotation, annt_colors=annt_colors, act=act, struct=struct, cv=cv))
+    
   })
+
+
+#   plotting_paras <- reactive({
+#     
+#     sort_meth <- input$sort_method
+#     profile_type <- input$proftype
+#     activity_type <- ''
+#     partial <- matrix_chemical()
+#     ip <- subset(get_lookup_list(chemical_loader(), master), ! is.na(StructureID), select=c(CAS, Cluster))
+#     
+#     if (profile_type == 'activity')
+#     {
+#       activity_type <- input$acttype
+#       act <- partial[[activity_type]]
+#       
+#     } else
+#     {
+#       act <- partial[['nwauc']]
+#     }
+#     
+#     cv <- partial[['cv']]
+#     struct <- partial[['struct']]
+#     
+#     dcols <- dist(struct, method = "binary") ## chemicals
+#     
+#     annotation <- get_heatmap_annotation(dcols, ip, master, dmat=partial, actType=activity_type) #data.frame output
+#     annt_colors <- get_heatmap_annotation_color(annotation,  actType=activity_type)
+#     
+#     
+#     if (sort_meth == 'actclust')
+#     {
+#       dcols <- dist(act, method = "euclidean") ## chemicals by assays
+#       
+#     } else if (sort_meth == 'toxscore' )
+#     {
+#       tox_order <- rownames(annotation)[order(annotation$toxScore)]
+#       act <- act[tox_order, ]
+#       cv <- cv[tox_order, ]
+#     } 
+#     
+#     drows <- dist(t(act) , method = "euclidean") ## assays
+#     
+#     return(list(dcols=dcols, drows=drows, annotation=annotation, annt_colors=annt_colors, act=act, struct=struct, cv=cv))
+#   })
   
   select_plot <- reactive({
-    showHeatmap <- input$showheat
+    showDendrogram <- input$showdendro
     profile_type <- input$proftype
     sort_meth <- input$sort_method
     fsize <- input$fontsize
+    
     color <- wauc_colors
     breaks <- wauc_breaks
     leg_labels <- wauc_leg_labels
@@ -184,7 +314,7 @@ shinyServer(function(input, output) {
     if (profile_type == 'activity')
     {
       activity_type <- input$acttype
-      if (activity_type != 'nwauc')
+      if (activity_type != 'nwauc.logit')
       {
         color <- potency_colors
         breaks <- potency_breaks
@@ -193,18 +323,18 @@ shinyServer(function(input, output) {
       }
     }
     
-    if (! is.null(data_chemical()) )
+    if (! is.null(chemical_loader()) )
     {
       # note pheatmap input has to have the same order!!!
-      para <- plotting_paras()
-      act <- para[['act']]
-      cv <- para[['cv']]
-      dcols <- para[['dcols']]
-      drows <- para[['drows']]
-      annotation <- para[['annotation']]
-      annt_colors <- para[['annt_colors']]
+      paras <- heatmap_para_generator()
+      act <- paras[['act']]
+      cv <- paras[['cv']]
+      dcols <- paras[['dcols']]
+      drows <- paras[['drows']]
+      annotation <- paras[['annotation']]
+      annt_colors <- paras[['annt_colors']]
       
-      if (showHeatmap)
+      if (showDendrogram)
       {
         if (profile_type == 'signal')
         {
@@ -225,12 +355,18 @@ shinyServer(function(input, output) {
   })
 
   output$contents <- renderDataTable({
-    if ( ! is.null(data_chemical()) ) get_lookup_list(data_chemical(), master)
+    if ( ! is.null(chemical_loader()) ) get_lookup_list(chemical_loader(), master)
+  })
+
+  output$assay_des <- renderDataTable({
+    #return(assay_names)
+    partial <- matrix_subsetter()
+    return(as.data.frame(partial[['struct']][, c(1:10)]))
   })
   
 
   getVarWidth <- reactive({
-    if ( ! is.null(data_chemical()) ) df <- get_lookup_list(data_chemical(), master)
+    if ( ! is.null(chemical_loader()) ) df <- get_lookup_list(chemical_loader(), master)
     ncmpd <- sum(rowSums(apply(df, 2, function(x) x == '' | is.na(x))) == 0)
     if (ncmpd < 40)
     {
@@ -255,15 +391,15 @@ shinyServer(function(input, output) {
     if (profile_type == 'activity')
     {
       activity_type <- input$acttype
-      if (activity_type == 'pod')
+      if (activity_type == 'npod')
       {
-        paras <- plotting_paras()
+        paras <- heatmap_para_generator()
         act <- paras[['act']]
         annotation <- paras[['annotation']]
         dcols <- paras[['dcols']]
         
         result <- get_output_df(act, annotation)
-        p <- get_pod_boxplot(result, fontsize=fsize, sortby=sort_meth, dcols=dcols, global_para=para)
+        p <- get_pod_boxplot(result, fontsize=fsize, sortby=sort_meth, dcols=dcols, global_para=paras)
       }
     }
     if (! is.null(p)) print(p)
@@ -281,9 +417,9 @@ shinyServer(function(input, output) {
       }
        },
     content = function(file) {
-      para <- plotting_paras()
-      act <- para[['act']]
-      annotation <- para[['annotation']]
+      paras <- heatmap_para_generator()
+      act <- paras[['act']]
+      annotation <- paras[['annotation']]
       result <- get_output_df(act, annotation)
       write.table(result, file, row.names = FALSE, col.names = TRUE, sep="\t", quote=FALSE, append=FALSE)
     }
@@ -308,7 +444,7 @@ output$downloadPlot <- downloadHandler(
 )
 
 select_plot2 <- function () {
-  showHeatmap <- input$showheat
+  showDendrogram <- input$showdendro
   profile_type <- input$proftype
   sort_meth <- input$sort_method
   fsize <- input$fontsize
@@ -320,7 +456,7 @@ select_plot2 <- function () {
   if (profile_type == 'activity')
   {
     activity_type <- input$acttype
-    if (activity_type != 'nwauc')
+    if (activity_type != 'nwauc.logit')
     {
       color <- potency_colors
       breaks <- potency_breaks
@@ -329,18 +465,18 @@ select_plot2 <- function () {
     }
   }
   
-  if (! is.null(data_chemical()) )
+  if (! is.null(chemical_loader()) )
   {
     # note pheatmap input has to have the same order!!!
-    para <- plotting_paras()
-    act <- para[['act']]
-    cv <- para[['cv']]
-    dcols <- para[['dcols']]
-    drows <- para[['drows']]
-    annotation <- para[['annotation']]
-    annt_colors <- para[['annt_colors']]
+    paras <- heatmap_para_generator()
+    act <- paras[['act']]
+    cv <- paras[['cv']]
+    dcols <- paras[['dcols']]
+    drows <- paras[['drows']]
+    annotation <- paras[['annotation']]
+    annt_colors <- paras[['annt_colors']]
     
-    if (showHeatmap)
+    if (showDendrogram)
     {
       if (profile_type == 'signal')
       {
