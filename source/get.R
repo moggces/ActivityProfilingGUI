@@ -161,7 +161,7 @@ get_heatmap_annotation <- function (d, input, master, cutoff=0.7, method="averag
     annotation3 <- data.frame(toxScore = rowSums(abs(dmat[[actType]]) ))                           
   } else if (actType == 'npod' | actType == 'nac50' )
   {
-    annotation3 <- data.frame(toxScore = unlist(lapply(1:nrow(dmat[[actType]]), function (x) sum(abs(dmat[[actType]][x,])*dmat[['nwauc']][x,]) )))
+    annotation3 <- data.frame(toxScore = unlist(lapply(1:nrow(dmat[[actType]]), function (x) sum(abs(dmat[[actType]][x,])*dmat[['nwauc.logit']][x,]) )))
   }
   
   if (nrow(annotation3) > 0)
@@ -175,15 +175,15 @@ get_heatmap_annotation <- function (d, input, master, cutoff=0.7, method="averag
   return(annotation)
 }
 
-get_heatmap_annotation_color <- function(annotation, actType=NULL)
+get_heatmap_annotation_color <- function(annotation, actType='')
 {
   user <- rainbow(length(unique(annotation[['userClust']])))
   names(user) <- levels(annotation[['userClust']])
   chem  <- rainbow(length(unique(annotation[['chemClust']])))
   names(chem) <- levels(annotation[['chemClust']])
   
-  #if (actType != '')
-  if (! is.null(actType))
+  if (actType != '')
+  #if (! is.null(actType))
   {
     tox <-  c("#F7F4F9", "#E7E1EF", "#D4B9DA", "#C994C7", "#DF65B0", "#E7298A", "#CE1256", "#980043", "#67001F") #PuRd
     return(list(userClust=user, chemClust=chem, toxScore=tox))
@@ -220,7 +220,7 @@ get_pod_boxplot <- function (pod, fontsize, sortby, dcols, global_para)
   mat <- pod_m
   
   #create conversion
-  let <- conversion(global_para, inp='pathway_name', out='pathway_abb')
+  let <- conversion(global_para, inp='common_name', out='letters')
   let2 <- paste(let, names(let), sep="=") # color legend
   names(let2) <- names(let)
 
@@ -235,6 +235,7 @@ get_pod_boxplot <- function (pod, fontsize, sortby, dcols, global_para)
      theme(text=element_text(size=fontsize), 
            axis.text.x = element_text( angle=90, color="black")) + 
     scale_y_continuous('uM', breaks=seq(-10+6, -3+6, by=1), limits=c(-10+6, -3+6), labels = math_format(10^.x)) + 
+    #theme_bw(base_size = fontsize) + 
     annotation_logticks(sides = "l") 
   return(p)
 }
@@ -257,10 +258,12 @@ get_property_name <- function (master)
   return(names)
 }
 
-get_cv_mark_mat <- function(cv)
+get_cv_mark_mat <- function(cv, nwauc)
 {
   cv_mark <- cv
-  cv_mark <- ""
-  cv_mark[cv > 1.4] <- "#"
+  cv_mark[is.na(cv_mark) ] <- -0.1
+  cv_mark[cv_mark > 1.4  & nwauc > 0.0001 ] <- "#"
+  cv_mark[cv_mark != "#"] <- ''
   return(cv_mark)
+
 }

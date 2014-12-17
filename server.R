@@ -46,19 +46,6 @@ struct_mat_rdata <- './data/struct_mat.RData'
 load(activities_rdata) # global, matrix output, activities
 load(struct_mat_rdata) # global, matrix output, struct_mat
 
-# cv_mat_rdata <- '/data/cv_mat.RData'
-# loose_logit_rdata <- '/data/loose.RData'
-# medium_logit_rdata <- '/data/medium.RData'
-# tight_logit_rdata <- '/data/tight.RData'
-# struct_mat_rdata <- '/data/struct_mat.RData'
-# signal_logit_rdata <- '/data/signal_wauc.RData'
-# 
-# load(paste(getwd(), loose_logit_rdata, sep="")) #global, list output, loose
-# load(paste(getwd(), medium_logit_rdata, sep="")) #global, list output, medium 
-# load(paste(getwd(), tight_logit_rdata, sep="")) #global, list output, tight   
-# load(paste(getwd(),  cv_mat_rdata, sep="")) # global, matrix output, cv_mat
-# load(paste(getwd(),  struct_mat_rdata, sep="")) # global, matrix output, struct_mat
-# load(paste(getwd(),  signal_logit_rdata, sep="")) # global, list output, signal_wauc
 
 # heatmap settings
 wauc_breaks <- c( -1, -0.75, -0.5, -0.25, -0.1, -0.02, 0, 0.0001, 0.1, 0.25, 0.5, 0.75, 1) # upper is filled , lower is empty 
@@ -156,7 +143,7 @@ shinyServer(function(input, output) {
     partial <- activity_filter()
     
     # create CV marks
-    cv_mark <- get_cv_mark_mat(partial[['cv.wauc']])
+    cv_mark <- get_cv_mark_mat(partial[['cv.wauc']], partial[['nwauc.logit']])
     partial[['cv_mark']] <- cv_mark
     
     # make activities matrix as 0.0001
@@ -167,53 +154,10 @@ shinyServer(function(input, output) {
   })
   
   
-#   chemical_subsetter <- reactive({
-#     partial <- NULL
-#     profile_type <- input$proftype
-#     reg_sel <- input$reg_sel # select the assays
-#     inv_sel <- input$inv_sel # inverse the selection
-#     matid <- 'signal_wauc'
-#     activity_type <- ''
-#     nwauc_thres <- 0.0001
-#     
-#     if (profile_type == 'activity')
-#     {
-#       matid <- input$actstrict
-#       activity_type <- input$acttype # ac50, pod, etc.
-#       nwauc_thres <- input$nwauc_thres
-#       if (nwauc_thres == 0  ) nwauc_thres <- 0.0001 # to classify the pods
-#     }
-#     
-#     mat_list <- eval(as.name(matid))
-#     
-#     # todo: id map
-#     ip <- subset(get_lookup_list(chemical_loader(), master), ! is.na(StructureID), select=c(CAS, Cluster)) 
-#     
-#     if (profile_type == 'activity')
-#     {
-#      
-#       full <- list(nwauc=mat_list[['act']], pod=mat_list[['pod']], ac50=mat_list[['ac50']], struct=struct_mat, cv=cv_mat)
-#     } else
-#     {
-#       full <- list(nwauc=mat_list[['act']], struct=struct_mat)
-#     }  
-#     
-#     partial <- get_input_mat(ip, full) #list output ## need to change while change input 
-#     partial <- rename_mat(partial, master, para, actType=activity_type) #list output
-#     #partial <- edit_mat_manual(partial, removeCytotoxic=removeCyto,  nwaucThres=nwauc_thres,  actType=activity_type)
-#     
-#     # todo: need to split into small functions
-#     # filter the assays by regular expression
-#     # order the columns and rows
-#     # other small issues
-#     partial <- edit_mat_manual(partial, nwaucThres=nwauc_thres,  actType=activity_type, regSel=reg_sel, invSel=inv_sel)
-#     return(partial)
-#   })
-  
   heatmap_para_generator <- reactive({
     sort_meth <- input$sort_method
     profile_type <- input$proftype
-    activity_type <- input$acttype
+    activity_type <- ''
     
     # get all chemical information
     chem_id_df <- get_lookup_list(chemical_loader(), master)
@@ -224,10 +168,16 @@ shinyServer(function(input, output) {
     
     # the cleaned matrices
     dt <- matrix_editor() # c('npod', 'nac50', 'nwauc.logit','wauc.logit', 'cv_mark', 'struct') 
-    #dt <- rename_mat_col_row(dt,  master, assay_names)
     
-    if (profile_type == 'signal') act <- dt[['wauc.logit']]
-    if (profile_type == 'activity') act <- dt[[activity_type]]
+    if (profile_type == 'activity')
+    {
+      activity_type <- input$acttype
+      act <- dt[[activity_type]]
+      
+    } else
+    {
+      act <- dt[['wauc.logit']]
+    }
     
     cv <- dt[['cv_mark']]
     struct <- dt[['struct']]
@@ -256,56 +206,13 @@ shinyServer(function(input, output) {
     
   })
 
-
-#   plotting_paras <- reactive({
-#     
-#     sort_meth <- input$sort_method
-#     profile_type <- input$proftype
-#     activity_type <- ''
-#     partial <- matrix_chemical()
-#     ip <- subset(get_lookup_list(chemical_loader(), master), ! is.na(StructureID), select=c(CAS, Cluster))
-#     
-#     if (profile_type == 'activity')
-#     {
-#       activity_type <- input$acttype
-#       act <- partial[[activity_type]]
-#       
-#     } else
-#     {
-#       act <- partial[['nwauc']]
-#     }
-#     
-#     cv <- partial[['cv']]
-#     struct <- partial[['struct']]
-#     
-#     dcols <- dist(struct, method = "binary") ## chemicals
-#     
-#     annotation <- get_heatmap_annotation(dcols, ip, master, dmat=partial, actType=activity_type) #data.frame output
-#     annt_colors <- get_heatmap_annotation_color(annotation,  actType=activity_type)
-#     
-#     
-#     if (sort_meth == 'actclust')
-#     {
-#       dcols <- dist(act, method = "euclidean") ## chemicals by assays
-#       
-#     } else if (sort_meth == 'toxscore' )
-#     {
-#       tox_order <- rownames(annotation)[order(annotation$toxScore)]
-#       act <- act[tox_order, ]
-#       cv <- cv[tox_order, ]
-#     } 
-#     
-#     drows <- dist(t(act) , method = "euclidean") ## assays
-#     
-#     return(list(dcols=dcols, drows=drows, annotation=annotation, annt_colors=annt_colors, act=act, struct=struct, cv=cv))
-#   })
   
-  select_plot <- reactive({
+    select_plot <- reactive({
     showDendrogram <- input$showdendro
     profile_type <- input$proftype
     sort_meth <- input$sort_method
     fsize <- input$fontsize
-    
+      
     color <- wauc_colors
     breaks <- wauc_breaks
     leg_labels <- wauc_leg_labels
@@ -334,7 +241,7 @@ shinyServer(function(input, output) {
       annotation <- paras[['annotation']]
       annt_colors <- paras[['annt_colors']]
       
-      if (showDendrogram)
+      if (! showDendrogram)
       {
         if (profile_type == 'signal')
         {
@@ -346,7 +253,7 @@ shinyServer(function(input, output) {
         {
           p <- pheatmap_new_label(t(act), t(cv), fontsize=fsize,annotation=annotation,annotation_colors=annt_colors,legend_labels=leg_labels,legend_breaks=leg_breaks, breaks=breaks, color=color, display_numbers=TRUE, clustering_distance_rows = drows, cluster_cols = FALSE, clustering_method = "average")
         }
-      } else
+      } else if (sort_meth != 'toxscore' )
       {
         p <- plot(hclust(dcols, method="average"), hang=-1)
       }
@@ -359,9 +266,16 @@ shinyServer(function(input, output) {
   })
 
   output$assay_des <- renderDataTable({
-    #return(assay_names)
-    partial <- matrix_subsetter()
-    return(as.data.frame(partial[['struct']][, c(1:10)]))
+    
+    #paras <- heatmap_para_generator() #heatmap_para_generator
+    #act <- paras[['act']]
+    #annotation <- paras[['annotation']]
+    #result <- get_output_df(act, annotation)
+    #return(result)
+    
+    # for testing
+    paras <- activity_filter()
+    return(as.data.frame(paras[['nwauc.logit']]))
   })
   
 
@@ -391,7 +305,7 @@ shinyServer(function(input, output) {
     if (profile_type == 'activity')
     {
       activity_type <- input$acttype
-      if (activity_type == 'npod')
+      if (activity_type == 'npod' | activity_type == 'nac50')
       {
         paras <- heatmap_para_generator()
         act <- paras[['act']]
@@ -399,7 +313,7 @@ shinyServer(function(input, output) {
         dcols <- paras[['dcols']]
         
         result <- get_output_df(act, annotation)
-        p <- get_pod_boxplot(result, fontsize=fsize, sortby=sort_meth, dcols=dcols, global_para=paras)
+        p <- get_pod_boxplot(result, fontsize=fsize, sortby=sort_meth, dcols=dcols, global_para=assay_names)
       }
     }
     if (! is.null(p)) print(p)
@@ -476,7 +390,7 @@ select_plot2 <- function () {
     annotation <- paras[['annotation']]
     annt_colors <- paras[['annt_colors']]
     
-    if (showDendrogram)
+    if (! showDendrogram)
     {
       if (profile_type == 'signal')
       {
@@ -488,7 +402,7 @@ select_plot2 <- function () {
       {
         p <- pheatmap_new_label(t(act), t(cv), fontsize=fsize,annotation=annotation,annotation_colors=annt_colors,legend_labels=leg_labels,legend_breaks=leg_breaks, breaks=breaks, color=color, display_numbers=TRUE, clustering_distance_rows = drows, cluster_cols = FALSE, clustering_method = "average")
       }
-    } else
+    } else if (sort_meth != 'toxscore' )
     {
       p <- plot(hclust(dcols, method="average"), hang=-1)
     }

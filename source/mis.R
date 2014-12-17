@@ -55,15 +55,18 @@ filter_activity_by_type <- function(partial, type, thres=NULL, decision=FALSE, a
     if (type == 'pod_med_diff')
     {
       ant_ids <- grepl('antagonism|inhibition', colnames(partial[[name]]))
-      ids <- (partial[[type]][, ant_ids]*-1) < thres & ! is.na(partial[[type]][, ant_ids]) & ! is.na(partial[[name]][, ant_ids]) & partial[[name]][, ant_ids] > 0.0001
-      partial[[name]][, ant_ids][ids] <- (partial[[name]][, ant_ids][ids])*-1
+      if (sum(ant_ids) > 0) 
+      {
+        ids <- (partial[[type]][, ant_ids]*-1) < thres & ! is.na(partial[[type]][, ant_ids]) & ! is.na(partial[[name]][, ant_ids]) & partial[[name]][, ant_ids] > 0.0001
+        partial[[name]][, ant_ids][ids] <- (partial[[name]][, ant_ids][ids])*-1
+      }
       
     } else
     {
       if (type == 'nwauc.logit' | type == 'npod' | type == 'nac50') ids <- partial[[type]] < thres & ! is.na(partial[[type]]) & ! is.na(partial[[name]]) & partial[[name]] > 0.0001
       if (type == 'nemax') ids <- abs(partial[[type]]) < thres & ! is.na(partial[[type]]) & ! is.na(partial[[name]]) & partial[[name]] > 0.0001
-      if (type == 'hitcall' & isTRUE(decision)) ids <- partial[[type]] == 1 & ! is.na(partial[[name]]) & partial[[name]] > 0.0001
-      if (type == 'cc2' & isTRUE(decision)) ids <- ( abs(partial[[type]] == 1.1) | abs(partial[[type]] == 1.2) | abs(partial[[type]] == 2.1)) & ! is.na(partial[[type]]) & ! is.na(partial[[name]]) & partial[[name]] > 0.0001
+      if (type == 'hitcall' & isTRUE(decision)) ids <- partial[[type]] != 1 & ! is.na(partial[[name]]) & partial[[name]] > 0.0001
+      if (type == 'cc2' & isTRUE(decision)) ids <- ( abs(partial[[type]]) != 1.1 & abs(partial[[type]]) != 1.2 & abs(partial[[type]]) != 2.1) & ! is.na(partial[[type]]) & ! is.na(partial[[name]]) & partial[[name]] > 0.0001
       partial[[name]][ids] <- (partial[[name]][ids])*-1
     }
   }
@@ -74,7 +77,7 @@ fix_mitotox_reverse <- function(partial, act_mat_names=c('npod', 'nac50', 'nwauc
 {
   for (name in act_mat_names)
   {
-    mitotox_id <- grepl('mitotox', colnames(partial[[name]]))
+    mitotox_id <- grepl('inhibition_MMP', colnames(partial[[name]]))
     if (sum(mitotox_id) > 0)
     {
       rev_ids <- partial[[name]][, mitotox_id] < 0 &  ! is.na(partial[[name]][, mitotox_id])
@@ -86,11 +89,17 @@ fix_mitotox_reverse <- function(partial, act_mat_names=c('npod', 'nac50', 'nwauc
 
 assign_reverse_na_number <- function (partial, act_mat_names=c('npod', 'nac50', 'nwauc.logit'))
 {
-  for (name in act_mat_names)
+  result <- partial
+  for (name in names(partial))
   {
-    partial[[name]][partial[[name]] < 0 | is.na(partial[[name]]) ] <- 0.0001
+    if (name == 'npod' | name == 'nac50') {
+      result[[name]][ partial[['nwauc.logit']] == 0 ] <- 0
+      result[[name]][ result[[name]] < 0 |  is.na(result[[name]])   ] <- 0.0001
+    }
+    if (name == 'nwauc.logit' ) result[[name]][ partial[[name]] < 0 ] <- 0.0001
   }
-  return(partial)
+
+  return(result)
 }
 
 rename_mat_col_row <- function (partial, master, assay_names)

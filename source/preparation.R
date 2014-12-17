@@ -89,12 +89,6 @@ lapply(activities, ncol)
 save(activities, file='activities.RData')
 
 # load the structure fingerprint
-structure_fp_base <- 'U:/Projects/TOX21/Chemical_Curation_from_Ann/20140722/tox21_v5a_leadscope_fp' # tox21_8598_fp tox21_8306_fp
+structure_fp_base <- 'U:/Projects/TOX21/Chemical_Curation_from_Ann/20140722/tox21_v5a_leadscope_fp_extend' # tox21_8598_fp tox21_8306_fp
 struct_mat <- load_struc_fp_file(structure_fp_base,NULL) #global, mat output
-read.excel <- function(header=TRUE,...) {
-  read.table("clipboard",sep="\t",header=header,...)
-}
-dd <- read.excel()
-v <- conversion(dd, inp='DSSTox_CID', out='DSSTox_GSID')
-v[as.character(rownames(struct_mat))]
 save(struct_mat, file='struct_mat.RData')

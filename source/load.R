@@ -16,6 +16,7 @@ load_profile <- function (profile_file)
   return ( read.table( profile_file, header = TRUE, sep = "\t", quote = '', check.names=FALSE, comment.char = "") )
 }
 
+#### deprecated
 load_logit_para <- function (logit_para_file)
 {
   name_match <- read.table(paste(getwd(),  logit_para_file, sep=""), header = TRUE, sep = "\t", quote = "", comment.char = "")

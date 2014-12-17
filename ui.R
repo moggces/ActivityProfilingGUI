@@ -1,7 +1,7 @@
 library(shiny)
-
+library(markdown)
 # todo: need to be replaced by markdown page
-tabPanelAbout <- source(paste(getwd(), "/source/about.R", sep=""))$value
+#tabPanelAbout <- source(paste(getwd(), "/source/about.R", sep=""))$value
 
 shinyUI(pageWithSidebar(
   
@@ -63,7 +63,7 @@ shinyUI(pageWithSidebar(
                   "AC50 threshold", min=3, max=10, value=3, step=0.5),
       tags$br(),
       sliderInput("pod_diff_thres", 
-                  "ratio of signal to cytotoxicity", min=0, max=5, value=0, step=0.5),
+                  "ratio of signal to cytotoxicity", min=0, max=3, value=0, step=0.2),
       tags$br(),
       checkboxInput("isstrong", "wauc above the median of least potent (10 uM)", FALSE),
       
@@ -118,9 +118,10 @@ shinyUI(pageWithSidebar(
       tabPanel( 'Input chemicals', dataTableOutput('contents')),
       #tabPanel( 'Input chemicals', htmlOutput('contents')),
       tabPanel( "Profile", plotOutput("profiling", height=1000, width="500%")), # i think the height don't affect
-      tabPanel( "POD boxplot", plotOutput("box",  height=1000, width="500%")),
-      tabPanel( 'Assays', dataTableOutput('assay_des')),
-      tabPanelAbout()
+      tabPanel( "Potency boxplot", plotOutput("box",  height=1000, width="500%")),
+      tabPanel( 'Data', dataTableOutput('assay_des')),
+      #tabPanelAbout()
+      tabPanel('About', includeMarkdown("test.Rmd"))
     )
   )
 ))
