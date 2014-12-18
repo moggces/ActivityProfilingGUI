@@ -64,14 +64,15 @@ shinyServer(function(input, output) {
     
     result <- NULL
     inFile <- input$file1
-    path <- switch(input$dataset,
-                     "no selection" = NULL, 
-                     "polycyclic aromatic hydrocarbons (PAHs)" = pah_file,
-                     "flame retardants (FRs)" = fr_file)
+    path <- NULL
+#     path <- switch(input$dataset,
+#                      "no selection" = NULL, 
+#                      "polycyclic aromatic hydrocarbons (PAHs)" = pah_file,
+#                      "flame retardants (FRs)" = fr_file)
     textdata <- input$cmpds
-    if (! is.null(inFile)) path <- inFile$datapath
+    if (! is.null(inFile)) { path <- inFile$datapath; filen <- inFile$name }
     if (textdata != '' ) result <- load_text_2_df(textdata)
-    if (! is.null(path)) result <- load_input_file(path) # as long as path or file has something it will override
+    if (! is.null(path)) result <- load_data_matrix(path, filen) # as long as path or file has something it will override
    
     return(result)
 
@@ -81,27 +82,43 @@ shinyServer(function(input, output) {
     partial <- NULL
     reg_sel <- input$reg_sel # select the assays
     inv_sel <- input$inv_sel # inverse the selection
+    rename_assay <- TRUE
     
     # get all chemical information
-    chem_id_df <- get_lookup_list(chemical_loader(), master)
+    id_info <- chemical_loader()
+    
+    chem_id_df <- get_lookup_list(id_info[['id']], master)
     #ip <- subset(chem_id_df, ! is.na(StructureID), select=c(CAS, Cluster))
     
     # the basic identifies , GSID + Cluster
     ip <- subset(chem_id_df, GSID != '' & CAS != '', select=c(GSID, Cluster))
     
     # collect all the matrices
-    full <- activities
+    
+    full <- list()
+    full <- activities 
+    
+    # if it is a data matrix
+    if (length(id_info) > 1)
+    {
+      full <- id_info[! grepl('id', names(id_info))]
+      chemical_name_ref <- conversion(master, inp='CAS', out='GSID')
+      rownames(full[[1]]) <- chemical_name_ref[as.character(rownames(full[[1]]))]
+      rename_assay <- FALSE
+    }
     full[['struct']] <- struct_mat
     
     # subset the matrices by chemicals
     partial <- get_input_chemical_mat(ip, full)
     
     # rename the assays
-    partial <- rename_mat_col_row(partial,  master, assay_names)
+    partial <- rename_mat_col_row(partial,  master, assay_names, rename_assay=rename_assay)
     
     # subset the matrices by assay names
     partial <- get_assay_mat(partial, reg_sel, invSel=inv_sel)
     
+    # sort the matrix
+    partial <- sort_matrix(partial)
     
     return(partial)
   })
@@ -114,17 +131,22 @@ shinyServer(function(input, output) {
     npod_thres <- input$npod_thres
     nac50_thres <- input$nac50_thres
     pod_diff_thres <- input$pod_diff_thres
-    isstrong <- input$isstrong
+    #isstrong <- input$isstrong
+    nocyto <- input$nocyto
     isgoodcc2 <- input$isgoodcc2
+    nohighcv <- input$nohighcv
     
     partial <- matrix_subsetter()
+    
+    # if it is data matrix
+    if (length(partial) == 2) return(partial)
    
     act_mat_names <- c('npod', 'nac50', 'nwauc.logit')
     # reverse direction of mitotox could be meaningful
     partial <- fix_mitotox_reverse(partial,act_mat_names=act_mat_names )
     
-    # sort the matrix
-    partial <- sort_matrix(partial)
+#    # sort the matrix
+#    partial <- sort_matrix(partial)
     
     # filtering
     partial <- filter_activity_by_type(partial, 'nwauc.logit', nwauc_thres, act_mat_names=act_mat_names)
@@ -132,15 +154,19 @@ shinyServer(function(input, output) {
     partial <- filter_activity_by_type(partial, 'npod', npod_thres,act_mat_names=act_mat_names)
     partial <- filter_activity_by_type(partial, 'nac50', nac50_thres,act_mat_names=act_mat_names)
     partial <- filter_activity_by_type(partial, 'pod_med_diff', pod_diff_thres,act_mat_names=act_mat_names)
-    partial <- filter_activity_by_type(partial, 'hitcall', thres=NULL, decision=isstrong,act_mat_names=act_mat_names)
+    #partial <- filter_activity_by_type(partial, 'hitcall', thres=NULL, decision=isstrong,act_mat_names=act_mat_names)
+    partial <- filter_activity_by_type(partial, 'pod_med_diff', thres=NULL, decision=nocyto,act_mat_names=act_mat_names)
     partial <- filter_activity_by_type(partial, 'cc2', thres=NULL, decision=isgoodcc2,act_mat_names=act_mat_names)
-
+    partial <- filter_activity_by_type(partial, 'cv.wauc', thres=NULL, decision=nohighcv,act_mat_names=act_mat_names)
+    
     return(partial)
   })
   
   matrix_editor <- reactive({
     
     partial <- activity_filter()
+    # if it is data matrix
+    if (length(partial) == 2) return(partial)
     
     # create CV marks
     cv_mark <- get_cv_mark_mat(partial[['cv.wauc']], partial[['nwauc.logit']])
@@ -160,7 +186,7 @@ shinyServer(function(input, output) {
     activity_type <- ''
     
     # get all chemical information
-    chem_id_df <- get_lookup_list(chemical_loader(), master)
+    chem_id_df <- get_lookup_list(chemical_loader()[['id']], master)
     #ip <- subset(chem_id_df, ! is.na(StructureID), select=c(CAS, Cluster))
     
     # the basic identifies , GSID + Cluster
@@ -169,17 +195,29 @@ shinyServer(function(input, output) {
     # the cleaned matrices
     dt <- matrix_editor() # c('npod', 'nac50', 'nwauc.logit','wauc.logit', 'cv_mark', 'struct') 
     
-    if (profile_type == 'activity')
+    # if the input is data matrix
+    if (length(dt) == 2 ) 
     {
-      activity_type <- input$acttype
-      act <- dt[[activity_type]]
-      
+      activity_type <- names(dt)[1]
+      act <- dt[[1]]
+      cv <-  matrix("", nrow(act), ncol(act), dimnames=dimnames(act))
     } else
     {
-      act <- dt[['wauc.logit']]
+      if (profile_type == 'activity')
+      {
+        activity_type <- input$acttype
+        act <- dt[[activity_type]]
+        
+      } else
+      {
+        act <- dt[['wauc.logit']]
+      }
+      
+      cv <- dt[['cv_mark']]
+      
     }
     
-    cv <- dt[['cv_mark']]
+    # struct matrix
     struct <- dt[['struct']]
     
     # first, cluster the chemicals
@@ -201,7 +239,6 @@ shinyServer(function(input, output) {
     }
     # cluster assays by similarity 
     drows <- dist(t(act) , method = "euclidean") ## assays
-    
     return(list(dcols=dcols, drows=drows, annotation=annotation, annt_colors=annt_colors, act=act, struct=struct, cv=cv))
     
   })
@@ -262,25 +299,25 @@ shinyServer(function(input, output) {
   })
 
   output$contents <- renderDataTable({
-    if ( ! is.null(chemical_loader()) ) get_lookup_list(chemical_loader(), master)
+    if ( ! is.null(chemical_loader()) ) get_lookup_list(chemical_loader()[['id']], master)
   })
 
   output$assay_des <- renderDataTable({
     
-    #paras <- heatmap_para_generator() #heatmap_para_generator
-    #act <- paras[['act']]
-    #annotation <- paras[['annotation']]
-    #result <- get_output_df(act, annotation)
-    #return(result)
+#     paras <- heatmap_para_generator() #heatmap_para_generator
+#     act <- paras[['act']]
+#     annotation <- paras[['annotation']]
+#     result <- get_output_df(act, annotation)
+#     return(result)
     
     # for testing
-    paras <- activity_filter()
-    return(as.data.frame(paras[['nwauc.logit']]))
+     paras <- heatmap_para_generator()
+     return(data.frame(paras))
   })
   
 
   getVarWidth <- reactive({
-    if ( ! is.null(chemical_loader()) ) df <- get_lookup_list(chemical_loader(), master)
+    if ( ! is.null(chemical_loader()) ) df <- get_lookup_list(chemical_loader()[['id']], master)
     ncmpd <- sum(rowSums(apply(df, 2, function(x) x == '' | is.na(x))) == 0)
     if (ncmpd < 40)
     {

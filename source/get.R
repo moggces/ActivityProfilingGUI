@@ -161,12 +161,19 @@ get_heatmap_annotation <- function (d, input, master, cutoff=0.7, method="averag
     annotation3 <- data.frame(toxScore = rowSums(abs(dmat[[actType]]) ))                           
   } else if (actType == 'npod' | actType == 'nac50' )
   {
-    annotation3 <- data.frame(toxScore = unlist(lapply(1:nrow(dmat[[actType]]), function (x) sum(abs(dmat[[actType]][x,])*dmat[['nwauc.logit']][x,]) )))
+    if ( ! is.null(dmat[['nwauc.logit']]))
+    {
+      annotation3 <- data.frame(toxScore = unlist(lapply(1:nrow(dmat[[actType]]), function (x) sum(abs(dmat[[actType]][x,])*dmat[['nwauc.logit']][x,]) )))
+    } else
+    {
+      annotation3 <- data.frame(toxScore = rowSums(abs(dmat[[actType]]) ))
+    }
+
   }
   
   if (nrow(annotation3) > 0)
   {
-    rownames(annotation3) <- rownames(dmat[['nwauc.logit']])
+    rownames(annotation3) <- rownames(dmat[[1]])
     annotation <- merge(annotation, annotation3, by="row.names")
     rownames(annotation) <- annotation$Row.names
     annotation <- annotation[,-which(colnames(annotation) == 'Row.names')]

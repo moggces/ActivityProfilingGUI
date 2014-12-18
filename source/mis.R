@@ -57,7 +57,9 @@ filter_activity_by_type <- function(partial, type, thres=NULL, decision=FALSE, a
       ant_ids <- grepl('antagonism|inhibition', colnames(partial[[name]]))
       if (sum(ant_ids) > 0) 
       {
-        ids <- (partial[[type]][, ant_ids]*-1) < thres & ! is.na(partial[[type]][, ant_ids]) & ! is.na(partial[[name]][, ant_ids]) & partial[[name]][, ant_ids] > 0.0001
+        ids <- matrix(FALSE, nrow(partial[[name]][, ant_ids]), ncol(partial[[name]][, ant_ids]))
+        if (! is.null(thres) ) ids <- (partial[[type]][, ant_ids]*-1) < thres & ! is.na(partial[[type]][, ant_ids]) & ! is.na(partial[[name]][, ant_ids]) & partial[[name]][, ant_ids] > 0.0001
+        if ( decision ) ids <- ! is.na(partial[[type]][, ant_ids]) & ! is.na(partial[[name]][, ant_ids]) & partial[[name]][, ant_ids] > 0.0001
         partial[[name]][, ant_ids][ids] <- (partial[[name]][, ant_ids][ids])*-1
       }
       
@@ -67,6 +69,8 @@ filter_activity_by_type <- function(partial, type, thres=NULL, decision=FALSE, a
       if (type == 'nemax') ids <- abs(partial[[type]]) < thres & ! is.na(partial[[type]]) & ! is.na(partial[[name]]) & partial[[name]] > 0.0001
       if (type == 'hitcall' & isTRUE(decision)) ids <- partial[[type]] != 1 & ! is.na(partial[[name]]) & partial[[name]] > 0.0001
       if (type == 'cc2' & isTRUE(decision)) ids <- ( abs(partial[[type]]) != 1.1 & abs(partial[[type]]) != 1.2 & abs(partial[[type]]) != 2.1) & ! is.na(partial[[type]]) & ! is.na(partial[[name]]) & partial[[name]] > 0.0001
+      if (type == 'cv.wauc' & isTRUE(decision)) ids <- partial[[type]] > 1.4 & ! is.na(partial[[type]]) & ! is.na(partial[[name]]) & partial[[name]] > 0.0001
+        
       partial[[name]][ids] <- (partial[[name]][ids])*-1
     }
   }
@@ -102,14 +106,14 @@ assign_reverse_na_number <- function (partial, act_mat_names=c('npod', 'nac50', 
   return(result)
 }
 
-rename_mat_col_row <- function (partial, master, assay_names)
+rename_mat_col_row <- function (partial, master, assay_names, rename_assay=TRUE)
 {
   chemical_name_ref <- conversion(master, inp='GSID', out='Chemical.Name')
   
   for (name in names(partial))
   {
     rownames(partial[[name]]) <-  chemical_name_ref[as.character(rownames(partial[[name]])) ]
-    if (  name != 'struct')
+    if (  name != 'struct' & rename_assay )
     {
       
       pathway_ref <- conversion(assay_names, inp='assay', out='common_name')

@@ -12,14 +12,15 @@ shinyUI(pageWithSidebar(
     
     # input control
     h4('Input'),
-    fileInput('file1', 'Import a list of chemcials', multiple=FALSE),
-    helpText("Note: a tab-delimited file with two columns: CAS & Cluster"),
-    h6('or'),
     tags$textarea(id="cmpds", rows=3, cols=1, ""),
-    helpText("Note: copy & paste from excel file with two columns: CAS & Cluster"),
+    helpText("Note: copy & paste from excel file with two columns: CAS|GSID & Cluster"),
+    
     h6('or'),
-    selectInput("dataset", "Choose a pre-defined set:", 
-                choices = c("no selection", "polycyclic aromatic hydrocarbons (PAHs)", "flame retardants (FRs)")),
+    fileInput('file1', 'Import the data matrix', multiple=FALSE),
+#    helpText("Note: a tab-delimited file with two columns: CAS & Cluster|userClust"),
+#    h6('or'),
+#    selectInput("dataset", "Choose a pre-defined set:", 
+#                choices = c("no selection", "polycyclic aromatic hydrocarbons (PAHs)", "flame retardants (FRs)")),
     tags$hr(),
     
     # profiling options
@@ -49,6 +50,8 @@ shinyUI(pageWithSidebar(
     
     # todo: nwauc, emax, pod, ac50, pod_med_diff, call matrix
     conditionalPanel(
+      h4('Activity filtering (not applicable if loading the data matrix'),
+      
       condition = "(input.acttype == 'npod' || input.acttype == 'nac50' || input.acttype == 'nwauc.logit'  ) && input.proftype == 'activity'",
       sliderInput("nwauc_thres", 
                   "wAUC threshold", min=0, max=1, value=0.05, step=0.05),
@@ -63,12 +66,16 @@ shinyUI(pageWithSidebar(
                   "AC50 threshold", min=3, max=10, value=3, step=0.5),
       tags$br(),
       sliderInput("pod_diff_thres", 
-                  "ratio of signal to cytotoxicity", min=0, max=3, value=0, step=0.2),
-      tags$br(),
-      checkboxInput("isstrong", "wauc above the median of least potent (10 uM)", FALSE),
+                  "log10(ratio of signal to cytotoxicity)(inhibition-type assays only)", min=0, max=3, value=0, step=0.2),
+      checkboxInput("nocyto", "not cytotoxic (inhibition-type assays only)", FALSE),
+      #tags$br(),
+      #checkboxInput("isstrong", "wauc above the median of least potent (10 uM)", FALSE),
       
       tags$br(),
-      checkboxInput("isgoodcc2", "only curve class 1.1, 1.2, 2.1", FALSE)
+      checkboxInput("isgoodcc2", "only curve class 1.1, 1.2, 2.1", FALSE),
+      
+      tags$br(),
+      checkboxInput("nohighcv", "exclude high activity variation between sources", TRUE)
     ),
     
     tags$hr(),
@@ -121,7 +128,7 @@ shinyUI(pageWithSidebar(
       tabPanel( "Potency boxplot", plotOutput("box",  height=1000, width="500%")),
       tabPanel( 'Data', dataTableOutput('assay_des')),
       #tabPanelAbout()
-      tabPanel('About', includeMarkdown("test.Rmd"))
+      tabPanel('About', includeHTML("test.html"))
     )
   )
 ))

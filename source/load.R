@@ -10,6 +10,27 @@ load_input_file <- function (input_file)
   return(input)
 }
 
+load_data_matrix <- function (input_file, file_name)
+{
+  result <- list()
+  
+  dm_id <- 'unknown'
+  dm_id  <- sub(".*(nwauc\\.logit|npod|nac50).*", "\\1", file_name )
+  input <- read.table( input_file, header = TRUE, sep = "\t", quote = '', check.names=FALSE, comment.char = "") 
+  if (is.null(input$Cluster)) 
+  {
+    input[, "Cluster"] <- 'unassigned'
+    if ( ! is.null(input$userClust)) input[, "Cluster"] <- input$userClust 
+  }
+  pot_id_cols <- c('CAS','GSID', 'Chemical.Name','chemClust', 'userClust',	'toxScore', 'Cluster')
+  id_df <- input[, colnames(input) %in% pot_id_cols]
+  data_df <- input[,! colnames(input) %in% pot_id_cols]
+  rownames(data_df) <- id_df$CAS
+  result[['id']] <- subset(id_df, select=c(CAS, Cluster))
+  result[[dm_id]] <- data_df
+  return(result)
+}
+
 load_profile <- function (profile_file)
 {
   #return ( read.table(paste(getwd(),  profile_file, sep=""), header = TRUE, sep = "\t", quote = '"', comment.char = "") )
@@ -50,5 +71,6 @@ load_text_2_df <- function (textarea)
   mat <- do.call("rbind", rows)
   result <- data.frame(mat[-1,], stringsAsFactors=FALSE)
   colnames(result) <- mat[1,]
-  return(result)
+  if (is.null(result$Cluster)) result[, "Cluster"] <- 'unassigned'
+  return(list(id=result))
 }
