@@ -5,6 +5,12 @@
 # 3) in shiny server, once you delete a file but replace a file with same name. somwhow don't know how to refresh its
 # but if you update .R file, you can refresh to get new functions
 
+# chemical_loader() out: list(id, ?(nwauc.logit or npod or nac50 or unknown))
+# matrix_subsetter() out: list(activities or ?(nwauc.logit or npod or nac50 or unknown), struct)
+# activity_filter() out: same as above 
+# matrix_editor() out: list(nwauc.logit, npod, nac50,wauc.logit, struct, cv_mark)
+# heatmap_para_generator() out: list(dcols, drows, annotation, annt_colors, act=act, struct, cv)
+# select_plot()
 
 library(shiny)
 library(plyr)
@@ -25,20 +31,13 @@ source(paste(getwd(), "/source/load.R", sep=""), local=TRUE)
 source(paste(getwd(), "/source/mis.R", sep=""), local=TRUE)
 environment(pheatmap_new_label) <- environment(pheatmap)
 
-# the example files
-pah_file <- './data/pah_60_lead_clust_v3.txt'
-fr_file <- './data/flame_retardant_clusters_selected_v4.txt'
-
 # load assay related parameters
-logit_para_file <- './data/tox21_assay_collection.txt'  #logit_para_file call_match_pathway_name
+logit_para_file <- './data/tox21_assay_collection.txt'
 assay_names <- load_profile(logit_para_file) # global, dataframe output
 
 # load chemical information (will include purity later)
 profile_file <- './data/tox21_compound_id_v5a.txt'
 master <- load_profile(profile_file) # global, dataframe output
-
-# ??
-removeAbnormalDirection <- FALSE
 
 # load the activities (all data) and the structure fp matrix
 activities_rdata <- './data/activities.RData'
@@ -46,30 +45,36 @@ struct_mat_rdata <- './data/struct_mat.RData'
 load(activities_rdata) # global, matrix output, activities
 load(struct_mat_rdata) # global, matrix output, struct_mat
 
-
 # heatmap settings
 wauc_breaks <- c( -1, -0.75, -0.5, -0.25, -0.1, -0.02, 0, 0.0001, 0.1, 0.25, 0.5, 0.75, 1) # upper is filled , lower is empty 
 wauc_colors <-  c("#053061" ,"#2166AC" ,"#4393C3" ,"#92C5DE", "#D1E5F0", "#F7F7F7", "gray", "#FDDBC7" ,"#F4A582" ,"#D6604D" ,"#B2182B", "#67001F"  ) #RdBu
 wauc_leg_breaks <- c(-1, -0.75, -0.5, -0.25,  0,   0.25, 0.5, 0.75, 1 )
 wauc_leg_labels <- c("-1", "-0.75", "-0.5", "-0.25",  "0", "0.25", "0.5", "0.75", "1")
-potency_breaks <- c(-10, -9, -7.5, -5, -4.5, -4, -0.02, 0, 0.0001, 4, 4.5, 5, 7.5, 9, 10)
-potency_colors <- c("darkorange","#543005", "#8C510A", "#BF812D", "#DFC27D", "#F6E8C3", "#F5F5F5", "gray", "#C7EAE5", "#80CDC1", "#35978F", "#01665E", "#003C30", "chartreuse") #BrBG
-potency_leg_breaks <- c(-10, -9, -7.5, -5, -4.5, -4,  0,  4, 4.5, 5, 7.5, 9,10 )
-potency_leg_labels <- c("-10", "-9", "-7.5", "-5", "-4.5", "-4",  "0",  "4", "4.5", "5", "7.5", "9", "10")
+
+potency_breaks <- c(-0.02, 0, 0.0001, 4, 4.5, 5, 7.5, 9, 10)
+potency_colors <- c("#F5F5F5", "gray", "#C7EAE5", "#80CDC1", "#35978F", "#01665E", "#003C30", "chartreuse") #BrBG
+potency_leg_breaks <- c( 0,  4, 4.5, 5, 7.5, 9,10 )
+potency_leg_labels <- c( "inactive",  "100uM", "30uM", "10uM", "0.3uM", "1nM", "10nM")
+
+# potency_breaks <- c(-10, -9, -7.5, -5, -4.5, -4, -0.02, 0, 0.0001, 4, 4.5, 5, 7.5, 9, 10)
+# potency_colors <- c("darkorange","#543005", "#8C510A", "#BF812D", "#DFC27D", "#F6E8C3", "#F5F5F5", "gray", "#C7EAE5", "#80CDC1", "#35978F", "#01665E", "#003C30", "chartreuse") #BrBG
+# potency_leg_breaks <- c(-10, -9, -7.5, -5, -4.5, -4,  0,  4, 4.5, 5, 7.5, 9,10 )
+# potency_leg_labels <- c("-10", "-9", "-7.5", "-5", "-4.5", "-4",  "0",  "4", "4.5", "5", "7.5", "9", "10")
 
 
 shinyServer(function(input, output) {
-   
+
+# chemical_loader()
   chemical_loader <- reactive({
     
     result <- NULL
-    inFile <- input$file1
     path <- NULL
-#     path <- switch(input$dataset,
-#                      "no selection" = NULL, 
-#                      "polycyclic aromatic hydrocarbons (PAHs)" = pah_file,
-#                      "flame retardants (FRs)" = fr_file)
+    
+    # input file
+    inFile <- input$file1
+    # input textarea
     textdata <- input$cmpds
+    
     if (! is.null(inFile)) { path <- inFile$datapath; filen <- inFile$name }
     if (textdata != '' ) result <- load_text_2_df(textdata)
     if (! is.null(path)) result <- load_data_matrix(path, filen) # as long as path or file has something it will override
@@ -77,12 +82,13 @@ shinyServer(function(input, output) {
     return(result)
 
   })
-  
+
+# matrix_subsetter()
   matrix_subsetter <- reactive({
     partial <- NULL
     reg_sel <- input$reg_sel # select the assays
     inv_sel <- input$inv_sel # inverse the selection
-    rename_assay <- TRUE
+    rename_assay <- TRUE # use the assay_names df
     
     # get all chemical information
     id_info <- chemical_loader()
@@ -93,12 +99,12 @@ shinyServer(function(input, output) {
     # the basic identifies , GSID + Cluster
     ip <- subset(chem_id_df, GSID != '' & CAS != '', select=c(GSID, Cluster))
     
-    # collect all the matrices
+    # collect all the matrices and store in full (list)
     
     full <- list()
     full <- activities 
     
-    # if it is a data matrix
+    # if it is a data matrix input, only CAS ID is allowd
     if (length(id_info) > 1)
     {
       full <- id_info[! grepl('id', names(id_info))]
@@ -106,6 +112,8 @@ shinyServer(function(input, output) {
       rownames(full[[1]]) <- chemical_name_ref[as.character(rownames(full[[1]]))]
       rename_assay <- FALSE
     }
+    
+    # the structure fingerprint matrix
     full[['struct']] <- struct_mat
     
     # subset the matrices by chemicals
@@ -122,8 +130,11 @@ shinyServer(function(input, output) {
     
     return(partial)
   })
-  
+
+# activity_filter()  
   activity_filter <- reactive({
+    
+    # load all the activity filter parameters
     profile_type <- input$proftype
     activity_type <- input$acttype
     nwauc_thres <- input$nwauc_thres
@@ -138,15 +149,12 @@ shinyServer(function(input, output) {
     
     partial <- matrix_subsetter()
     
-    # if it is data matrix
+    # if it is data matrix input, don't change 
     if (length(partial) == 2) return(partial)
    
     act_mat_names <- c('npod', 'nac50', 'nwauc.logit')
     # reverse direction of mitotox could be meaningful
     partial <- fix_mitotox_reverse(partial,act_mat_names=act_mat_names )
-    
-#    # sort the matrix
-#    partial <- sort_matrix(partial)
     
     # filtering
     partial <- filter_activity_by_type(partial, 'nwauc.logit', nwauc_thres, act_mat_names=act_mat_names)
@@ -161,11 +169,12 @@ shinyServer(function(input, output) {
     
     return(partial)
   })
-  
+
+# matrix_editor()
   matrix_editor <- reactive({
     
     partial <- activity_filter()
-    # if it is data matrix
+    # if it is data matrix input, skip 
     if (length(partial) == 2) return(partial)
     
     # create CV marks
@@ -179,7 +188,7 @@ shinyServer(function(input, output) {
     return(acts)
   })
   
-  
+#heatmap_para_generator()  
   heatmap_para_generator <- reactive({
     sort_meth <- input$sort_method
     profile_type <- input$proftype
@@ -187,15 +196,14 @@ shinyServer(function(input, output) {
     
     # get all chemical information
     chem_id_df <- get_lookup_list(chemical_loader()[['id']], master)
-    #ip <- subset(chem_id_df, ! is.na(StructureID), select=c(CAS, Cluster))
     
     # the basic identifies , GSID + Cluster
     ip <- subset(chem_id_df, GSID != '' & CAS != '', select=c(GSID, Cluster))
     
     # the cleaned matrices
-    dt <- matrix_editor() # c('npod', 'nac50', 'nwauc.logit','wauc.logit', 'cv_mark', 'struct') 
+    dt <- matrix_editor() 
     
-    # if the input is data matrix
+    # if the input is data matrix, creat a blank CV matrix
     if (length(dt) == 2 ) 
     {
       activity_type <- names(dt)[1]
@@ -223,6 +231,7 @@ shinyServer(function(input, output) {
     # first, cluster the chemicals
     dcols <- dist(struct, method = "binary") ## chemicals
     
+    # very, very cumbersome functions. better to split, merge dt + activity_type
     annotation <- get_heatmap_annotation(dcols, ip, master, dmat=dt, actType=activity_type) #data.frame output
     annt_colors <- get_heatmap_annotation_color(annotation,  actType=activity_type)
     
@@ -304,21 +313,28 @@ shinyServer(function(input, output) {
 
   output$assay_des <- renderDataTable({
     
-#     paras <- heatmap_para_generator() #heatmap_para_generator
-#     act <- paras[['act']]
-#     annotation <- paras[['annotation']]
-#     result <- get_output_df(act, annotation)
-#     return(result)
+    paras <- heatmap_para_generator() #heatmap_para_generator
+    act <- paras[['act']]
+    annotation <- paras[['annotation']]
+    result <- get_output_df(act, annotation)
+    return(result)
     
     # for testing
-     paras <- heatmap_para_generator()
-     return(data.frame(paras))
+#      paras <- heatmap_para_generator()
+#      return(data.frame(paras))
   })
   
 
   getVarWidth <- reactive({
-    if ( ! is.null(chemical_loader()) ) df <- get_lookup_list(chemical_loader()[['id']], master)
-    ncmpd <- sum(rowSums(apply(df, 2, function(x) x == '' | is.na(x))) == 0)
+    ncmpd <- 0 
+    if ( ! is.null(chemical_loader()) ) 
+    {
+      #df <- get_lookup_list(chemical_loader()[['id']], master)
+      #ncmpd <- sum(rowSums(apply(df, 2, function(x) x == '' | is.na(x))) == 0)
+      chem_id_df <- get_lookup_list(chemical_loader()[['id']], master)
+      ip <- subset(chem_id_df, GSID != '' & CAS != '', select=c(GSID, Cluster))
+      ncmpd <- nrow(ip)
+    }
     if (ncmpd < 40)
     {
       return(1200)
@@ -359,7 +375,7 @@ shinyServer(function(input, output) {
 
   output$downloadData <-  downloadHandler(
     filename = function() {
-      if (input$proftype == 'profile')
+      if (input$proftype == 'signal')
       {
         paste(input$proftype, '_', input$sigtype, '.txt', sep='')
       } else

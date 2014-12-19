@@ -1,7 +1,6 @@
 library(shiny)
 library(markdown)
-# todo: need to be replaced by markdown page
-#tabPanelAbout <- source(paste(getwd(), "/source/about.R", sep=""))$value
+
 
 shinyUI(pageWithSidebar(
   
@@ -10,18 +9,7 @@ shinyUI(pageWithSidebar(
   
   sidebarPanel(
     
-    # input control
-    h4('Input'),
-    tags$textarea(id="cmpds", rows=3, cols=1, ""),
-    helpText("Note: copy & paste from excel file with two columns: CAS|GSID & Cluster"),
-    
-    h6('or'),
-    fileInput('file1', 'Import the data matrix', multiple=FALSE),
-#    helpText("Note: a tab-delimited file with two columns: CAS & Cluster|userClust"),
-#    h6('or'),
-#    selectInput("dataset", "Choose a pre-defined set:", 
-#                choices = c("no selection", "polycyclic aromatic hydrocarbons (PAHs)", "flame retardants (FRs)")),
-    tags$hr(),
+
     
     # profiling options
     h4('Profiling'),
@@ -30,7 +18,6 @@ shinyUI(pageWithSidebar(
                  list("signal", "activity")),
     tags$hr(),
     
-    # todo: wauc matrix
     conditionalPanel(
       condition = "input.proftype == 'signal'",
       radioButtons("sigtype", "Signal type:",
@@ -39,7 +26,6 @@ shinyUI(pageWithSidebar(
     
     tags$br(),
     
-    # todo: nwauc, pod, ac50 matrix
     conditionalPanel(
       condition = "input.proftype == 'activity'",
       radioButtons("acttype", "Activity type:",
@@ -48,9 +34,8 @@ shinyUI(pageWithSidebar(
     
     tags$br(),
     
-    # todo: nwauc, emax, pod, ac50, pod_med_diff, call matrix
     conditionalPanel(
-      h4('Activity filtering (not applicable if loading the data matrix'),
+      h4('Activity filtering (not applicable if loading the data matrix)'),
       
       condition = "(input.acttype == 'npod' || input.acttype == 'nac50' || input.acttype == 'nwauc.logit'  ) && input.proftype == 'activity'",
       sliderInput("nwauc_thres", 
@@ -93,16 +78,25 @@ shinyUI(pageWithSidebar(
     h4('Filter assays'), 
     textInput('reg_sel', 'names (regular expression)', 'cytotoxicity'),
     checkboxInput("inv_sel", "invert your selection", TRUE),
-#    helpText("e.g. to view only assays used Tox21 Library version#1: cytotoxicity|pparg_antagonism|ppard|are|hse plus inverse"),
-#    helpText("to select exact assays: \bmitotox\b|er_antagonism|ar_antagonism(mdakb2)|\baromatase\b|\bare\b"),
     
+    tags$hr(),
+    
+    # input control
+    h4('Input'),
+    tags$textarea(id="cmpds", rows=3, cols=1, ""),
+    helpText("Note: copy & paste from excel file with two columns: CAS|GSID & Cluster"),
+    
+    h6('or'),
+    fileInput('file1', 'Import the data matrix', multiple=FALSE),
+    #    helpText("Note: a tab-delimited file with two columns: CAS & Cluster|userClust"),
+    #    h6('or'),
+    #    selectInput("dataset", "Choose a pre-defined set:", 
+    #                choices = c("no selection", "polycyclic aromatic hydrocarbons (PAHs)", "flame retardants (FRs)")),
     tags$hr(),
     
     # miscellaneous functions
     h4('Others'),
 
-    # todo: adjust the variable
-    # to show the dendrogram
     checkboxInput("showdendro", "show compound similarity dendrogram ", FALSE),
     
     tags$br(),
@@ -123,11 +117,9 @@ shinyUI(pageWithSidebar(
     tabsetPanel(
      
       tabPanel( 'Input chemicals', dataTableOutput('contents')),
-      #tabPanel( 'Input chemicals', htmlOutput('contents')),
       tabPanel( "Profile", plotOutput("profiling", height=1000, width="500%")), # i think the height don't affect
       tabPanel( "Potency boxplot", plotOutput("box",  height=1000, width="500%")),
       tabPanel( 'Data', dataTableOutput('assay_des')),
-      #tabPanelAbout()
       tabPanel('About', includeHTML("test.html"))
     )
   )

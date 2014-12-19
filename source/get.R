@@ -1,82 +1,29 @@
-#output: list
-get_mat <- function (master_df, para, select=c('nwauc', 'call', 'pod', 'ac50'), removeAbnormalDirection=TRUE, isSignal=FALSE)
+# specific to activity file generated from KNIME
+get_property_name <- function (master)
 {
-  nwauc_mat <- NULL
-  call_mat <- NULL
-  pod_mat <- NULL
-  ac_mat <- NULL
-  
-  if ('nwauc' %in% select )
-  {
-    if (isSignal) 
-    {
-      select_opt <- 'wauc'
-    } else
-    {
-      select_opt <- 'nwauc'
-    }
-    
-    temp_mat <- master_df[, c('CAS', grep(paste("_", select_opt, sep=""), colnames(master_df), value=TRUE))]
-    if (removeAbnormalDirection)
-    {
-      temp_mat[,-c(1)][temp_mat[,-c(1)] < 0 & ! is.na(temp_mat[,-c(1)])] <- NA
-    }
-    temp_mat <- melt(temp_mat,  id.vars=c('CAS'), variable.name = 'pathway', value.name = 'nwauc_4toxpi')
-    temp_mat$inv_logit <- NA
-    temp_mat$inv_logit <- unlist(lapply(1:length(temp_mat$nwauc_4toxpi), function(x) convert_wauc_2logit(select=select_opt, temp_mat$nwauc_4toxpi[x], temp_mat$pathway[x], para))	)
-    
-    #### sanity check: plotting
-    #temp_mat_2 <- merge(temp_mat, para, by.x="pathway", by.y="nwauc")
-    #temp_mat_2 <- subset(temp_mat_2, ! is.na(nwauc_4toxpi) )
-    #temp_mat_2$activity <- 'inactive'
-    #temp_mat_2[abs(temp_mat_2$nwauc_4toxpi) > temp_mat_2$low  , ]$activity <- 'marginal active'
-    #temp_mat_2[abs(temp_mat_2$nwauc_4toxpi) > temp_mat_2$high, ]$activity <- 'active'
-    
-    #dev.new()
-    #p <- ggplot(temp_mat_2, aes(x=nwauc_4toxpi, y=inv_logit, color=activity))
-    #p + geom_point(alpha=0.5)  + facet_wrap(~ pathway_name, scales = "free_x")  + scale_x_continuous("raw wAUC", limits = c(0, 100)) + scale_y_continuous("normalized wAUC")
-    
-    # check the distribution
-    temp_mat <- dcast(temp_mat, CAS ~ pathway, value.var='inv_logit')
-    nwauc_mat <- temp_mat[, -c(1)]
-    #mat[is.na(temp_mat) ] <- -0.1
-    rownames(nwauc_mat) <- temp_mat$CAS
-    nwauc_mat <- nwauc_mat[order(rownames(nwauc_mat)),]
-    nwauc_mat <- nwauc_mat[,order(colnames(nwauc_mat))]
-  }
-  
-  if ( 'call' %in%  select )
+  col_list <- strsplit(colnames(master), '.', fixed=TRUE)
+  #unique(unlist(lapply(col_list, function (x) x[[length(x)]]))) # get the unique assay name
+  names <- lapply(col_list, function (x)
   {
     
-  }
-  
-  if ( 'pod' %in% select )
-  {
-    temp_mat <- master_df[, c('CAS', grep(paste("_", 'pod_4toxpi', sep=""), colnames(master_df), value=TRUE))]
-    if (removeAbnormalDirection)
+    if (length(x) == 3)
     {
-      temp_mat[,-c(1)][temp_mat[,-c(1)] < 0 & ! is.na(temp_mat[,-c(1)])] <- NA
-    }
-    pod_mat <- temp_mat[, -c(1)]
-    rownames(pod_mat) <- temp_mat$CAS
-    pod_mat <- pod_mat[order(rownames(pod_mat)),]
-    pod_mat <- pod_mat[,order(colnames(pod_mat))]
+      return(paste(x[[1]], '.', x[[2]], sep=""))
+    } else {return(x[[1]])}
+    
   }
-  
-  if (  'ac50' %in% select)
-  {
-    temp_mat <- master_df[, c('CAS', grep(paste("_", 'ac50_4toxpi', sep=""), colnames(master_df), value=TRUE))]
-    if (removeAbnormalDirection)
-    {
-      temp_mat[,-c(1)][temp_mat[,-c(1)] < 0 & ! is.na(temp_mat[,-c(1)])] <- NA
-    }
-    ac_mat <- temp_mat[, -c(1)]
-    rownames(ac_mat) <- temp_mat$CAS
-    ac_mat <- ac_mat[order(rownames(ac_mat)),]
-    ac_mat <- ac_mat[,order(colnames(ac_mat))]
-  }
-  
-  return(list(act=nwauc_mat, call=call_mat, pod=pod_mat, ac50=ac_mat))
+  )
+  names <- unique(unlist(names))
+  return(names)
+}
+
+# a wrapper for join, it can detect, CAS, GSID automatically
+get_lookup_list <- function (input, master)
+{
+  #result <- subset(master, select=c(CAS, Chemical.Name, StructureID))
+  #result <- merge(input,result, by='CAS', all.x=TRUE)
+  result <- join(input, master)
+  return(result)
 }
 
 # filter the matrix by chemical input 
@@ -105,16 +52,22 @@ get_assay_mat <- function (partial, regSel, invSel=FALSE)
   return(partial)
 }
 
-
-
-get_lookup_list <- function (input, master)
+# its linked with nwauc.logit matrix results. if active and high CV -> mark
+get_cv_mark_mat <- function(cv, nwauc)
 {
-  #result <- subset(master, select=c(CAS, Chemical.Name, StructureID))
-  #result <- merge(input,result, by='CAS', all.x=TRUE)
-  result <- join(input, master)
-  return(result)
+  cv_mark <- cv
+  cv_mark[is.na(cv_mark) ] <- -0.1
+  cv_mark[cv_mark > 1.4  & nwauc > 0.0001 ] <- "#"
+  cv_mark[cv_mark != "#"] <- ''
+  return(cv_mark)
+  
 }
 
+# dependent on conversion
+# d: is the distance matrix
+# input: chemical identification (GSID + Cluster)
+# master: all mapping info
+# dmat
 
 get_heatmap_annotation <- function (d, input, master, cutoff=0.7, method="average", dmat, actType='')
 {
@@ -168,7 +121,7 @@ get_heatmap_annotation <- function (d, input, master, cutoff=0.7, method="averag
     {
       annotation3 <- data.frame(toxScore = rowSums(abs(dmat[[actType]]) ))
     }
-
+    
   }
   
   if (nrow(annotation3) > 0)
@@ -182,6 +135,8 @@ get_heatmap_annotation <- function (d, input, master, cutoff=0.7, method="averag
   return(annotation)
 }
 
+# rainbow color to generate unique colors
+# toxScore is a continuous color
 get_heatmap_annotation_color <- function(annotation, actType='')
 {
   user <- rainbow(length(unique(annotation[['userClust']])))
@@ -190,17 +145,18 @@ get_heatmap_annotation_color <- function(annotation, actType='')
   names(chem) <- levels(annotation[['chemClust']])
   
   if (actType != '')
-  #if (! is.null(actType))
+    #if (! is.null(actType))
   {
     tox <-  c("#F7F4F9", "#E7E1EF", "#D4B9DA", "#C994C7", "#DF65B0", "#E7298A", "#CE1256", "#980043", "#67001F") #PuRd
     return(list(userClust=user, chemClust=chem, toxScore=tox))
-   
+    
   } else
   {
     return(list(userClust=user, chemClust=chem))
   }
   
 }
+
 
 get_output_df <- function (act, annotation)
 {
@@ -247,30 +203,6 @@ get_pod_boxplot <- function (pod, fontsize, sortby, dcols, global_para)
   return(p)
 }
 
-get_property_name <- function (master)
-{
-  col_list <- strsplit(colnames(master), '.', fixed=TRUE)
-  #unique(unlist(lapply(col_list, function (x) x[[length(x)]]))) # get the unique assay name
-  names <- lapply(col_list, function (x)
-  {
-    
-    if (length(x) == 3)
-    {
-      return(paste(x[[1]], '.', x[[2]], sep=""))
-    } else {return(x[[1]])}
-    
-  }
-  )
-  names <- unique(unlist(names))
-  return(names)
-}
 
-get_cv_mark_mat <- function(cv, nwauc)
-{
-  cv_mark <- cv
-  cv_mark[is.na(cv_mark) ] <- -0.1
-  cv_mark[cv_mark > 1.4  & nwauc > 0.0001 ] <- "#"
-  cv_mark[cv_mark != "#"] <- ''
-  return(cv_mark)
 
-}
+
