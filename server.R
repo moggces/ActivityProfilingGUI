@@ -255,6 +255,7 @@ shinyServer(function(input, output) {
   
     select_plot <- reactive({
     showDendrogram <- input$showdendro
+    keepsize <- input$keepsize
     profile_type <- input$proftype
     sort_meth <- input$sort_method
     fsize <- input$fontsize
@@ -326,11 +327,10 @@ shinyServer(function(input, output) {
   
 
   getVarWidth <- reactive({
-    ncmpd <- 0 
-    if ( ! is.null(chemical_loader()) ) 
+    ncmpd <- 0
+    keepsize <- input$keepsize
+    if ( ! is.null(chemical_loader()) & ! keepsize) 
     {
-      #df <- get_lookup_list(chemical_loader()[['id']], master)
-      #ncmpd <- sum(rowSums(apply(df, 2, function(x) x == '' | is.na(x))) == 0)
       chem_id_df <- get_lookup_list(chemical_loader()[['id']], master)
       ip <- subset(chem_id_df, GSID != '' & CAS != '', select=c(GSID, Cluster))
       ncmpd <- nrow(ip)
@@ -412,6 +412,7 @@ output$downloadPlot <- downloadHandler(
 
 select_plot2 <- function () {
   showDendrogram <- input$showdendro
+  keepsize <- input$keepsize
   profile_type <- input$proftype
   sort_meth <- input$sort_method
   fsize <- input$fontsize

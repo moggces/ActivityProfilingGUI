@@ -5,7 +5,7 @@ library(markdown)
 shinyUI(pageWithSidebar(
   
   # application title
-  headerPanel("Compound signal/activity profiling (by Tox21 qHTS assays)"),
+  headerPanel("Compound signal/activity profiling"),
   
   sidebarPanel(
     
@@ -97,7 +97,8 @@ shinyUI(pageWithSidebar(
     # miscellaneous functions
     h4('Others'),
 
-    checkboxInput("showdendro", "show compound similarity dendrogram ", FALSE),
+    checkboxInput("showdendro", "show compound similarity dendrogram", FALSE),
+    checkboxInput("keepsize", "keep heatmap size one page", FALSE),
     
     tags$br(),
     
