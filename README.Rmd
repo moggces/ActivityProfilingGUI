@@ -1,0 +1,185 @@
+---
+output: html_document
+---
+## A R Shiny interface to explore activity profiling data
+The pipeline identifies reproducible patterns in assays and interprets the results afterwards.
+
+For a compound which is called as _active_ in in an assay. It could mean:
+
+1. It may be an active relevant to pathways in human. 
+2. It may be a cell-type specific active.
+3. it may be an artifact not identified in current pipeline (e.g., frequent hitters in _Bla_ or _Luc_ technology)
+
+### Requirement
+
+* firefox or chrome browser with the link on NIEHS JOBS sever [JOBS](http://jobs.niehs.nih.gov:3838/myapps/profiling2/)
+
+or
+
+* download the shiny app from [ActivityProfilingGUI](https://github.com/moggces/ActivityProfilingGUI)
+```{r eval=FALSE }
+library(shiny)
+runApp()
+```
+
+***
+
+### Input
+Two types of input are allowed: chemicals and data matrix
+
+##### chemicals
+1. creat two columns of data (i.e., chemical ID and its attribute) in excel
+  + chemical ID: two types are allowed, **CAS** and **GSID**
+      + CAS: Chemical Abstracts Service registration ID, e.g., 83-79-4
+      + GSID: from EPA DSSTox, e.g., gsid_20464
+  + attribute: any class attribute associated with the chemical that could be compared with the in vitro data
+2. create column names (case sensitive): (**CAS** or **GSID**) and **Cluster**
+3. copy and paste to the text area
+
+or **Cluster** columns can be omitted
+
+###### Examples
+CAS | Cluster
+----| -------
+83-79-4 | positive_zfish
+80-05-7 | negative_zfish
+
+
+##### data matrix (advanced function):
+1. the downloaded activitiy data data can be modified and re-uploaded.
+2. other data matrix with CAS as ID and comparable activity information can be uploaded.
+
+###### Notes
+* two forms of activity are allowed (see _activity type_), specified by the file name
+    + nwauc.logit
+    + npod or nac50
+* _Activity filtering_ function becomes invalid 
+
+***
+
+### Profiling
+
+##### signal
+results observation, e.g., whether the compound causes increasing or decreasing signal
+
+    * signal type
+    currently only wauc is available, suitable for compound grouping
+        
+##### activity
+results interpretation, e.g., whether the compound is active
+
+    * activity type
+        + wauc: overall effect of the chemical
+        + pod: assay-dependent point-of-departure 
+        + ac50: half-maximal effect concentration
+    
+###### activity type
+
+type | value range | value description
+-----|-------------| -----------------
+wauc | 0 ~ 1 | higher value -> higher activity <br> 0 -> inactive <br> value > 0.05 -> active <br> 1E-4 -> inconlusive
+pod | log10(M)\*(-1) | higher value -> more potent <br> 1E-4 -> inconlusive <br> 0 -> inactive
+
+ac50 type is same as pod type. 
+
+***
+
+### Activity filtering
+The default activity results are based on pipeline. But the activities can be **further** filtered by following parameters. 
+
+* wAUC threshold: see above
+* Emax threshold: half-maximal concentration (e.g., 30% relative to the positive control)
+* POD threshold: see above
+* AC50 threshold: see above
+* log10(ratio of signal to cytotoxicity) (for inhibition-type assays): (e.g., 1 => 10 fold between signal and cytotoxicity).
+The pipeline uses assay-dependent threshold, mostly ~ 5 fold.
+* not cytotoxic (for inhibition-type assays): toggle ON to exclude any activity interpreted under cytotoxicity condition
+* only curve class 1.1, 1.2, 2.1: toggle ON to include only activities from  two asymptote + strong/weak Emax + good fit or one asymptote + strong Emax + good fit in at least one run
+* exclude high activity variation between sources: toggle OFF to include more potential activity, however, these included activities can still be recognized in the heatmap by the # sign
+
+***
+
+### Compound sorting
+The columns of the heatmap can be ordered in three methods:
+
+1. structure similarity
+    + Tanimoto cofficient based on Leadscope structural fingerprints
+    + hierarchical clustering with average linkage
+    + chemicals are grouped by cutoff 0.7
+    + a new parameter is created, chemClust, where chemClust = 0, are the compounds that cannot form clusters. 
+    
+2. activity similarity
+    + Euclidean distance based on respective activities
+    + hierarchical clustering with average linkage
+    
+3. toxicity score (only for __activity__)
+    + sum of the activities (i.e. unbounded, dependent on # of assasy used)
+        + wauc: sum of wauc values
+        + pod or ac50: sum of wauc-weighted pod or ac50 values (not applicable for data matrix input)
+
+***
+
+### Assay filtering
+
+Please see the __Assays__ tab to get complete assay (common_name column) information
+
+Simple regular expression rules:
+
+1. how to get all specific assays
+    + put _cytotoxicity_ in the text box plus toggle _ON_ invert your selection
+2. how to get all antagonism or inhibition and specific assays
+    + put antagonism\_|inhibition\_ in the text box plus toggle _OFF_ invert your selection
+3. how to get all agonism and specific assays
+    + put \\bagonism\_ in the text box plus toggle _OFF_ invert your selection
+
+***
+
+### Tabs
+
+#### Input chemicals
+
+If the input chemicals are not available, they will not have _GSID_. 
+Current information is based on Ann Richard's v5a file. 
+
+#### Profile
+
+The heatmap will be displayed here. 
+
+##### main map
+
+* columns are compounds
+* rows are assays
+* cells are activities
+
+##### annotation map
+
+* columns are compounds
+* first row is toxScore (only available in __activity__)
+* second row is userClust (__Cluster__)
+* third row is chemCust
+
+#### Potency plot
+
+Only for pod or ac50 as activity.
+
+#### Data 
+
+background data used for heatmap and potency plot
+
+#### Assays
+
+assay information
+
+***
+
+### Others
+
+1. show the clustered dendrogram instead of the heatmap (toggle ON show compound similarity dendrogram)
+2. limit the heatmap/potency plot in one page (toggle ON keep heatmap size one page)
+3. adjust font size when downloading heatmap or online
+
+***
+
+### References
+
+contact [Jui-Hua Hsieh](mailto:juihua.hsieh@gmail.com) for more information 

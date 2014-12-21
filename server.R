@@ -12,6 +12,10 @@
 # heatmap_para_generator() out: list(dcols, drows, annotation, annt_colors, act=act, struct, cv)
 # select_plot()
 
+# todo:
+# 1. download potency plot
+# 2. broaden the "unknown" color scheme
+
 library(shiny)
 library(plyr)
 library(reshape2)
@@ -312,7 +316,7 @@ shinyServer(function(input, output) {
     if ( ! is.null(chemical_loader()) ) get_lookup_list(chemical_loader()[['id']], master)
   })
 
-  output$assay_des <- renderDataTable({
+  output$dd <- renderDataTable({
     
     paras <- heatmap_para_generator() #heatmap_para_generator
     act <- paras[['act']]
@@ -325,6 +329,13 @@ shinyServer(function(input, output) {
 #      return(data.frame(paras))
   })
   
+  output$assay_info <- renderDataTable({
+  
+    col_n <- c('common_name','technology','cell_type','species','abbreviation')
+    result <- assay_names[, colnames(assay_names) %in% col_n]
+    return(result)
+    
+  })
 
   getVarWidth <- reactive({
     ncmpd <- 0
