@@ -120,8 +120,9 @@ shinyUI(pageWithSidebar(
       tabPanel( 'Input chemicals', dataTableOutput('contents')),
       tabPanel( "Profile", plotOutput("profiling", height=1000, width="500%")), # i think the height don't affect
       tabPanel( "Potency boxplot", plotOutput("box",  height=1000, width="500%")),
-      tabPanel( 'Data', dataTableOutput('assay_des')),
-      tabPanel('About', includeHTML("test.html"))
+      tabPanel( 'Data', dataTableOutput('dd')),
+      tabPanel( 'Assays', dataTableOutput('assay_info')),
+      tabPanel('About', includeHTML("README.html"))
     )
   )
 ))
