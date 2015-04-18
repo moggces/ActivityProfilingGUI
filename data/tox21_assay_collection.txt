@@ -1,56 +1,64 @@
-assay	specific	common_name	technology	cell_type	species	abbreviation	letters
-ahr	yes	activation_AhR	luciferase	HepG2	human	Aryl Hydrocarbon Receptor	A
-elg1-luc-agonist	yes	activation_ATAD5	luciferase	Hek293	human		H
-esre-bla	yes	activation_EndoRS	beta-lactamase	HeLa	human	Endoplasmic Reticulum Stress 	M
-hse-bla	yes	activation_HSP	beta-lactamase	HeLa	human	Heat Shock Pathway	T
-nfkb-bla-agonist	yes	activation_NFkb	beta-lactamase	ME-180	human	Nuclear Factor Kappa Beta	V
-are-bla	yes	activation_Nrf2	beta-lactamase	HepG2	human	nuclear factor erythroid 2-related factor 2	D
-p53-bla	yes	activation_p53	beta-lactamase	HCT-116	human		W
-ar-mda-kb2-luc-agonist	yes	agonism_AR/full	luciferase	MDA-kb2	human	Androgen Receptor	E
-ar-bla-agonist	yes	agonism_AR/partial	beta-lactamase	Hek293	human	Androgen Receptor	B
-fxr-bla-agonist	yes	agonism_FXR	beta-lactamase	Hek293	human	Farnesoid X Receptor	N
-ppard-bla-agonist	yes	agonism_PPARd	beta-lactamase	Hek293	human	Peroxisome Proliferator-Activated Receptor delta	X
-pparg-bla-agonist	yes	agonism_PPARg	beta-lactamase	Hek293	human	Peroxisome Proliferator-Activated Receptor gamma	Z
-rar-agonist	yes	agonism_RSP	luciferase	C3H10T1/2	mouse	Retinol Signaling Pathway	AB
-gh3-tre-agonist	yes	agonism_TR	luciferase	GH3	rat	Thyroid Receptor	P
-vdr-bla-agonist	yes	agonism_VDR	beta-lactamase	Hek293	human	Vitamin D Receptor	AD
-er-luc-bg1-4e2-agonist	yes	agonism_ER/full	luciferase	BG1	human	Estrogen Receptor	K
-er-bla-agonist	yes	agonism_ER/partial	beta-lactamase	Hek293	human	Estrogen Receptor	I
-gr-hela-bla-agonist	yes	agonism_GR	beta-lactamase	HeLa	human	Glucocorticoid Receptor	R
-ar-mda-kb2-luc-antagonist	yes	antagonism_AR/full	luciferase	MDA-kb2	human	Androgen Receptor	F
-ar-bla-antagonist	yes	antagonism_AR/partial	beta-lactamase	Hek293	human	Androgen Receptor	C
-er-luc-bg1-4e2-antagonist	yes	antagonism_ER/full	luciferase	BG1	human	Estrogen Receptor	L
-er-bla-antagonist	yes	antagonism_ER/partial	beta-lactamase	Hek293	human	Estrogen Receptor	J
-fxr-bla-antagonist	yes	antagonism_FXR	beta-lactamase	Hek293	human	Farnesoid X Receptor	O
-gr-hela-bla-antagonist	yes	antagonism_GR	beta-lactamase	HeLa	human	Glucocorticoid Receptor	S
-ppard-bla-antagonist	yes	antagonism_PPARd	beta-lactamase	Hek293	human	Peroxisome Proliferator-Activated Receptor delta	Y
-pparg-bla-antagonist	yes	antagonism_PPARg	beta-lactamase	Hek293	human	Peroxisome Proliferator-Activated Receptor gamma	AA
-ror-cho-antagonist	yes	antagonism_RORr	luciferase	CHO	chicken	Retinoid Orphan Receptor gamma 	AC
-gh3-tre-antagonist	yes	antagonism_TR	luciferase	GH3	rat	Thyroid Receptor	Q
-vdr-bla-antagonist	yes	antagonism_VDR	beta-lactamase	Hek293	human	Vitamin D Receptor	AE
-via_ahr	no	cytotoxicity_AhR/agonism		HepG2	human	Aryl Hydrocarbon Receptor	A.c
-via_ar-mda-kb2-luc-antagonist	no	cytotoxicity_AR/antagonism/full		MDA-kb2	human	Androgen Receptor	F.c
-via_ar-bla-antagonist	no	cytotoxicity_AR/antagonism/partial		Hek293	human	Androgen Receptor	C.c
-via_aromatase	no	cytotoxicity_aromatase/inhibition		MCF-7	human		G.c
-via_elg1-luc-agonist	no	cytotoxicity_ATAD5/activation		Hek293	human		H.c
-via_esre-bla	no	cytotoxicity_EndoRS/activation		HeLa	human	Endoplasmic Reticulum Stress 	M.c
-via_er-luc-bg1-4e2-antagonist	no	cytotoxicity_ER/antagonism/full		BG1	human	Estrogen Receptor	L.c
-via_er-bla-antagonist	no	cytotoxicity_ER/antagonism/partial		Hek293	human	Estrogen Receptor	J.c
-via_fxr-bla-agonist	no	cytotoxicity_FXR/agonism		Hek293	human	Farnesoid X Receptor	N.c
-via_fxr-bla-antagonist	no	cytotoxicity_FXR/antagonism		Hek293	human	Farnesoid X Receptor	O.c
-via_gr-hela-bla-antagonist	no	cytotoxicity_GR/antagonism		HeLa	human	Glucocorticoid Receptor	S.c
-via_hse-bla	no	cytotoxicity_HSP/activation		HeLa	human	Heat Shock Pathway	T.c
-via_mitotox	no	cytotoxicity_MMP/inhibition		HepG2	human	Mitochondria Membrane Potential 	U.c
-via_nfkb-bla-agonist	no	cytotoxicity_NFkb/activation		ME-180	human	Nuclear Factor Kappa Beta	V.c
-via_are-bla	no	cytotoxicity_Nrf2/activation		HepG2	human	nuclear factor erythroid 2-related factor 2	D.c
-via_p53-bla	no	cytotoxicity_p53/activiation		HCT-116	human		W.c
-via_ppard-bla-agonist	no	cytotoxicity_PPARd/agonism		Hek293	human	Peroxisome Proliferator-Activated Receptor delta	X.c
-via_ppard-bla-antagonist	no	cytotoxicity_PPARd/antagonism		Hek293	human	Peroxisome Proliferator-Activated Receptor delta	Y.c
-via_pparg-bla-antagonist	no	cytotoxicity_PPARg/antagonism		Hek293	human	Peroxisome Proliferator-Activated Receptor gamma	AA.c
-via_ror-cho-antagonist	no	cytotoxicity_RORr/antagonism		CHO	chicken	Retinoid Orphan Receptor gamma 	AC.c
-via_rar-agonist	no	cytotoxicity_RSP/agonism		C3H10T1/2	mouse	Retinol Signaling Pathway	AB.c
-via_gh3-tre-antagonist	no	cytotoxicity_TR/antagonism		GH3	rat	Thyroid Receptor	Q.c
-via_vdr-bla-agonist	no	cytotoxicity_VDR/agonism		Hek293	human	Vitamin D Receptor	AD.c
-via_vdr-bla-antagonist	no	cytotoxicity_VDR/antagonism		Hek293	human	Vitamin D Receptor	AE.c
-aromatase	yes	inhibition_aromatase	luciferase	MCF-7	human		G
-mitotox	yes	inhibition_MMP	beta-lactamase	HepG2	human	Mitochondria Membrane Potential 	U
+assay	specific	common_name	technology	cell_type	species	abbreviation	letters	PubChem AID
+ahr	yes	agonism_AhR	luciferase	HepG2	human	Aryl Hydrocarbon Receptor	A	743122
+via_ahr	no	cytotoxicity_AhR/agonism		HepG2	human	Aryl Hydrocarbon Receptor	A.c	743086
+pparg-bla-antagonist	yes	antagonism_PPARg	beta-lactamase	Hek293	human	Peroxisome Proliferator-Activated Receptor gamma	AA	743199
+via_pparg-bla-antagonist	no	cytotoxicity_PPARg/antagonism		Hek293	human	Peroxisome Proliferator-Activated Receptor gamma	AA.c	743194
+rar-agonist	yes	agonism_RSP	luciferase	C3H10T1/2	mouse	Retinol Signaling Pathway	AB	
+via_rar-agonist	no	cytotoxicity_RSP/agonism		C3H10T1/2	mouse	Retinol Signaling Pathway	AB.c	
+ror-cho-antagonist	yes	antagonism_RORr	luciferase	CHO	chicken	Retinoid Orphan Receptor gamma 	AC	
+via_ror-cho-antagonist	no	cytotoxicity_RORr/antagonism		CHO	chicken	Retinoid Orphan Receptor gamma 	AC.c	
+vdr-bla-agonist	yes	agonism_VDR	beta-lactamase	Hek293	human	Vitamin D Receptor	AD	743241
+via_vdr-bla-agonist	no	cytotoxicity_VDR/agonism		Hek293	human	Vitamin D Receptor	AD.c	743224
+vdr-bla-antagonist	yes	antagonism_VDR	beta-lactamase	Hek293	human	Vitamin D Receptor	AE	743242
+via_vdr-bla-antagonist	no	cytotoxicity_VDR/antagonism		Hek293	human	Vitamin D Receptor	AE.c	743225
+ar-bla-agonist	yes	agonism_AR/partial	beta-lactamase	Hek293	human	Androgen Receptor	B	743053
+ar-bla-antagonist	yes	antagonism_AR/partial	beta-lactamase	Hek293	human	Androgen Receptor	C	743063
+via_ar-bla-antagonist	no	cytotoxicity_AR/antagonism/partial		Hek293	human	Androgen Receptor	C.c	743033
+are-bla	yes	activation_Nrf2	beta-lactamase	HepG2	human	nuclear factor erythroid 2-related factor 2	D	743219
+via_are-bla	no	cytotoxicity_Nrf2/activation		HepG2	human	nuclear factor erythroid 2-related factor 2	D.c	743203
+ar-mda-kb2-luc-agonist	yes	agonism_AR/full	luciferase	MDA-kb2	human	Androgen Receptor	E	743040
+ar-mda-kb2-luc-antagonist	yes	antagonism_AR/full	luciferase	MDA-kb2	human	Androgen Receptor	F	743054
+via_ar-mda-kb2-luc-antagonist	no	cytotoxicity_AR/antagonism/full		MDA-kb2	human	Androgen Receptor	F.c	743041
+aromatase	yes	inhibition_aromatase	luciferase	MCF-7	human		G	743139
+via_aromatase	no	cytotoxicity_aromatase/inhibition		MCF-7	human		G.c	743084
+elg1-luc-agonist	yes	activation_ATAD5	luciferase	Hek293	human		H	720516
+via_elg1-luc-agonist	no	cytotoxicity_ATAD5/activation		Hek293	human		H.c	651634
+er-bla-agonist	yes	agonism_ER/partial	beta-lactamase	Hek293	human	Estrogen Receptor	I	743077
+er-bla-antagonist	yes	antagonism_ER/partial	beta-lactamase	Hek293	human	Estrogen Receptor	J	743078
+via_er-bla-antagonist	no	cytotoxicity_ER/antagonism/partial		Hek293	human	Estrogen Receptor	J.c	743074
+er-luc-bg1-4e2-agonist	yes	agonism_ER/full	luciferase	BG1	human	Estrogen Receptor	K	743079
+er-luc-bg1-4e2-antagonist	yes	antagonism_ER/full	luciferase	BG1	human	Estrogen Receptor	L	743091
+via_er-luc-bg1-4e2-antagonist	no	cytotoxicity_ER/antagonism/full		BG1	human	Estrogen Receptor	L.c	743081
+esre-bla	yes	activation_EndoRS	beta-lactamase	HeLa	human	Endoplasmic Reticulum Stress 	M	
+via_esre-bla	no	cytotoxicity_EndoRS/activation		HeLa	human	Endoplasmic Reticulum Stress 	M.c	
+fxr-bla-agonist	yes	agonism_FXR	beta-lactamase	Hek293	human	Farnesoid X Receptor	N	743239
+via_fxr-bla-agonist	no	cytotoxicity_FXR/agonism		Hek293	human	Farnesoid X Receptor	N.c	743218
+fxr-bla-antagonist	yes	antagonism_FXR	beta-lactamase	Hek293	human	Farnesoid X Receptor	O	743240
+via_fxr-bla-antagonist	no	cytotoxicity_FXR/antagonism		Hek293	human	Farnesoid X Receptor	O.c	743221
+gh3-tre-agonist	yes	agonism_TR	luciferase	GH3	rat	Thyroid Receptor	P	743066
+gh3-tre-antagonist	yes	antagonism_TR	luciferase	GH3	rat	Thyroid Receptor	Q	743067
+via_gh3-tre-antagonist	no	cytotoxicity_TR/antagonism		GH3	rat	Thyroid Receptor	Q.c	743064
+gr-hela-bla-agonist	yes	agonism_GR	beta-lactamase	HeLa	human	Glucocorticoid Receptor	R	720719
+gr-hela-bla-antagonist	yes	antagonism_GR	beta-lactamase	HeLa	human	Glucocorticoid Receptor	S	720725
+via_gr-hela-bla-antagonist	no	cytotoxicity_GR/antagonism		HeLa	human	Glucocorticoid Receptor	S.c	720693
+hse-bla	yes	activation_HSP	beta-lactamase	HeLa	human	Heat Shock Pathway	T	743228
+via_hse-bla	no	cytotoxicity_HSP/activation		HeLa	human	Heat Shock Pathway	T.c	743209
+mitotox	yes	inhibition_MMP	fluorescent dye	HepG2	human	Mitochondria Membrane Potential 	U	720637
+via_mitotox	no	cytotoxicity_MMP/inhibition		HepG2	human	Mitochondria Membrane Potential 	U.c	720634
+nfkb-bla-agonist	yes	activation_NFkb	beta-lactamase	ME-180	human	Nuclear Factor Kappa Beta	V	
+via_nfkb-bla-agonist	no	cytotoxicity_NFkb/activation		ME-180	human	Nuclear Factor Kappa Beta	V.c	
+p53-bla	yes	activation_p53	beta-lactamase	HCT-116	human		W	720552
+via_p53-bla	no	cytotoxicity_p53/activiation		HCT-116	human		W.c	651633
+ppard-bla-agonist	yes	agonism_PPARd	beta-lactamase	Hek293	human	Peroxisome Proliferator-Activated Receptor delta	X	743227
+via_ppard-bla-agonist	no	cytotoxicity_PPARd/agonism		Hek293	human	Peroxisome Proliferator-Activated Receptor delta	X.c	743211
+ppard-bla-antagonist	yes	antagonism_PPARd	beta-lactamase	Hek293	human	Peroxisome Proliferator-Activated Receptor delta	Y	743226
+via_ppard-bla-antagonist	no	cytotoxicity_PPARd/antagonism		Hek293	human	Peroxisome Proliferator-Activated Receptor delta	Y.c	743213
+pparg-bla-agonist	yes	agonism_PPARg	beta-lactamase	Hek293	human	Peroxisome Proliferator-Activated Receptor gamma	Z	743140
+rxr-bla-agonist	yes	agonism_RXR	beta-lactamase	Hek293	human	Retinoid X Receptor	AF	
+via_rxr-bla-agonist	no	cytotoxicity_RXR/agonism		Hek293	human	Retinoid X Receptor	AF.c	
+dt40-srf	yes	activation_DNA_damage/srf	luciferase	DT40	chicken	Stalled Replication Fork	AG	
+dt40-dsb	yes	activation_DNA_damage/dsb	luciferase	DT40	chicken	Double Strand Break	AH	
+via_dt40-srf	no	cytotoxicity_DNA_damage/srf		DT40	chicken	Stalled Replication Fork	AG.c	
+via_dt40-dsb	no	cytotoxicity_DNA_damage/dsb		DT40	chicken	Double Strand Break	AH.c	
+ap1-agonist	yes	activation_AP1	beta-lactamase	ME-180	human	Activator Protein-1	AI	
+via_ap1-agonist	no	cytotoxicity_AP1/activation	beta-lactamase	ME-180	human	Activator Protein-1	AI.c	

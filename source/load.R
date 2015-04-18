@@ -43,11 +43,11 @@ load_data_matrix <- function (input_file, file_name)
     input[, "Cluster"] <- 'unassigned'
     if ( ! is.null(input$userClust)) input[, "Cluster"] <- input$userClust 
   }
-  pot_id_cols <- c('CAS','GSID', 'Chemical.Name','chemClust', 'userClust',  'toxScore', 'Cluster')
+  pot_id_cols <- c('CAS','GSID', 'Chemical.Name','chemClust', 'userClust',  'toxScore', 'Cluster', 'input_Chemical.Name')
   id_df <- input[, colnames(input) %in% pot_id_cols]
   data_df <- input[,! colnames(input) %in% pot_id_cols]
   rownames(data_df) <- id_df$CAS
-  result[['id']] <- subset(id_df, select=c(CAS, Cluster))
+  result[['id']] <- id_df[, colnames(id_df) %in% c('CAS', 'Cluster', 'input_Chemical.Name')] #subset(id_df, select=c(CAS, Cluster))
   result[[dm_id]] <- data_df
   return(result)
 }

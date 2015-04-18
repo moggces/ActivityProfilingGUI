@@ -40,7 +40,7 @@ logit_para_file <- './data/tox21_assay_collection.txt'
 assay_names <- load_profile(logit_para_file) # global, dataframe output
 
 # load chemical information (will include purity later)
-profile_file <- './data/tox21_compound_id_v5a.txt'
+profile_file <- './data/tox21_compound_id_v5a.txt' #colunm name has to be GSID
 master <- load_profile(profile_file) # global, dataframe output
 
 # load the activities (all data) and the structure fp matrix
@@ -58,7 +58,7 @@ wauc_leg_labels <- c("-1", "-0.75", "-0.5", "-0.25",  "0", "0.25", "0.5", "0.75"
 potency_breaks <- c(-0.02, 0, 0.0001, 4, 4.5, 5, 7.5, 9, 10)
 potency_colors <- c("#F5F5F5", "gray", "#C7EAE5", "#80CDC1", "#35978F", "#01665E", "#003C30", "chartreuse") #BrBG
 potency_leg_breaks <- c( 0,  4, 4.5, 5, 7.5, 9,10 )
-potency_leg_labels <- c( "inactive",  "100uM", "30uM", "10uM", "0.3uM", "1nM", "10nM")
+potency_leg_labels <- c( "inactive",  "100uM", "30uM", "10uM", "0.3uM", "1nM", "0.1nM")
 
 # potency_breaks <- c(-10, -9, -7.5, -5, -4.5, -4, -0.02, 0, 0.0001, 4, 4.5, 5, 7.5, 9, 10)
 # potency_colors <- c("darkorange","#543005", "#8C510A", "#BF812D", "#DFC27D", "#F6E8C3", "#F5F5F5", "gray", "#C7EAE5", "#80CDC1", "#35978F", "#01665E", "#003C30", "chartreuse") #BrBG
@@ -109,11 +109,15 @@ shinyServer(function(input, output) {
     full <- activities 
     
     # if it is a data matrix input, only CAS ID is allowd
+    input_chemical_name <- NULL
     if (length(id_info) > 1)
     {
       full <- id_info[! grepl('id', names(id_info))]
       chemical_name_ref <- conversion(master, inp='CAS', out='GSID')
       rownames(full[[1]]) <- chemical_name_ref[as.character(rownames(full[[1]]))]
+      if (! is.null(id_info[['id']]$input_Chemical.Name)) {
+        input_chemical_name <- conversion(join(id_info[['id']], master), inp='GSID', out='input_Chemical.Name')
+      }
       rename_assay <- FALSE
     }
     
@@ -124,7 +128,7 @@ shinyServer(function(input, output) {
     partial <- get_input_chemical_mat(ip, full)
     
     # rename the assays
-    partial <- rename_mat_col_row(partial,  master, assay_names, rename_assay=rename_assay)
+    partial <- rename_mat_col_row(partial,  master, assay_names, input_chemical_name, rename_assay=rename_assay)
     
     # subset the matrices by assay names
     partial <- get_assay_mat(partial, reg_sel, invSel=inv_sel)
@@ -199,8 +203,11 @@ shinyServer(function(input, output) {
     activity_type <- ''
     
     # get all chemical information
+    input_chemical_name <- NULL
     chem_id_df <- get_lookup_list(chemical_loader()[['id']], master)
-    
+    if (! is.null(chem_id_df$input_Chemical.Name)) {
+      input_chemical_name <- conversion(chem_id_df, inp='GSID', out='input_Chemical.Name')
+    }
     # the basic identifies , GSID + Cluster
     ip <- subset(chem_id_df, GSID != '' & CAS != '', select=c(GSID, Cluster))
     
@@ -236,7 +243,7 @@ shinyServer(function(input, output) {
     dcols <- dist(struct, method = "binary") ## chemicals
     
     # very, very cumbersome functions. better to split, merge dt + activity_type
-    annotation <- get_heatmap_annotation(dcols, ip, master, dmat=dt, actType=activity_type) #data.frame output
+    annotation <- get_heatmap_annotation(dcols, ip, master, input_chemical_name=input_chemical_name, dmat=dt, actType=activity_type) #data.frame output
     annt_colors <- get_heatmap_annotation_color(annotation,  actType=activity_type)
     
     # cluster compounds by various methods
@@ -318,6 +325,8 @@ shinyServer(function(input, output) {
 
   output$dd <- renderDataTable({
     
+#     return(matrix_subsetter()[['nwauc.logit']])
+    
     paras <- heatmap_para_generator() #heatmap_para_generator
     act <- paras[['act']]
     annotation <- paras[['annotation']]
@@ -327,6 +336,7 @@ shinyServer(function(input, output) {
     # for testing
 #      paras <- heatmap_para_generator()
 #      return(data.frame(paras))
+    
   })
   
   output$assay_info <- renderDataTable({

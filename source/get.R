@@ -69,8 +69,9 @@ get_cv_mark_mat <- function(cv, nwauc)
 # master: all mapping info
 # dmat
 
-get_heatmap_annotation <- function (d, input, master, cutoff=0.7, method="average", dmat, actType='')
+get_heatmap_annotation <- function (d, input, master, input_chemical_name=NULL, cutoff=0.7, method="average", dmat, actType='')
 {
+  chemical_name_ref <- input_chemical_name
   # chemical structure clustering
   hc <- hclust(d, method=method)
   group <- cutree(hc, h=cutoff)
@@ -98,7 +99,7 @@ get_heatmap_annotation <- function (d, input, master, cutoff=0.7, method="averag
   if (nrow(annotation2) > 0)
   {
     rownames(annotation2) <- as.character(input[['GSID']])
-    chemical_name_ref <- conversion(master, inp='GSID', out='Chemical.Name')
+    if (is.null(chemical_name_ref)) chemical_name_ref <- conversion(master, inp='GSID', out='Chemical.Name')
     rownames(annotation2) <- chemical_name_ref[as.character(rownames(annotation2))]
     
     annotation <- merge(annotation, annotation2, by="row.names")

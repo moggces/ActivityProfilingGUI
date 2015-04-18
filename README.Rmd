@@ -45,9 +45,12 @@ CAS | Cluster
 80-05-7 | negative_zfish
 
 
-##### data matrix (advanced function):
+##### data matrix (advanced function, instruction under construction):
 1. the downloaded activitiy data data can be modified and re-uploaded.
-2. other data matrix with CAS as ID and comparable activity information can be uploaded.
+2. the file names have to be **nwauc\\.logit|npod|nac50**. So it will recognize the coloring scheme.
+2. other data matrix with **CAS** as ID and comparable activity information can be uploaded.
+3. **Cluster** information is optional.
+4. **input_Chemical.Name** information is optional (colnames of heat map will change).
 
 ###### Notes
 * two forms of activity are allowed (see _activity type_), specified by the file name

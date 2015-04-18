@@ -24,9 +24,12 @@ split_master_2_matrix <- function(master, props, id='CAS')
 }
 
 # required: conversion, rename the GSID to Chemical.Name (row), rename assay to common_name (col, if TRUE)
-rename_mat_col_row <- function (partial, master, assay_names, rename_assay=TRUE)
+rename_mat_col_row <- function (partial, master, assay_names, input_chemical_name=NULL, rename_assay=TRUE)
 {
-  chemical_name_ref <- conversion(master, inp='GSID', out='Chemical.Name')
+  chemical_name_ref <- input_chemical_name
+  if (is.null(chemical_name_ref)) {
+    chemical_name_ref <- conversion(master, inp='GSID', out='Chemical.Name')
+  } 
   
   for (name in names(partial))
   {
