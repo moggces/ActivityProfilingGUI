@@ -29,7 +29,7 @@ shinyUI(pageWithSidebar(
     conditionalPanel(
       condition = "input.proftype == 'activity'",
       radioButtons("acttype", "Activity type:",
-                   list("wAUC" = "nwauc.logit",  "POD" = "npod", "AC50" = "nac50"))
+                   list("wAUC" = "nwauc.logit",  "POD" = "npod", "EC50" = "nec50"))
     ),
     
     tags$br(),
@@ -37,18 +37,18 @@ shinyUI(pageWithSidebar(
     conditionalPanel(
       h4('Activity filtering (not applicable if loading the data matrix)'),
       
-      condition = "(input.acttype == 'npod' || input.acttype == 'nac50' || input.acttype == 'nwauc.logit'  ) && input.proftype == 'activity'",
+      condition = "(input.acttype == 'npod' || input.acttype == 'nec50' || input.acttype == 'nwauc.logit'  ) && input.proftype == 'activity'",
       sliderInput("nwauc_thres", 
-                  "wAUC threshold", min=0, max=1, value=0.05, step=0.05),
+                  "wAUC threshold", min=0, max=1, value=0, step=0.05),
       tags$br(),
-      sliderInput("nemax_thres", 
+      sliderInput("ncmax_thres", 
                   "Emax threshold", min=0, max=100, value=0, step=5),
       tags$br(),
       sliderInput("npod_thres", 
                   "POD threshold",  min=3, max=10, value=3, step=0.5),
       tags$br(),
-      sliderInput("nac50_thres", 
-                  "AC50 threshold", min=3, max=10, value=3, step=0.5),
+      sliderInput("nec50_thres", 
+                  "EC50 threshold", min=3, max=10, value=3, step=0.5),
       tags$br(),
       sliderInput("pod_diff_thres", 
                   "log10(ratio of signal to cytotoxicity)(inhibition-type assays only)", min=0, max=3, value=0, step=0.2),
@@ -60,7 +60,10 @@ shinyUI(pageWithSidebar(
       checkboxInput("isgoodcc2", "only curve class 1.1, 1.2, 2.1", FALSE),
       
       tags$br(),
-      checkboxInput("nohighcv", "exclude high activity variation between sources", TRUE)
+      checkboxInput("nohighcv", "exclude high activity variation between sources", TRUE),
+      
+      tags$br(),
+      checkboxInput("noinconlab", "exclude inconclusive label", FALSE)
     ),
     
     tags$hr(),
@@ -104,7 +107,7 @@ shinyUI(pageWithSidebar(
     
     # fontsize
     sliderInput("fontsize", 
-                "fontsize", min = 2,max = 28, value = 18, step=2),
+                "fontsize", min = 2,max = 28, value = 16, step=2),
     helpText("tip: lower the fontsize when saving the plot"),
   
     # output functions

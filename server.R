@@ -5,10 +5,10 @@
 # 3) in shiny server, once you delete a file but replace a file with same name. somwhow don't know how to refresh its
 # but if you update .R file, you can refresh to get new functions
 
-# chemical_loader() out: list(id, ?(nwauc.logit or npod or nac50 or unknown))
-# matrix_subsetter() out: list(activities or ?(nwauc.logit or npod or nac50 or unknown), struct)
+# chemical_loader() out: list(id, ?(nwauc.logit or npod or nec50 or unknown))
+# matrix_subsetter() out: list(activities or ?(nwauc.logit or npod or nec50 or unknown), struct)
 # activity_filter() out: same as above 
-# matrix_editor() out: list(nwauc.logit, npod, nac50,wauc.logit, struct, cv_mark)
+# matrix_editor() out: list(nwauc.logit, npod, nec50,wauc.logit, struct, cv_mark)
 # heatmap_para_generator() out: list(dcols, drows, annotation, annt_colors, act=act, struct, cv)
 # select_plot()
 
@@ -40,7 +40,7 @@ logit_para_file <- './data/tox21_assay_collection.txt'
 assay_names <- load_profile(logit_para_file) # global, dataframe output
 
 # load chemical information (will include purity later)
-profile_file <- './data/tox21_compound_id_v5a.txt' #colunm name has to be GSID
+profile_file <- './data/tox21_compound_id_v5a2.txt' #colunm name has to be GSID
 master <- load_profile(profile_file) # global, dataframe output
 
 # load the activities (all data) and the structure fp matrix
@@ -48,6 +48,9 @@ activities_rdata <- './data/activities.RData'
 struct_mat_rdata <- './data/struct_mat.RData'
 load(activities_rdata) # global, matrix output, activities
 load(struct_mat_rdata) # global, matrix output, struct_mat
+
+# remove the structures with low purity
+struct_mat <- struct_mat[rownames(struct_mat) %in% rownames(activities[[1]]),]
 
 # heatmap settings
 wauc_breaks <- c( -1, -0.75, -0.5, -0.25, -0.1, -0.02, 0, 0.0001, 0.1, 0.25, 0.5, 0.75, 1) # upper is filled , lower is empty 
@@ -146,9 +149,9 @@ shinyServer(function(input, output) {
     profile_type <- input$proftype
     activity_type <- input$acttype
     nwauc_thres <- input$nwauc_thres
-    nemax_thres <- input$nemax_thres
+    ncmax_thres <- input$ncmax_thres
     npod_thres <- input$npod_thres
-    nac50_thres <- input$nac50_thres
+    nec50_thres <- input$nec50_thres
     pod_diff_thres <- input$pod_diff_thres
     #isstrong <- input$isstrong
     nocyto <- input$nocyto
@@ -160,15 +163,15 @@ shinyServer(function(input, output) {
     # if it is data matrix input, don't change 
     if (length(partial) == 2) return(partial)
    
-    act_mat_names <- c('npod', 'nac50', 'nwauc.logit')
+    act_mat_names <- c('npod', 'nec50', 'nwauc.logit')
     # reverse direction of mitotox could be meaningful
     partial <- fix_mitotox_reverse(partial,act_mat_names=act_mat_names )
     
     # filtering
     partial <- filter_activity_by_type(partial, 'nwauc.logit', nwauc_thres, act_mat_names=act_mat_names)
-    partial <- filter_activity_by_type(partial, 'nemax', nemax_thres,act_mat_names=act_mat_names)
+    partial <- filter_activity_by_type(partial, 'ncmax', ncmax_thres,act_mat_names=act_mat_names)
     partial <- filter_activity_by_type(partial, 'npod', npod_thres,act_mat_names=act_mat_names)
-    partial <- filter_activity_by_type(partial, 'nac50', nac50_thres,act_mat_names=act_mat_names)
+    partial <- filter_activity_by_type(partial, 'nec50', nec50_thres,act_mat_names=act_mat_names)
     partial <- filter_activity_by_type(partial, 'pod_med_diff', pod_diff_thres,act_mat_names=act_mat_names)
     #partial <- filter_activity_by_type(partial, 'hitcall', thres=NULL, decision=isstrong,act_mat_names=act_mat_names)
     partial <- filter_activity_by_type(partial, 'pod_med_diff', thres=NULL, decision=nocyto,act_mat_names=act_mat_names)
@@ -181,6 +184,9 @@ shinyServer(function(input, output) {
 # matrix_editor()
   matrix_editor <- reactive({
     
+    noincon_label <- input$noinconlab #inconclusive label
+    act_mat_names <- c('npod', 'nec50', 'nwauc.logit')
+    
     partial <- activity_filter()
     # if it is data matrix input, skip 
     if (length(partial) == 2) return(partial)
@@ -190,8 +196,12 @@ shinyServer(function(input, output) {
     partial[['cv_mark']] <- cv_mark
     
     # make activities matrix as 0.0001
-    act_mat_names <- c('npod', 'nac50', 'nwauc.logit')
     partial <- assign_reverse_na_number(partial, act_mat_names=act_mat_names)
+    
+    
+    # remove inconclusive label (but keep the untested ones)
+    if (noincon_label) partial <- remove_inconclusive_label(partial, act_mat_names=act_mat_names)
+
     acts <- partial[c( act_mat_names, 'wauc.logit', 'struct', 'cv_mark')]
     return(acts)
   })
@@ -325,7 +335,7 @@ shinyServer(function(input, output) {
 
   output$dd <- renderDataTable({
     
-#     return(matrix_subsetter()[['nwauc.logit']])
+     #return(matrix_subsetter()[['nwauc.logit']])
     
     paras <- heatmap_para_generator() #heatmap_para_generator
     act <- paras[['act']]
@@ -379,7 +389,7 @@ shinyServer(function(input, output) {
     if (profile_type == 'activity')
     {
       activity_type <- input$acttype
-      if (activity_type == 'npod' | activity_type == 'nac50')
+      if (activity_type == 'npod' | activity_type == 'nec50')
       {
         paras <- heatmap_para_generator()
         act <- paras[['act']]

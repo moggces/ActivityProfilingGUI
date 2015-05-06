@@ -30,13 +30,13 @@ load_text_2_df <- function (textarea)
   return(list(id=result))
 }
 
-# load data matrix from the loading file; a list with two dfs (id and nwauc.logit or npod, or nac50 or unknown)
+# load data matrix from the loading file; a list with two dfs (id and nwauc.logit or npod, or nec50 or unknown)
 load_data_matrix <- function (input_file, file_name)
 {
   result <- list()
   
   dm_id <- 'unknown'
-  dm_id  <- sub(".*(nwauc\\.logit|npod|nac50).*", "\\1", file_name )
+  dm_id  <- sub(".*(nwauc\\.logit|npod|nec50).*", "\\1", file_name )
   input <- read.table( input_file, header = TRUE, sep = "\t", quote = '', check.names=FALSE, comment.char = "") 
   if (is.null(input$Cluster)) 
   {

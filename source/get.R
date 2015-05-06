@@ -113,7 +113,7 @@ get_heatmap_annotation <- function (d, input, master, input_chemical_name=NULL, 
   if (actType == 'nwauc.logit' )
   {
     annotation3 <- data.frame(toxScore = rowSums(abs(dmat[[actType]]) ))                           
-  } else if (actType == 'npod' | actType == 'nac50' )
+  } else if (actType == 'npod' | actType == 'nec50' )
   {
     if ( ! is.null(dmat[['nwauc.logit']]))
     {
