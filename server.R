@@ -53,6 +53,7 @@ load(struct_mat_rdata) # global, matrix output, struct_mat
 struct_mat <- struct_mat[rownames(struct_mat) %in% rownames(activities[[1]]),]
 
 # heatmap settings
+# the negative direction breaks won't capture wauc with very small values
 wauc_breaks <- c( -1, -0.75, -0.5, -0.25, -0.1, -0.02, 0, 0.0001, 0.1, 0.25, 0.5, 0.75, 1) # upper is filled , lower is empty 
 wauc_colors <-  c("#053061" ,"#2166AC" ,"#4393C3" ,"#92C5DE", "#D1E5F0", "#F7F7F7", "gray", "#FDDBC7" ,"#F4A582" ,"#D6604D" ,"#B2182B", "#67001F"  ) #RdBu
 wauc_leg_breaks <- c(-1, -0.75, -0.5, -0.25,  0,   0.25, 0.5, 0.75, 1 )
@@ -351,7 +352,7 @@ shinyServer(function(input, output) {
   
   output$assay_info <- renderDataTable({
   
-    col_n <- c('common_name','technology','cell_type','species','abbreviation')
+    col_n <- c('common_name','technology','cell_type','species','abbreviation', 'PubChem AID')
     result <- assay_names[, colnames(assay_names) %in% col_n]
     return(result)
     
@@ -419,6 +420,7 @@ shinyServer(function(input, output) {
       act <- paras[['act']]
       annotation <- paras[['annotation']]
       result <- get_output_df(act, annotation)
+      result <- get_published_data_only_commonname(result, assay_names)  # to remove unpublished data
       write.table(result, file, row.names = FALSE, col.names = TRUE, sep="\t", quote=FALSE, append=FALSE)
     }
   )

@@ -82,6 +82,7 @@ filter_activity_by_type <- function(partial, type, thres=NULL, decision=FALSE, a
 {
   if (type == 'nwauc.logit') 
   {
+    # for codel 104
     if (thres == 0) thres <- 0.0001
   }
   for (name in act_mat_names)

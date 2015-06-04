@@ -16,7 +16,9 @@ For a compound which is called as _active_ in in an assay. It could mean:
 
 or
 
-* download the shiny app from [ActivityProfilingGUI](https://github.com/moggces/ActivityProfilingGUI)
+* download the shiny app from [ActivityProfilingGUI](https://github.com/moggces/ActivityProfilingGUI) and contact & contact [Jui-Hua Hsieh](mailto:juihua.hsieh@gmail.com) for background data
+
+
 ```{r eval=FALSE }
 library(shiny)
 runApp()
@@ -47,7 +49,7 @@ CAS | Cluster
 
 ##### data matrix (advanced function, instruction under construction):
 1. the downloaded activitiy data data can be modified and re-uploaded.
-2. the file names have to be **nwauc\\.logit|npod|nac50**. So it will recognize the coloring scheme.
+2. the file names have to be **nwauc.logit|npod|nac50**. So it will recognize the coloring scheme.
 2. other data matrix with **CAS** as ID and comparable activity information can be uploaded.
 3. **Cluster** information is optional.
 4. **input_Chemical.Name** information is optional (colnames of heat map will change).
@@ -80,7 +82,7 @@ results interpretation, e.g., whether the compound is active
 
 type | value range | value description
 -----|-------------| -----------------
-wauc | 0 ~ 1 | higher value -> higher activity <br> 0 -> inactive <br> value > 0.05 -> active <br> 1E-4 -> inconlusive
+wauc | 0 ~ 1 | higher value -> higher activity <br> 0 -> inactive <br> 1E-4 -> inconlusive
 pod | log10(M)\*(-1) | higher value -> more potent <br> 1E-4 -> inconlusive <br> 0 -> inactive
 
 ac50 type is same as pod type. 
@@ -95,10 +97,10 @@ The default activity results are based on pipeline. But the activities can be **
 * POD threshold: see above
 * AC50 threshold: see above
 * log10(ratio of signal to cytotoxicity) (for inhibition-type assays): (e.g., 1 => 10 fold between signal and cytotoxicity).
-The pipeline uses assay-dependent threshold, mostly ~ 5 fold.
 * not cytotoxic (for inhibition-type assays): toggle ON to exclude any activity interpreted under cytotoxicity condition
 * only curve class 1.1, 1.2, 2.1: toggle ON to include only activities from  two asymptote + strong/weak Emax + good fit or one asymptote + strong Emax + good fit in at least one run
 * exclude high activity variation between sources: toggle OFF to include more potential activity, however, these included activities can still be recognized in the heatmap by the # sign
+* exclude inconclusive label: ON makes all inconclusives (cytotoxic, artifacts) as inactives 
 
 ***
 
@@ -109,14 +111,14 @@ The columns of the heatmap can be ordered in three methods:
     + Tanimoto cofficient based on Leadscope structural fingerprints
     + hierarchical clustering with average linkage
     + chemicals are grouped by cutoff 0.7
-    + a new parameter is created, chemClust, where chemClust = 0, are the compounds that cannot form clusters. 
+    + a new parameter is created, chemClust, where chemClust = 0, are the compounds that cannot form clusters or compounds without structures
     
 2. activity similarity
     + Euclidean distance based on respective activities
     + hierarchical clustering with average linkage
     
 3. toxicity score (only for __activity__)
-    + sum of the activities (i.e. unbounded, dependent on # of assasy used)
+    + sum of the activities (unbounded, dependent on # of assasy used)
         + wauc: sum of wauc values
         + pod or ac50: sum of wauc-weighted pod or ac50 values (not applicable for data matrix input)
 
@@ -137,12 +139,24 @@ Simple regular expression rules:
 
 ***
 
+
+### Others
+
+1. show the clustered dendrogram instead of the heatmap (toggle ON show compound similarity dendrogram)
+2. limit the heatmap/potency plot in one page (toggle ON keep heatmap size one page)
+3. adjust font size when downloading heatmap or online
+
+  * Download Activities: If the data haven\'t been released to PubChem, they won\'t be able to download
+  * Save Plot
+
+***
+
 ### Tabs
 
 #### Input chemicals
 
 If the input chemicals are not available, they will not have _GSID_. 
-Current information is based on Ann Richard's v5a file. 
+Current information is based on EPA DSSTOX. 
 
 #### Profile
 
@@ -153,6 +167,8 @@ The heatmap will be displayed here.
 * columns are compounds
 * rows are assays
 * cells are activities
+* coloring scheme: please refer the color bar
+* gray color: not tested. However if \"exclude inconclusive label\" ON, it could mean _inconclusive_.
 
 ##### annotation map
 
@@ -173,13 +189,6 @@ background data used for heatmap and potency plot
 
 assay information
 
-***
-
-### Others
-
-1. show the clustered dendrogram instead of the heatmap (toggle ON show compound similarity dendrogram)
-2. limit the heatmap/potency plot in one page (toggle ON keep heatmap size one page)
-3. adjust font size when downloading heatmap or online
 
 ***
 

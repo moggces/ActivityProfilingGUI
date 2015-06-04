@@ -5,17 +5,18 @@ library(markdown)
 shinyUI(pageWithSidebar(
   
   # application title
-  headerPanel("Compound signal/activity profiling"),
+  headerPanel("Tox21 Activity Profiler"),
   
   sidebarPanel(
     
-
+    tags$head(tags$meta(`http-equiv`="pragma", content="no-cache"), 
+              tags$meta(`http-equiv`="Cache-control", content="no-cache, no-store")),
     
     # profiling options
     h4('Profiling'),
     
     radioButtons("proftype", "Profile type:", 
-                 list("signal", "activity")),
+                 list("signal", "activity"), selected = "activity"),
     tags$hr(),
     
     conditionalPanel(
@@ -29,7 +30,7 @@ shinyUI(pageWithSidebar(
     conditionalPanel(
       condition = "input.proftype == 'activity'",
       radioButtons("acttype", "Activity type:",
-                   list("wAUC" = "nwauc.logit",  "POD" = "npod", "EC50" = "nec50"))
+                   list("wAUC" = "nwauc.logit",  "POD" = "npod", "EC50" = "nec50"), selected="npod")
     ),
     
     tags$br(),
@@ -63,7 +64,7 @@ shinyUI(pageWithSidebar(
       checkboxInput("nohighcv", "exclude high activity variation between sources", TRUE),
       
       tags$br(),
-      checkboxInput("noinconlab", "exclude inconclusive label", FALSE)
+      checkboxInput("noinconlab", "exclude inconclusive label", TRUE)
     ),
     
     tags$hr(),
@@ -112,7 +113,7 @@ shinyUI(pageWithSidebar(
   
     # output functions
     br(),
-    downloadButton('downloadData', 'Download'),
+    downloadButton('downloadData', 'Download Activities'),
     downloadButton('downloadPlot', 'Save Plot')
     
     

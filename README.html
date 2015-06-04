@@ -69,7 +69,7 @@ if (window.hljs && document.readyState && document.readyState === "complete") {
 </ul>
 <p>or</p>
 <ul>
-<li>download the shiny app from <a href="https://github.com/moggces/ActivityProfilingGUI">ActivityProfilingGUI</a></li>
+<li>download the shiny app from <a href="https://github.com/moggces/ActivityProfilingGUI">ActivityProfilingGUI</a> and contact &amp; contact <a href="mailto:juihua.hsieh@gmail.com">Jui-Hua Hsieh</a> for background data</li>
 </ul>
 <pre class="r"><code>library(shiny)
 runApp()</code></pre>
@@ -118,11 +118,14 @@ runApp()</code></pre>
 </table>
 </div>
 </div>
-<div id="data-matrix-advanced-function" class="section level5">
-<h5>data matrix (advanced function):</h5>
+<div id="data-matrix-advanced-function-instruction-under-construction" class="section level5">
+<h5>data matrix (advanced function, instruction under construction):</h5>
 <ol style="list-style-type: decimal">
 <li>the downloaded activitiy data data can be modified and re-uploaded.</li>
-<li>other data matrix with CAS as ID and comparable activity information can be uploaded.</li>
+<li>the file names have to be <strong>nwauc.logit|npod|nac50</strong>. So it will recognize the coloring scheme.</li>
+<li>other data matrix with <strong>CAS</strong> as ID and comparable activity information can be uploaded.</li>
+<li><strong>Cluster</strong> information is optional.</li>
+<li><strong>input_Chemical.Name</strong> information is optional (colnames of heat map will change).</li>
 </ol>
 <div id="notes" class="section level6">
 <h6>Notes</h6>
@@ -168,7 +171,7 @@ currently only wauc is available, suitable for compound grouping
 <tr class="odd">
 <td align="left">wauc</td>
 <td align="left">0 ~ 1</td>
-<td align="left">higher value -&gt; higher activity <br> 0 -&gt; inactive <br> value &gt; 0.05 -&gt; active <br> 1E-4 -&gt; inconlusive</td>
+<td align="left">higher value -&gt; higher activity <br> 0 -&gt; inactive <br> 1E-4 -&gt; inconlusive</td>
 </tr>
 <tr class="even">
 <td align="left">pod</td>
@@ -190,10 +193,11 @@ currently only wauc is available, suitable for compound grouping
 <li>Emax threshold: half-maximal concentration (e.g., 30% relative to the positive control)</li>
 <li>POD threshold: see above</li>
 <li>AC50 threshold: see above</li>
-<li>log10(ratio of signal to cytotoxicity) (for inhibition-type assays): (e.g., 1 =&gt; 10 fold between signal and cytotoxicity). The pipeline uses assay-dependent threshold, mostly ~ 5 fold.</li>
+<li>log10(ratio of signal to cytotoxicity) (for inhibition-type assays): (e.g., 1 =&gt; 10 fold between signal and cytotoxicity).</li>
 <li>not cytotoxic (for inhibition-type assays): toggle ON to exclude any activity interpreted under cytotoxicity condition</li>
 <li>only curve class 1.1, 1.2, 2.1: toggle ON to include only activities from two asymptote + strong/weak Emax + good fit or one asymptote + strong Emax + good fit in at least one run</li>
 <li>exclude high activity variation between sources: toggle OFF to include more potential activity, however, these included activities can still be recognized in the heatmap by the # sign</li>
+<li>exclude inconclusive label: ON makes all inconclusives (cytotoxic, artifacts) as inactives</li>
 </ul>
 <hr />
 </div>
@@ -206,7 +210,7 @@ currently only wauc is available, suitable for compound grouping
 <li>Tanimoto cofficient based on Leadscope structural fingerprints</li>
 <li>hierarchical clustering with average linkage</li>
 <li>chemicals are grouped by cutoff 0.7</li>
-<li>a new parameter is created, chemClust, where chemClust = 0, are the compounds that cannot form clusters.</li>
+<li>a new parameter is created, chemClust, where chemClust = 0, are the compounds that cannot form clusters or compounds without structures</li>
 </ul></li>
 <li>activity similarity
 <ul>
@@ -215,7 +219,7 @@ currently only wauc is available, suitable for compound grouping
 </ul></li>
 <li>toxicity score (only for <strong>activity</strong>)
 <ul>
-<li>sum of the activities (i.e. unbounded, dependent on # of assasy used)
+<li>sum of the activities (unbounded, dependent on # of assasy used)
 <ul>
 <li>wauc: sum of wauc values</li>
 <li>pod or ac50: sum of wauc-weighted pod or ac50 values (not applicable for data matrix input)</li>
@@ -244,11 +248,24 @@ currently only wauc is available, suitable for compound grouping
 </ol>
 <hr />
 </div>
+<div id="others" class="section level3">
+<h3>Others</h3>
+<ol style="list-style-type: decimal">
+<li>show the clustered dendrogram instead of the heatmap (toggle ON show compound similarity dendrogram)</li>
+<li>limit the heatmap/potency plot in one page (toggle ON keep heatmap size one page)</li>
+<li>adjust font size when downloading heatmap or online</li>
+</ol>
+<ul>
+<li>Download Activities: If the data haven't been released to PubChem, they won't be able to download</li>
+<li>Save Plot</li>
+</ul>
+<hr />
+</div>
 <div id="tabs" class="section level3">
 <h3>Tabs</h3>
 <div id="input-chemicals" class="section level4">
 <h4>Input chemicals</h4>
-<p>If the input chemicals are not available, they will not have <em>GSID</em>. Current information is based on Ann Richard’s v5a file.</p>
+<p>If the input chemicals are not available, they will not have <em>GSID</em>. Current information is based on EPA DSSTOX.</p>
 </div>
 <div id="profile" class="section level4">
 <h4>Profile</h4>
@@ -259,6 +276,8 @@ currently only wauc is available, suitable for compound grouping
 <li>columns are compounds</li>
 <li>rows are assays</li>
 <li>cells are activities</li>
+<li>coloring scheme: please refer the color bar</li>
+<li>gray color: not tested. However if &quot;exclude inconclusive label&quot; ON, it could mean <em>inconclusive</em>.</li>
 </ul>
 </div>
 <div id="annotation-map" class="section level5">
@@ -284,15 +303,6 @@ currently only wauc is available, suitable for compound grouping
 <p>assay information</p>
 <hr />
 </div>
-</div>
-<div id="others" class="section level3">
-<h3>Others</h3>
-<ol style="list-style-type: decimal">
-<li>show the clustered dendrogram instead of the heatmap (toggle ON show compound similarity dendrogram)</li>
-<li>limit the heatmap/potency plot in one page (toggle ON keep heatmap size one page)</li>
-<li>adjust font size when downloading heatmap or online</li>
-</ol>
-<hr />
 </div>
 <div id="references" class="section level3">
 <h3>References</h3>

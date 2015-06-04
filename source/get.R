@@ -204,6 +204,13 @@ get_pod_boxplot <- function (pod, fontsize, sortby, dcols, global_para)
   return(p)
 }
 
+get_published_data_only_commonname <- function (dd, assay_dd)
+{
+  id_cols <- c('CAS','Chemical.Name','chemClust','userClust','toxScore')
+  ok_assays <- unlist(subset(assay_dd, ! is.na(`PubChem AID`), select="common_name"))
+  result <- dd[, colnames(dd) %in% c(id_cols, ok_assays)]
 
+  return(result)
+}
 
 
