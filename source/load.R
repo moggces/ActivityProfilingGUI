@@ -27,6 +27,9 @@ load_text_2_df <- function (textarea)
   result <- data.frame(mat[-1,], stringsAsFactors=FALSE)
   colnames(result) <- mat[1,]
   if (is.null(result$Cluster)) result[, "Cluster"] <- 'unassigned'
+  
+  # remove duplicates
+  result <- result[! duplicated(result$CAS),]
   return(list(id=result))
 }
 
@@ -44,6 +47,11 @@ load_data_matrix <- function (input_file, file_name)
     if ( ! is.null(input$userClust)) input[, "Cluster"] <- input$userClust 
   }
   pot_id_cols <- c('CAS','GSID', 'Chemical.Name','chemClust', 'userClust',  'toxScore', 'Cluster', 'input_Chemical.Name')
+  
+  
+  # remove duplicates
+  input <- input[! duplicated(input$CAS),]
+  
   id_df <- input[, colnames(input) %in% pot_id_cols]
   data_df <- input[,! colnames(input) %in% pot_id_cols]
   rownames(data_df) <- id_df$CAS

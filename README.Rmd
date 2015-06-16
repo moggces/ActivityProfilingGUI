@@ -12,7 +12,7 @@ For a compound which is called as _active_ in in an assay. It could mean:
 
 ### Requirement
 
-* firefox or chrome browser with the link on NIEHS JOBS sever [JOBS](http://jobs.niehs.nih.gov:3838/myapps/profiling2/)
+* firefox or chrome browser with the link on NIEHS internal JOBS server [JOBS](http://jobs.niehs.nih.gov:3838/myapps/profiling2/) or Rstudio public Shiny server [shinyapps.io](https://hsiehjh.shinyapps.io/tox21actprofiler)
 
 or
 
@@ -31,11 +31,10 @@ Two types of input are allowed: chemicals and data matrix
 
 ##### chemicals
 1. creat two columns of data (i.e., chemical ID and its attribute) in excel
-  + chemical ID: two types are allowed, **CAS** and **GSID**
+  + chemical ID: one type is allowed, **CAS**
       + CAS: Chemical Abstracts Service registration ID, e.g., 83-79-4
-      + GSID: from EPA DSSTox, e.g., gsid_20464
   + attribute: any class attribute associated with the chemical that could be compared with the in vitro data
-2. create column names (case sensitive): (**CAS** or **GSID**) and **Cluster**
+2. create column names (case sensitive): **CAS** and **Cluster**
 3. copy and paste to the text area
 
 or **Cluster** columns can be omitted

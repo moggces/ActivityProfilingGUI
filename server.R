@@ -420,7 +420,7 @@ shinyServer(function(input, output) {
       act <- paras[['act']]
       annotation <- paras[['annotation']]
       result <- get_output_df(act, annotation)
-      result <- get_published_data_only_commonname(result, assay_names)  # to remove unpublished data
+      #result <- get_published_data_only_commonname(result, assay_names)  # to remove unpublished data
       write.table(result, file, row.names = FALSE, col.names = TRUE, sep="\t", quote=FALSE, append=FALSE)
     }
   )

@@ -65,7 +65,7 @@ if (window.hljs && document.readyState && document.readyState === "complete") {
 <div id="requirement" class="section level3">
 <h3>Requirement</h3>
 <ul>
-<li>firefox or chrome browser with the link on NIEHS JOBS sever <a href="http://jobs.niehs.nih.gov:3838/myapps/profiling2/">JOBS</a></li>
+<li>firefox or chrome browser with the link on NIEHS internal JOBS server <a href="http://jobs.niehs.nih.gov:3838/myapps/profiling2/">JOBS</a> or Rstudio public Shiny server <a href="https://hsiehjh.shinyapps.io/tox21actprofiler">shinyapps.io</a></li>
 </ul>
 <p>or</p>
 <ul>
@@ -84,15 +84,14 @@ runApp()</code></pre>
 <li>creat two columns of data (i.e., chemical ID and its attribute) in excel</li>
 </ol>
 <ul>
-<li>chemical ID: two types are allowed, <strong>CAS</strong> and <strong>GSID</strong>
+<li>chemical ID: one type is allowed, <strong>CAS</strong>
 <ul>
 <li>CAS: Chemical Abstracts Service registration ID, e.g., 83-79-4</li>
-<li>GSID: from EPA DSSTox, e.g., gsid_20464</li>
 </ul></li>
 <li>attribute: any class attribute associated with the chemical that could be compared with the in vitro data</li>
 </ul>
 <ol start="2" style="list-style-type: decimal">
-<li>create column names (case sensitive): (<strong>CAS</strong> or <strong>GSID</strong>) and <strong>Cluster</strong></li>
+<li>create column names (case sensitive): <strong>CAS</strong> and <strong>Cluster</strong></li>
 <li>copy and paste to the text area</li>
 </ol>
 <p>or <strong>Cluster</strong> columns can be omitted</p>
