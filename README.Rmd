@@ -1,5 +1,6 @@
 ---
 output: html_document
+
 ---
 ## A R Shiny interface to explore activity profiling data
 The pipeline identifies reproducible patterns in assays and interprets the results afterwards.
