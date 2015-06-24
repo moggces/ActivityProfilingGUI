@@ -141,9 +141,9 @@ get_heatmap_annotation <- function (d, input, master, input_chemical_name=NULL, 
 get_heatmap_annotation_color <- function(annotation, actType='')
 {
   user <- rainbow(length(unique(annotation[['userClust']])))
-  names(user) <- levels(annotation[['userClust']])
+  names(user) <- sort(unique(annotation[['userClust']])) # for the CAS not avaiable, more levels than values
   chem  <- rainbow(length(unique(annotation[['chemClust']])))
-  names(chem) <- levels(annotation[['chemClust']])
+  names(chem) <- sort(unique(annotation[['chemClust']]))
   
   if (actType != '')
     #if (! is.null(actType))

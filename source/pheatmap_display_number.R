@@ -1,3 +1,4 @@
+# for pheatmap verion < 1.0
 pheatmap_new_label <- function (mat, mat_num, color = colorRampPalette(rev(c("#D73027", "#FC8D59", 
     "#FEE090", "#FFFFBF", "#E0F3F8", "#91BFDB", "#4575B4")))(100), 
     kmeans_k = NA, breaks = NA, border_color = "grey60", cellwidth = NA, 
