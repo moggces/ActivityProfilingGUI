@@ -12,8 +12,13 @@ split_master_2_matrix <- function(master, props, id='CAS')
   id_data <- master[, id]
   result <- lapply(as.list(props), function (x)
   {
-    col_ids <- grepl(paste('^',x, sep=""), colnames(master))
-    mat <- master[,col_ids]
+    
+    n_ori <- str_count(x, '\\.')
+    #col_ids <- grepl(paste('^',x, sep=""), colnames(master))
+    col_names <- grep(paste('^',x, '\\.', sep=""), colnames(master), value=TRUE)
+    col_names <- col_names[str_count(col_names, '\\.') == n_ori + 1]
+    
+    mat <- master[,col_names]
     rownames(mat) <- id_data
     colnames(mat) <- sub(paste(x, '.', sep=""), "", colnames(mat))
     return(mat)

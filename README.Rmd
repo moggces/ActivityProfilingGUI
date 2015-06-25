@@ -52,6 +52,7 @@ CAS | Cluster
 2. other data matrix with **CAS** as ID and comparable activity information can be uploaded.
 3. **Cluster** information is optional.
 4. **input_Chemical.Name** information is optional (colnames of heat map will change).
+bug: once add  **input_Chemical.Name**, Data and Potency boxplot tabs are not working.
 
 ###### Notes
 * two forms of activity are allowed (see _activity type_), specified by the file name

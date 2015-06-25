@@ -40,7 +40,7 @@ logit_para_file <- './data/tox21_assay_collection.txt'
 assay_names <- load_profile(logit_para_file) # global, dataframe output
 
 # load chemical information (will include purity later)
-profile_file <- './data/tox21_compound_id_v5a2.txt' #colunm name has to be GSID
+profile_file <- './data/tox21_compound_id.txt' #colunm name has to be GSID # v5a3
 master <- load_profile(profile_file) # global, dataframe output
 
 # load the activities (all data) and the structure fp matrix

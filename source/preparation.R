@@ -1,9 +1,9 @@
 # split the activity text file into pieces
-# profile_file <- 'U:/Projects/TOX21/report/tox21_qHTS_all_050815.txt'
+# profile_file <- 'U:/Projects/TOX21/report/tox21_qHTS_all_062415.txt'
 # master <- load_profile(profile_file)
 # props <- get_property_name(master)
-# 
-# # to reduce the size, only used parameters are included
+# # 
+# # # to reduce the size, only used parameters are included
 # activities <- split_master_2_matrix(master, 
 #       props=grep('nemax|label|cc2|cv\\.wauc|pod_med_diff|wauc_fold_change|a_normal|hitcall|npod|ncmax|nec50|n?wauc\\.logit|wauc\\.logit|wauc|pod|ec50|cmax|nac50|nemax)', 
 #                  props, value=TRUE), id='GSID')
