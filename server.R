@@ -114,11 +114,15 @@ shinyServer(function(input, output) {
     
     # if it is a data matrix input, only CAS ID is allowd
     input_chemical_name <- NULL
-    if (length(id_info) > 1)
+    if (length(id_info) > 1) # for loading the data matrix function
     {
       full <- id_info[! grepl('id', names(id_info))]
       chemical_name_ref <- conversion(master, inp='CAS', out='GSID')
-      rownames(full[[1]]) <- chemical_name_ref[as.character(rownames(full[[1]]))]
+      #rownames(full[[1]]) <- chemical_name_ref[as.character(rownames(full[[1]]))]
+      avail_name <- chemical_name_ref[as.character(rownames(full[[1]]))]
+      full[[1]] <- full[[1]][! is.na(avail_name), ]
+      rownames(full[[1]]) <- avail_name[!is.na(avail_name)]
+      
       if (! is.null(id_info[['id']]$input_Chemical.Name)) {
         input_chemical_name <- conversion(join(id_info[['id']], master), inp='GSID', out='input_Chemical.Name')
       }
@@ -158,6 +162,7 @@ shinyServer(function(input, output) {
     nocyto <- input$nocyto
     isgoodcc2 <- input$isgoodcc2
     nohighcv <- input$nohighcv
+    cytofilter <- input$cytofilter
     
     partial <- matrix_subsetter()
     
@@ -177,7 +182,11 @@ shinyServer(function(input, output) {
     #partial <- filter_activity_by_type(partial, 'hitcall', thres=NULL, decision=isstrong,act_mat_names=act_mat_names)
     partial <- filter_activity_by_type(partial, 'pod_med_diff', thres=NULL, decision=nocyto,act_mat_names=act_mat_names)
     partial <- filter_activity_by_type(partial, 'cc2', thres=NULL, decision=isgoodcc2,act_mat_names=act_mat_names)
+    partial <- filter_activity_by_type(partial, 'label', thres=NULL, decision=cytofilter,act_mat_names=act_mat_names)
+    
+    # it has to be the end
     partial <- filter_activity_by_type(partial, 'cv.wauc', thres=NULL, decision=nohighcv,act_mat_names=act_mat_names)
+    
     
     return(partial)
   })
@@ -345,12 +354,20 @@ shinyServer(function(input, output) {
     paras <- heatmap_para_generator() #heatmap_para_generator
     act <- paras[['act']]
     annotation <- paras[['annotation']]
-    result <- get_output_df(act, annotation)
+    
+    id_info <- chemical_loader()
+    id_data <- master
+    isUpload <- FALSE
+    if(length(id_info) > 1) {
+      id_data <- id_info[['id']]
+      isUpload <- TRUE
+    }
+    result <- get_output_df(act, annotation, id_data, isUpload)
     return(result)
     
     # for testing
-#      paras <- heatmap_para_generator()
-#      return(data.frame(paras))
+#       paras <- heatmap_para_generator()
+#       return(data.frame(rownames(paras[['act']])))
     
   })
   
@@ -401,7 +418,15 @@ shinyServer(function(input, output) {
         annotation <- paras[['annotation']]
         dcols <- paras[['dcols']]
         
-        result <- get_output_df(act, annotation)
+        id_info <- chemical_loader()
+        id_data <- master
+        isUpload <- FALSE
+        if(length(id_info) > 1) {
+          id_data <- id_info[['id']]
+          isUpload <- TRUE
+        }
+        result <- get_output_df(act, annotation, id_data, isUpload)
+        
         p <- get_pod_boxplot(result, fontsize=fsize, sortby=sort_meth, dcols=dcols, global_para=assay_names)
       }
     }
@@ -493,7 +518,7 @@ select_plot2 <- function () {
       } else
       {
         #p <- pheatmap_new_label(t(act), t(cv), fontsize=fsize,annotation=annotation,annotation_colors=annt_colors,legend_labels=leg_labels,legend_breaks=leg_breaks, breaks=breaks, color=color, display_numbers=TRUE, clustering_distance_rows = drows, cluster_cols = FALSE, clustering_method = "average")
-        p <- pheatmap(t(act), t(cv), fontsize=fsize,annotation=annotation,annotation_colors=annt_colors,legend_labels=leg_labels,legend_breaks=leg_breaks, breaks=breaks, color=color, display_numbers=t(cv), clustering_distance_rows = drows, cluster_cols = FALSE, clustering_method = "average")
+        p <- pheatmap(t(act), fontsize=fsize,annotation=annotation,annotation_colors=annt_colors,legend_labels=leg_labels,legend_breaks=leg_breaks, breaks=breaks, color=color, display_numbers=t(cv), clustering_distance_rows = drows, cluster_cols = FALSE, clustering_method = "average")
       }
     } else if (sort_meth != 'toxscore' )
     {

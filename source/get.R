@@ -159,13 +159,21 @@ get_heatmap_annotation_color <- function(annotation, actType='')
 }
 
 
-get_output_df <- function (act, annotation)
+get_output_df <- function (act, annotation, id_data, isUpload=FALSE)
 {
   
   act$Chemical.Name <- rownames(act)
   annotation$Chemical.Name <- rownames(annotation)
   result <- join(annotation, act)
-  result <- join(subset(master, select=c(CAS, Chemical.Name)), result, type = "inner")
+  if (isUpload)
+  {
+    if(!is.null(id_data$input_Chemical.Name))
+    {
+      id_data[, "Chemical.Name"] <- id_data$input_Chemical.Name
+    } else { id_data <- master}
+  }
+  result <- join(result, subset(id_data, select=c(CAS, Chemical.Name)),type = "left") # join by Chemical.Name
+  result <- result[, c("CAS", grep("CAS", colnames(result), invert=TRUE, value=TRUE))] 
   return(result)
 }
 

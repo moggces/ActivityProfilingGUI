@@ -95,16 +95,21 @@ filter_activity_by_type <- function(partial, type, thres=NULL, decision=FALSE, a
     ids <- matrix(FALSE, nrow(partial[[name]]), ncol(partial[[name]]))
     if (type == 'pod_med_diff')
     {
-      ant_ids <- grepl('antagonism|inhibition', colnames(partial[[name]]))
+      ant_ids <- grepl('antagonism_|inhibition_', colnames(partial[[name]]))
       if (sum(ant_ids) > 0) 
       {
         ids <- matrix(FALSE, nrow(partial[[name]][, ant_ids]), ncol(partial[[name]][, ant_ids]))
         if (! is.null(thres) ) ids <- (partial[[type]][, ant_ids]*-1) < thres & ! is.na(partial[[type]][, ant_ids]) & ! is.na(partial[[name]][, ant_ids]) & partial[[name]][, ant_ids] > 0.0001
-        if ( decision ) ids <- ! is.na(partial[[type]][, ant_ids]) & ! is.na(partial[[name]][, ant_ids]) & partial[[name]][, ant_ids] > 0.0001
+        if ( decision ) ids <- ! is.na(partial[['wauc_fold_change']][, ant_ids]) & ! is.na(partial[[name]][, ant_ids]) & partial[[name]][, ant_ids] > 0.0001
         partial[[name]][, ant_ids][ids] <- (partial[[name]][, ant_ids][ids])*-1
       }
       
-    } else
+    }else if (type == 'label')
+    {
+      if (! decision) ids <- partial[[type]] == 'd_cytotoxic' # cytofilter
+      sig_name <- sub("^n", "", name) 
+      partial[[name]][ids] <- abs(partial[[sig_name]][ids])
+    } else 
     {
       if (type == 'nwauc.logit' | type == 'npod' | type == 'nec50') ids <- partial[[type]] < thres & ! is.na(partial[[type]]) & ! is.na(partial[[name]]) & partial[[name]] > 0.0001
       if (type == 'ncmax') ids <- abs(partial[[type]]) < thres & ! is.na(partial[[type]]) & ! is.na(partial[[name]]) & partial[[name]] > 0.0001

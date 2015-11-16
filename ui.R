@@ -53,9 +53,11 @@ shinyUI(pageWithSidebar(
       tags$br(),
       sliderInput("pod_diff_thres", 
                   "log10(ratio of signal to cytotoxicity)(inhibition-type assays only)", min=0, max=3, value=0, step=0.2),
-      checkboxInput("nocyto", "not cytotoxic (inhibition-type assays only)", FALSE),
-      #tags$br(),
-      #checkboxInput("isstrong", "wauc above the median of least potent (10 uM)", FALSE),
+      tags$br(),
+      checkboxInput("cytofilter", "apply pipeline's cytotoxicity filter", TRUE),
+      
+      tags$br(),
+      checkboxInput("nocyto", "no cytotoxicity observed in tested concentration range (inhibition-type assays only)", FALSE),
       
       tags$br(),
       checkboxInput("isgoodcc2", "only curve class 1.1, 1.2, 2.1", FALSE),
@@ -124,7 +126,7 @@ shinyUI(pageWithSidebar(
       tabPanel( 'Input chemicals', dataTableOutput('contents')),
       tabPanel( "Profile", plotOutput("profiling", height=1000, width="500%")), # i think the height don't affect
       tabPanel( "Potency boxplot", plotOutput("box",  height=1000, width="500%")),
-      tabPanel( 'Data', dataTableOutput('dd')),
+      tabPanel( 'Activity data', dataTableOutput('dd')),
       tabPanel( 'Assays', dataTableOutput('assay_info')),
       tabPanel('About', includeHTML("README.html"))
     )
