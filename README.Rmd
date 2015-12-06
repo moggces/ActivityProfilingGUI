@@ -6,7 +6,7 @@ The Curvep-wAUC pipeline identifies reproducible patterns in assays and interpre
 
 ### Requirement
 
-* firefox or chrome browser with the link on NIEHS internal JOBS server [JOBS](http://jobs.niehs.nih.gov:3838/myapps/profiling2/) or Rstudio public Shiny server [shinyapps.io](https://hsiehjh.shinyapps.io/tox21actprofiler)
+* firefox or chrome browser with the link on NIEHS internal JOBS server [JOBS](http://jobs.niehs.nih.gov:3838/myapps/tox21actprofiler/) or Rstudio public Shiny server [shinyapps.io](https://hsiehjh.shinyapps.io/tox21actprofiler)
 
 or
 
@@ -189,3 +189,9 @@ Curvep-wAUC pipeline: .Hsieh, J.-H. et al. A Data Analysis Pipeline Accounting f
 
 contact [Jui-Hua Hsieh](mailto:juihua.hsieh@gmail.com) for more information 
 
+***
+
+### Troubleshooting
+
+* Error: 'breaks' are not unique. It is possible that the input compounds are not active in any of the assays. Please add another compound (e.g. 80-05-7).
+* my compound is missing on the heatmap. The compound may not be testesd or none of its sources passes the chemcial QC. 

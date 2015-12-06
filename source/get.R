@@ -32,10 +32,11 @@ get_input_chemical_mat <- function (input, full)
   partial <- list()
   for (name in names(full))
   {
+
     partial[[name]] <- full[[name]][as.character(rownames(full[[name]])) %in% as.character(input[['GSID']]),] # CAS here
     
   }
-  
+  #print(rownames(partial[['npod']]))
   return(partial)
 }
 
@@ -106,7 +107,7 @@ get_heatmap_annotation <- function (d, input, master, input_chemical_name=NULL, 
     rownames(annotation) <- annotation$Row.names
     annotation <- annotation[,-which(colnames(annotation) == 'Row.names')]
   }
-  
+ 
   # create annotations: toxScore
   annotation3 <- data.frame()
   
@@ -132,7 +133,7 @@ get_heatmap_annotation <- function (d, input, master, input_chemical_name=NULL, 
     rownames(annotation) <- annotation$Row.names
     annotation <- annotation[,-which(colnames(annotation) == 'Row.names')]
   }
-  
+ 
   return(annotation)
 }
 

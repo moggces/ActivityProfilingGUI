@@ -46,11 +46,12 @@ master <- load_profile(profile_file) # global, dataframe output
 # load the activities (all data) and the structure fp matrix
 activities_rdata <- './data/activities.RData'
 struct_mat_rdata <- './data/struct_mat.RData'
-load(activities_rdata) # global, matrix output, activities
-load(struct_mat_rdata) # global, matrix output, struct_mat
+load(activities_rdata, verbose=TRUE) # global, matrix output, activities
+load(struct_mat_rdata, verbose=TRUE) # global, matrix output, struct_mat
 
 # remove the structures with low purity
-struct_mat <- struct_mat[rownames(struct_mat) %in% rownames(activities[[1]]),]
+#struct_mat <- struct_mat[rownames(struct_mat) %in% rownames(activities[[1]]),]
+# very weird!! this line causes no error frozen on shiny public server
 
 # heatmap settings
 # the negative direction breaks won't capture wauc with very small values
@@ -135,7 +136,7 @@ shinyServer(function(input, output) {
     # subset the matrices by chemicals
     partial <- get_input_chemical_mat(ip, full)
     
-    # rename the assays
+    # rename the assays & chemicals
     partial <- rename_mat_col_row(partial,  master, assay_names, input_chemical_name, rename_assay=rename_assay)
     
     # subset the matrices by assay names

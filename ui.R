@@ -76,7 +76,7 @@ shinyUI(pageWithSidebar(
     radioButtons("sort_method", "Method:",
                  list('structure similarity' = 'chemclust',
                       'activity similarity' = 'actclust',
-                      'toxicity score (only for activity)' = 'toxscore')),
+                      'toxicity score (sum of activities)' = 'toxscore')),
     
     tags$hr(),
     
@@ -90,7 +90,7 @@ shinyUI(pageWithSidebar(
     # input control
     h4('Input'),
     tags$textarea(id="cmpds", rows=3, cols=1, ""),
-    helpText("Note: copy & paste from excel file with two columns: CAS|GSID & Cluster"),
+    helpText("Note: copy & paste from excel file with two columns: CAS & Cluster"),
     
     h6('or'),
     fileInput('file1', 'Import the data matrix', multiple=FALSE),
