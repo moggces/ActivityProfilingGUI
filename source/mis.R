@@ -29,7 +29,7 @@ split_master_2_matrix <- function(master, props, id='CAS')
 }
 
 # required: conversion, rename the GSID to Chemical.Name (row), rename assay to common_name (col, if TRUE)
-rename_mat_col_row <- function (partial, master, assay_names, input_chemical_name=NULL, rename_assay=TRUE)
+rename_mat_col_row <- function (partial, master, assay_names, input_chemical_name=NULL, rename_chemical=TRUE, rename_assay=TRUE)
 {
   chemical_name_ref <- input_chemical_name
   if (is.null(chemical_name_ref)) {
@@ -38,7 +38,7 @@ rename_mat_col_row <- function (partial, master, assay_names, input_chemical_nam
   
   for (name in names(partial))
   {
-    rownames(partial[[name]]) <-  chemical_name_ref[as.character(rownames(partial[[name]])) ]
+    if (rename_chemical) rownames(partial[[name]]) <-  chemical_name_ref[as.character(rownames(partial[[name]])) ]
     if (  name != 'struct' & rename_assay )
     {
       
@@ -100,8 +100,20 @@ filter_activity_by_type <- function(partial, type, thres=NULL, decision=FALSE, a
       {
         ids <- matrix(FALSE, nrow(partial[[name]][, ant_ids]), ncol(partial[[name]][, ant_ids]))
         if (! is.null(thres) ) ids <- (partial[[type]][, ant_ids]*-1) < thres & ! is.na(partial[[type]][, ant_ids]) & ! is.na(partial[[name]][, ant_ids]) & partial[[name]][, ant_ids] > 0.0001
-        if ( decision ) ids <- ! is.na(partial[['wauc_fold_change']][, ant_ids]) & ! is.na(partial[[name]][, ant_ids]) & partial[[name]][, ant_ids] > 0.0001
+        #if ( decision ) ids <- ! is.na(partial[['wauc_fold_change']][, ant_ids]) & ! is.na(partial[[name]][, ant_ids]) & partial[[name]][, ant_ids] > 0.0001
         partial[[name]][, ant_ids][ids] <- (partial[[name]][, ant_ids][ids])*-1
+      }
+      # to include the agonism_assay
+      if (decision)
+      {
+        ant_ago_ids <- grepl('antagonism_|inhibition_aromatase|agonism_', colnames(partial[[name]]))
+        if (sum(ant_ago_ids) > 0)
+        {
+          ids <- matrix(FALSE, nrow(partial[[name]][, ant_ago_ids]), ncol(partial[[name]][, ant_ago_ids]))
+          if (! is.null(thres) ) ids <- (partial[[type]][, ant_ago_ids]*-1) < thres & ! is.na(partial[[type]][, ant_ago_ids]) & ! is.na(partial[[name]][, ant_ago_ids]) & partial[[name]][, ant_ago_ids] > 0.0001
+          ids <- ! is.na(partial[['wauc_fold_change']][, ant_ago_ids]) & ! is.na(partial[[name]][, ant_ago_ids]) & partial[[name]][, ant_ago_ids] > 0.0001
+          partial[[name]][, ant_ago_ids][ids] <- (partial[[name]][, ant_ago_ids][ids])*-1
+        }
       }
       
     }else if (type == 'label')
@@ -132,9 +144,13 @@ assign_reverse_na_number <- function (partial, act_mat_names=c('npod', 'nec50', 
     if (name == 'npod' | name == 'nec50') {
       result[[name]][ partial[['nwauc.logit']] == 0 & ! is.na(partial[['nwauc.logit']]) ] <- 0
       result[[name]][ result[[name]] < 0 |  is.na(result[[name]])   ] <- 0.0001
+      #result[[name]][ result[[name]] < 0 |  ( is.na(result[[name]]) & ! is.na(result[['cc2']]))  ] <- 0.0001
+      
     }
     if (name == 'nwauc.logit' ) result[[name]][ partial[[name]] < 0 |  is.na(partial[[name]]) ] <- 0.0001
     if (name == 'wauc.logit') result[[name]][  is.na(partial[[name]]) ] <- 0.0001
+    #if (name == 'nwauc.logit' ) result[[name]][ partial[[name]] < 0 | ( is.na(partial[[name]]) & ! is.na(partial[['cc2']])) ] <- 0.0001
+    #if (! keep_not_tested_na ) result[[name]][  is.na(result[[name]])   ] <- 0.0001
   }
   
   return(result)

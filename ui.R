@@ -45,11 +45,14 @@ shinyUI(pageWithSidebar(
       sliderInput("ncmax_thres", 
                   "Emax threshold", min=0, max=100, value=0, step=5),
       tags$br(),
-      sliderInput("npod_thres", 
-                  "POD threshold",  min=3, max=10, value=3, step=0.5),
+      #sliderInput("npod_thres", 
+      #            "POD threshold",  min=3, max=10, value=3, step=0.5),
+      numericInput("npod_thres", label = "POD threshold (uM)", value = NA),
       tags$br(),
-      sliderInput("nec50_thres", 
-                  "EC50 threshold", min=3, max=10, value=3, step=0.5),
+      #sliderInput("nec50_thres", 
+      #           "EC50 threshold", min=3, max=10, value=3, step=0.5),
+      numericInput("nec50_thres", label = "EC50 threshold (uM)", value = NA),
+      
       tags$br(),
       sliderInput("pod_diff_thres", 
                   "log10(ratio of signal to cytotoxicity)(inhibition-type assays only)", min=0, max=3, value=0, step=0.2),
@@ -57,7 +60,7 @@ shinyUI(pageWithSidebar(
       checkboxInput("cytofilter", "apply pipeline's cytotoxicity filter", TRUE),
       
       tags$br(),
-      checkboxInput("nocyto", "no cytotoxicity observed in tested concentration range (inhibition-type assays only)", FALSE),
+      checkboxInput("nocyto", "no cytotoxicity observed in tested concentration range", FALSE),
       
       tags$br(),
       checkboxInput("isgoodcc2", "only curve class 1.1, 1.2, 2.1", FALSE),
@@ -116,7 +119,8 @@ shinyUI(pageWithSidebar(
     # output functions
     br(),
     downloadButton('downloadData', 'Download Activities'),
-    downloadButton('downloadPlot', 'Save Plot')
+    downloadButton('downloadPlot', 'Save Plot'), 
+    downloadButton('downloadEnrich', 'Download Enrichment analysis')
     
     
   ),
@@ -127,6 +131,7 @@ shinyUI(pageWithSidebar(
       tabPanel( "Profile", plotOutput("profiling", height=1000, width="500%")), # i think the height don't affect
       tabPanel( "Potency boxplot", plotOutput("box",  height=1000, width="500%")),
       tabPanel( 'Activity data', dataTableOutput('dd')),
+      tabPanel('Enrichment analysis', dataTableOutput('enrich')),
       tabPanel( 'Assays', dataTableOutput('assay_info')),
       tabPanel('About', includeHTML("README.html"))
     )
