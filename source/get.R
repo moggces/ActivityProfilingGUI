@@ -32,8 +32,16 @@ get_input_chemical_mat <- function (input, full)
   partial <- list()
   for (name in names(full))
   {
-
-    partial[[name]] <- full[[name]][as.character(rownames(full[[name]])) %in% as.character(input[['GSID']]),] # CAS here
+    if ((name == 'struct') )
+    {
+      # for the ones that are removed due to purity issue
+      partial[[name]] <- full[[name]][as.character(rownames(full[[name]])) %in% as.character(input[['GSID']]),] # CAS here
+      partial[[name]] <- partial[[name]][as.character(rownames(partial[[name]])) %in% as.character(rownames(partial[['npod']])),]
+    } else
+    {
+      partial[[name]] <- full[[name]][as.character(rownames(full[[name]])) %in% as.character(input[['GSID']]),] # CAS here
+    }
+    
     
   }
   #print(rownames(partial[['npod']]))
@@ -222,4 +230,49 @@ get_published_data_only_commonname <- function (dd, assay_dd)
   return(result)
 }
 
+get_clust_assay_enrichment <- function (partial_act, full_act, annotation, calZscore=FALSE)
+{
+  
+  pp <- partial_act %>% add_rownames() %>% left_join(select(add_rownames(annotation), -toxScore)) %>%
+    mutate(allClust = "all") %>% gather(assay, act, -matches('rowname|Clust'), na.rm = TRUE) %>%
+    gather(clust_group, clust, matches('Clust')) %>% 
+    group_by(assay, clust_group, clust) %>% filter(clust != 'unassigned') %>%
+    #summarize(n=sum(act != 0.0001), n_p=sum(act > 0.0001), n_mean=mean(act), n_std=sd(act))
+    summarize(n=sum(act != 0.0001), n_p=sum(act > 0.0001))
+  
+  ff_long <- full_act %>% select(one_of(colnames(partial_act))) %>% gather(assay, act, na.rm = TRUE) %>%
+    group_by(assay)
+  ff <- ff_long %>% summarise(N=sum(act != 0.0001), N_P=sum(act > 0.0001))
+  
+  if (calZscore)
+  {
+    zz <- bind_rows(lapply(1:2000, function (x) pp %>% filter(n_p > 1) %>% 
+                             left_join(ff_long, by="assay") %>% 
+                             group_by(assay, clust_group, clust) %>% 
+                             sample_frac(1) %>% slice(1:unique(n)) %>% group_by(assay, clust_group, clust) %>% 
+                             summarize(ns_p=sum(act > 0.0001)))) %>% group_by(assay, clust_group, clust) %>% 
+      summarize(ns_mean=mean(ns_p), ns_std=sd(ns_p))
+    result <- pp %>% filter(n_p > 1) %>% left_join(zz) %>% left_join(ff)
+    result <- result %>% rowwise() %>% 
+      mutate(pvalue = get_fisher_pvalue(n, n_p, N_P, N)$p.value, zscore = (n_p-ns_mean)/ns_std)
+  } else
+  {
+    result <- pp %>% filter(n_p > 1)  %>% left_join(ff)
+    if (nrow(result) > 0)
+    {
+      result <- result %>% rowwise() %>% 
+        mutate(pvalue = get_fisher_pvalue(n, n_p, N_P, N)$p.value)
+    }
+  }
+ 
+  return(result)
+  
+}
+
+get_fisher_pvalue <- function (n, n_p, N_P, N)
+{
+  conti <- matrix ( c( n_p-1, n-n_p, N_P-n_p, N-n-(N_P-n_p)), nrow=2, dimnames = list(active = c('In', 'notIn'), clust = c('In', 'notIn')))
+  fish <- fisher.test( conti ,  alternative="greater")
+  return(fish)
+}
 

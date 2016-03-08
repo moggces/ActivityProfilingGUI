@@ -23,6 +23,8 @@ library(pheatmap)
 library(RColorBrewer)
 library(ggplot2)
 library(scales)
+library(tidyr)
+library(dplyr)
 options(stringsAsFactors = FALSE)
 
 
@@ -137,7 +139,7 @@ shinyServer(function(input, output) {
     partial <- get_input_chemical_mat(ip, full)
     
     # rename the assays & chemicals
-    partial <- rename_mat_col_row(partial,  master, assay_names, input_chemical_name, rename_assay=rename_assay)
+    partial <- rename_mat_col_row(partial,  master, assay_names, input_chemical_name, rename_chemical=TRUE, rename_assay=rename_assay)
     
     # subset the matrices by assay names
     partial <- get_assay_mat(partial, reg_sel, invSel=inv_sel)
@@ -156,8 +158,8 @@ shinyServer(function(input, output) {
     activity_type <- input$acttype
     nwauc_thres <- input$nwauc_thres
     ncmax_thres <- input$ncmax_thres
-    npod_thres <- input$npod_thres
-    nec50_thres <- input$nec50_thres
+    npod_thres <- ifelse(is.na(input$npod_thres), 3, log10(input$npod_thres/1000000)*-1)
+    nec50_thres <- ifelse(is.na(input$nec50_thres), 3, log10(input$nec50_thres/1000000)*-1)
     pod_diff_thres <- input$pod_diff_thres
     #isstrong <- input$isstrong
     nocyto <- input$nocyto
@@ -234,6 +236,7 @@ shinyServer(function(input, output) {
     
     # the cleaned matrices
     dt <- matrix_editor() 
+    if (is.null(dt)) return(NULL)
     
     # if the input is data matrix, creat a blank CV matrix
     if (length(dt) == 2 ) 
@@ -284,6 +287,67 @@ shinyServer(function(input, output) {
     
   })
 
+  chemical_enricher <- reactive({
+    paras <- heatmap_para_generator()
+    if (is.null(paras)) return(NULL)
+    
+    reg_sel <- input$reg_sel # select the assays
+    inv_sel <- input$inv_sel # inverse the selection
+    rename_assay <- TRUE # use the assay_names df
+    profile_type <- input$proftype
+    activity_type <- input$acttype
+    act_mat_names <- activity_type
+    if (profile_type != 'activity') return(NULL)
+    
+    # get the partial matrix
+    partial <- activity_filter()
+    # if it is data matrix input, skip 
+    if (length(partial) == 2) return(NULL)
+    #filtered activies < 0, active >0, inactive =0 or inconclusive in the beginning, NA non tested
+    partial[[act_mat_names]][ (is.na(partial[[act_mat_names]]) | partial[[act_mat_names]] == 0.0001)   & ! is.na(partial[['cc2']]) ] <- 0
+    
+    # load all the activity filter parameters
+    nwauc_thres <- input$nwauc_thres
+    ncmax_thres <- input$ncmax_thres
+    npod_thres <- ifelse(is.na(input$npod_thres), 3, log10(input$npod_thres/1000000)*-1)
+    nec50_thres <- ifelse(is.na(input$nec50_thres), 3, log10(input$nec50_thres/1000000)*-1)
+    pod_diff_thres <- input$pod_diff_thres
+    #isstrong <- input$isstrong
+    nocyto <- input$nocyto
+    isgoodcc2 <- input$isgoodcc2
+    nohighcv <- input$nohighcv
+    cytofilter <- input$cytofilter
+    
+    full <- activities
+    # subset the matrices by assay names
+    
+    # rename the assays & chemicals
+    full <- rename_mat_col_row(full,  master, assay_names, input_chemical_name=NULL, rename_chemical=FALSE, rename_assay=rename_assay)
+    # subset the matrices by assay names
+    full <- get_assay_mat(full, reg_sel, invSel=inv_sel)
+    
+    # filtering
+    full <- filter_activity_by_type(full, 'nwauc.logit', nwauc_thres, act_mat_names=act_mat_names)
+    full <- filter_activity_by_type(full, 'ncmax', ncmax_thres,act_mat_names=act_mat_names)
+    full <- filter_activity_by_type(full, 'npod', npod_thres,act_mat_names=act_mat_names)
+    full <- filter_activity_by_type(full, 'nec50', nec50_thres,act_mat_names=act_mat_names)
+    full <- filter_activity_by_type(full, 'pod_med_diff', pod_diff_thres,act_mat_names=act_mat_names)
+    #full <- filter_activity_by_type(full, 'hitcall', thres=NULL, decision=isstrong,act_mat_names=act_mat_names)
+    full <- filter_activity_by_type(full, 'pod_med_diff', thres=NULL, decision=nocyto,act_mat_names=act_mat_names)
+    full <- filter_activity_by_type(full, 'cc2', thres=NULL, decision=isgoodcc2,act_mat_names=act_mat_names)
+    full <- filter_activity_by_type(full, 'label', thres=NULL, decision=cytofilter,act_mat_names=act_mat_names)
+    
+    # it has to be the end
+    full <- filter_activity_by_type(full, 'cv.wauc', thres=NULL, decision=nohighcv,act_mat_names=act_mat_names)
+    
+    #filtered activies < 0, active >0, inactive =0 or inconclusive in the beginning, NA non tested
+    full[[act_mat_names]][ (is.na(full[[act_mat_names]]) | full[[act_mat_names]] == 0.0001)   & ! is.na(full[['cc2']]) ] <- 0
+    
+    result <- get_clust_assay_enrichment(partial[[act_mat_names]], full[[act_mat_names]], paras[['annotation']], calZscore=FALSE)
+    
+    return(result)
+    
+  })
   
     select_plot <- reactive({
     showDendrogram <- input$showdendro
@@ -372,6 +436,11 @@ shinyServer(function(input, output) {
     
   })
   
+  output$enrich <- renderDataTable({
+    #return(as.data.frame(chemical_enricher()[['modl_acc']]))
+    return(chemical_enricher())
+  })
+  
   output$assay_info <- renderDataTable({
   
     col_n <- c('common_name','technology','cell_type','species','abbreviation', 'PubChem AID')
@@ -449,8 +518,19 @@ shinyServer(function(input, output) {
       paras <- heatmap_para_generator()
       act <- paras[['act']]
       annotation <- paras[['annotation']]
-      result <- get_output_df(act, annotation)
+      result <- get_output_df(act, annotation, master)
       #result <- get_published_data_only_commonname(result, assay_names)  # to remove unpublished data
+      write.table(result, file, row.names = FALSE, col.names = TRUE, sep="\t", quote=FALSE, append=FALSE)
+    }
+  )
+  
+  output$downloadEnrich <-  downloadHandler(
+    filename = function() {
+    
+      paste(input$proftype, '_', input$acttype, '_enrichment.txt', sep='')
+    },
+    content = function(file) {
+      result <- chemical_enricher()
       write.table(result, file, row.names = FALSE, col.names = TRUE, sep="\t", quote=FALSE, append=FALSE)
     }
   )

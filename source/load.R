@@ -30,6 +30,7 @@ load_text_2_df <- function (textarea)
   
   # remove duplicates
   result <- result[! duplicated(result$CAS),]
+  #resuult <- distinct(result)
   return(list(id=result))
 }
 

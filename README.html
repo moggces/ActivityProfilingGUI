@@ -61,13 +61,13 @@ img {
 
 
 
-<div id="a-r-shiny-interface-to-explore-activity-profiling-data" class="section level2">
-<h2>A R Shiny interface to explore activity profiling data</h2>
-<p>The Curvep-wAUC pipeline identifies reproducible patterns in assays and interprets the results afterwards. Activities caused by known artifacts (e.g., cytotoxicity, quenching/autofluorescence) are labelled as inconclusive. An <em>active</em> in in an assay may still need orthogonal assays to confirm its activity in the pathway and its relevance to human health.</p>
+<div id="a-r-shiny-interface-to-explore-compound-activity-in-tox21-assays" class="section level2">
+<h2>A R Shiny interface to explore compound activity in Tox21 assays</h2>
+<p>The activities of chemicals (based on CASRN) are presented. The activities caused by known artifacts (e.g., cytotoxicity, quenching/autofluorescence) are flagged. For summary of the data processing, please refer to the file <a href="https://www.dropbox.com/s/4ptkna93n3nel8v/pipeline_summary.pdf?dl=0">summary</a>. The underlying data for the actives, please refer to the Sciome site <a href="http://apps.sciome.com:3838/CurveVisualization/">Sciome:curve_browser</a>.</p>
 <div id="requirement" class="section level3">
 <h3>Requirement</h3>
 <ul>
-<li>firefox or chrome browser with the link on NIEHS internal JOBS server <a href="http://jobs.niehs.nih.gov:3838/myapps/tox21actprofiler/">JOBS</a> or Rstudio public Shiny server <a href="https://hsiehjh.shinyapps.io/tox21actprofiler">shinyapps.io</a></li>
+<li>Firefox or Chrome browser with the link on the NIEHS internal JOBS server <a href="http://jobs.niehs.nih.gov:3838/myapps/tox21actprofiler/">JOBS</a> or on the Sciome site <a href="http://apps.sciome.com:3838/ActivityProfiling/">Sciome:activity_profiler</a> or Rstudio public Shiny server <a href="https://hsiehjh.shinyapps.io/tox21actprofiler">shinyapps.io</a></li>
 </ul>
 <p>or</p>
 <ul>
@@ -75,6 +75,18 @@ img {
 </ul>
 <pre class="r"><code>library(shiny)
 runApp()</code></pre>
+</div>
+<div id="release-note" class="section level3">
+<h3>Release note</h3>
+<p>v1.1</p>
+<p>v1.2</p>
+<ul>
+<li>new: enrichment panel is added; results can be downloaded</li>
+<li>changed: purity information fixed(v5a5) v030716</li>
+<li>changed: add PubChem AIDs for the lately released assays in PubChem</li>
+<li>changed: default was set to activity clustering (columns)</li>
+<li>changed: structural clustering fixed for missing Tox21 chemicals due to low purity</li>
+</ul>
 <hr />
 </div>
 <div id="input" class="section level3">
@@ -83,20 +95,19 @@ runApp()</code></pre>
 <div id="chemicals" class="section level5">
 <h5>chemicals</h5>
 <ol style="list-style-type: decimal">
-<li>creat two columns of data (i.e., chemical ID and its attribute) in excel</li>
+<li>creat one column (column name: CAS) or two columns of data (column names: CAS and Cluster) in Excel</li>
 </ol>
 <ul>
-<li>chemical ID: one type is allowed, <strong>CAS</strong>
+<li>CAS, chemical ID: one type is allowed, <strong>CAS</strong>
 <ul>
-<li>CAS: Chemical Abstracts Service registration ID, e.g., 83-79-4</li>
+<li>CAS: Chemical Abstracts Service registration ID, e.g., 83-79-4. Please put at least two CASRNs.</li>
 </ul></li>
-<li>attribute: any class attribute associated with the chemical that could be compared with the in vitro qHTS data</li>
+<li>Cluster, chemical annotation: any annotation associated with the chemical that could be compared with the in vitro qHTS data</li>
 </ul>
 <ol start="2" style="list-style-type: decimal">
-<li>create column names (case sensitive): <strong>CAS</strong> and <strong>Cluster</strong></li>
+<li>column names are case sensitive: <strong>CAS</strong> and <strong>Cluster</strong></li>
 <li>copy and paste to the text area</li>
 </ol>
-<p>or the <strong>Cluster</strong> column is optional</p>
 <div id="examples" class="section level6">
 <h6>Examples</h6>
 <table>
@@ -122,16 +133,16 @@ runApp()</code></pre>
 <div id="data-matrix" class="section level5">
 <h5>data matrix</h5>
 <ol style="list-style-type: decimal">
-<li>the downloaded activitiy data can be modified and re-uploaded (e.g., add an external assay results)</li>
-<li>the file names have to contain <strong>nwauc.logit|npod|nac50</strong>. So it will recognize the type of activity and use respective coloring scheme.</li>
-<li>other data matrix with <strong>CAS</strong> as ID and comparable activity information can be uploaded (Note: data with CAS not available in Tox21 library will be excluded.).</li>
+<li>the downloaded activitiy data can be modified and re-uploaded (e.g., add results from external assays)</li>
+<li>the file names have to contain <strong>nwauc.logit|npod|nac50</strong>. So it will recognize the type of activity and use the respective coloring scheme.</li>
+<li>other data matrix with <strong>CAS</strong> as ID and comparable activity information can be uploaded (However, currently data from non-Tox21 chemicals will be excluded).</li>
 <li><strong>Cluster</strong> information is optional.</li>
 <li><strong>input_Chemical.Name</strong> can be used to change the column names in the heatmap (optional).</li>
 </ol>
 <div id="notes" class="section level6">
 <h6>Notes</h6>
 <ul>
-<li><em>Activity filtering</em> function becomes invalid.</li>
+<li><em>Activity filtering</em> and <em>Enrichment Analysis</em> function become invalid.</li>
 <li><em>Assay filtering</em> function is still functional.</li>
 </ul>
 <hr />
@@ -152,7 +163,7 @@ currently only wauc is available, suitable for compound grouping
 <p>results interpretation, e.g., whether the compound is active</p>
 <pre><code>* activity type
     + wauc: overall effect of the chemical
-    + pod: assay-dependent point-of-departure 
+    + pod: point-of-departure (depending on noise leve in the assay)
     + ac50: half-maximal effect concentration</code></pre>
 <div id="activity-type" class="section level6">
 <h6>activity type</h6>
@@ -188,13 +199,13 @@ currently only wauc is available, suitable for compound grouping
 <ul>
 <li>wAUC threshold: see above</li>
 <li>Emax threshold: half-maximal concentration (e.g., 30% relative to the positive control)</li>
-<li>POD threshold: see above</li>
-<li>AC50 threshold: see above</li>
+<li>POD threshold: (uM)</li>
+<li>AC50 threshold: (uM)</li>
 <li>log10(ratio of signal to cytotoxicity) (for inhibition-type assays): (e.g., 1 =&gt; 10 fold between signal and cytotoxicity).</li>
-<li>no cytotoxicity observed in tested concentration range (for inhibition-type assays): toggle ON to exclude any activity with cytotoxicity (information from the respective multiplexed assay) seen in the tested concentration range</li>
+<li>no cytotoxicity observed in tested concentration range (for nuclear receptor antagonism assays &amp; aromatase inhibition assay): toggle ON to exclude any activity with cytotoxicity (information from the respective multiplexed assay) seen in the tested concentration range</li>
 <li>only curve class 1.1, 1.2, 2.1: toggle ON to include only activities from two asymptote + strong/weak Emax + good fit or one asymptote + strong Emax + good fit in at least one run</li>
 <li>exclude high activity variation between sources: toggle OFF to include more potential activity. The included activities can still be recognized in the heatmap by the # sign</li>
-<li>exclude inconclusive label: ON makes all inconclusives (cytotoxic, artifacts) as inactives</li>
+<li>exclude inconclusive label: ON makes all inconclusives (cytotoxic, artifacts, value = 1E-4) as inactives (value = 0)</li>
 </ul>
 <hr />
 </div>
@@ -204,7 +215,7 @@ currently only wauc is available, suitable for compound grouping
 <ol style="list-style-type: decimal">
 <li>structure similarity
 <ul>
-<li>Tanimoto cofficient based on Leadscope structural fingerprints</li>
+<li>Tanimoto cofficient based on Leadscope proprietary structural fingerprints</li>
 <li>hierarchical clustering with average linkage</li>
 <li>chemicals are grouped by cutoff 0.7</li>
 <li>a new parameter is created, chemClust, where chemClust = 0, are the compounds that cannot form clusters or compounds without structures</li>
@@ -253,7 +264,7 @@ currently only wauc is available, suitable for compound grouping
 <li>adjust font size when downloading heatmap or online</li>
 </ol>
 <ul>
-<li>Download Activities: If the data have not been released to PubChem, they will not be able to download</li>
+<li>Download Activities: if the data have not been released to PubChem, they will not be able to download</li>
 <li>Save Plot (currently only for heatmap)</li>
 </ul>
 <hr />
@@ -295,6 +306,13 @@ currently only wauc is available, suitable for compound grouping
 <h4>Activity data</h4>
 <p>background data used for heatmap and potency plot</p>
 </div>
+<div id="enrichment-analysis" class="section level4">
+<h4>Enrichment analysis</h4>
+<ul>
+<li>DAVID (more strigent) Fisher’s exact test is applied</li>
+<li>n: number of compounds in a class; n_p: number of actives in a class; N_P: number of actives in the population;n: number of compounds in the population</li>
+</ul>
+</div>
 <div id="assays" class="section level4">
 <h4>Assays</h4>
 <p>assay information</p>
@@ -303,15 +321,15 @@ currently only wauc is available, suitable for compound grouping
 </div>
 <div id="references" class="section level3">
 <h3>References</h3>
-<p>Curvep-wAUC pipeline: .Hsieh, J.-H. et al. A Data Analysis Pipeline Accounting for Artifacts in Tox21 Quantitative High-Throughput Screening Assays. J Biomol Screen 2015</p>
 <p>contact <a href="mailto:juihua.hsieh@gmail.com">Jui-Hua Hsieh</a> for more information</p>
 <hr />
 </div>
 <div id="troubleshooting" class="section level3">
 <h3>Troubleshooting</h3>
 <ul>
+<li>DNA damage assays (activation_DNA_damage/dsb and activation_DNA_damage/srf) tend to have more false positives.</li>
 <li>Error: ‘breaks’ are not unique. It is possible that the input compounds are not active in any of the assays. Please add another compound (e.g. 80-05-7).</li>
-<li>my compound is missing on the heatmap. The compound may not be testesd or none of its sources passes the chemcial QC.</li>
+<li>The compound is missing on the heatmap. The compound may not be testesd or none of its sources passes the chemcial QC.</li>
 </ul>
 </div>
 </div>

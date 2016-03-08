@@ -60,7 +60,7 @@ shinyUI(pageWithSidebar(
       checkboxInput("cytofilter", "apply pipeline's cytotoxicity filter", TRUE),
       
       tags$br(),
-      checkboxInput("nocyto", "no cytotoxicity observed in tested concentration range", FALSE),
+      checkboxInput("nocyto", "no cytotoxicity observed in tested concentration range (antagonism & aromatase only)", FALSE),
       
       tags$br(),
       checkboxInput("isgoodcc2", "only curve class 1.1, 1.2, 2.1", FALSE),
@@ -79,7 +79,7 @@ shinyUI(pageWithSidebar(
     radioButtons("sort_method", "Method:",
                  list('structure similarity' = 'chemclust',
                       'activity similarity' = 'actclust',
-                      'toxicity score (sum of activities)' = 'toxscore')),
+                      'toxicity score (sum of activities)' = 'toxscore'), selected="actclust"),
     
     tags$hr(),
     
@@ -93,7 +93,7 @@ shinyUI(pageWithSidebar(
     # input control
     h4('Input'),
     tags$textarea(id="cmpds", rows=3, cols=1, ""),
-    helpText("Note: copy & paste from excel file with two columns: CAS & Cluster"),
+    helpText("Note: copy & paste from excel file with two columns: CAS & Cluster (optional)"),
     
     h6('or'),
     fileInput('file1', 'Import the data matrix', multiple=FALSE),

@@ -106,7 +106,7 @@ filter_activity_by_type <- function(partial, type, thres=NULL, decision=FALSE, a
       # to include the agonism_assay
       if (decision)
       {
-        ant_ago_ids <- grepl('antagonism_|inhibition_aromatase|agonism_', colnames(partial[[name]]))
+        ant_ago_ids <- grepl('antagonism_|inhibition_aromatase', colnames(partial[[name]]))
         if (sum(ant_ago_ids) > 0)
         {
           ids <- matrix(FALSE, nrow(partial[[name]][, ant_ago_ids]), ncol(partial[[name]][, ant_ago_ids]))

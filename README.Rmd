@@ -1,12 +1,13 @@
 ---
 output: html_document
 ---
-## A R Shiny interface to explore activity profiling data
-The Curvep-wAUC pipeline identifies reproducible patterns in assays and interprets the results afterwards. Activities caused by known artifacts (e.g., cytotoxicity, quenching/autofluorescence) are labelled as inconclusive. An _active_ in in an assay may still need orthogonal assays to confirm its activity in the pathway and its relevance to human health.
+## A R Shiny interface to explore compound activity in Tox21 assays
 
+The activities of chemicals (based on CASRN) are presented. The activities caused by known artifacts (e.g., cytotoxicity, quenching/autofluorescence) are flagged. For summary of the data processing, please refer to the file [summary](https://www.dropbox.com/s/4ptkna93n3nel8v/pipeline_summary.pdf?dl=0). The underlying data for the actives, please refer to the Sciome site [Sciome:curve_browser](http://apps.sciome.com:3838/CurveVisualization/).
+  
 ### Requirement
 
-* firefox or chrome browser with the link on NIEHS internal JOBS server [JOBS](http://jobs.niehs.nih.gov:3838/myapps/tox21actprofiler/) or Rstudio public Shiny server [shinyapps.io](https://hsiehjh.shinyapps.io/tox21actprofiler)
+* Firefox or Chrome browser with the link on the NIEHS internal JOBS server [JOBS](http://jobs.niehs.nih.gov:3838/myapps/tox21actprofiler/) or on the Sciome site [Sciome:activity_profiler](http://apps.sciome.com:3838/ActivityProfiling/) or Rstudio public Shiny server [shinyapps.io](https://hsiehjh.shinyapps.io/tox21actprofiler)
 
 or
 
@@ -18,20 +19,31 @@ library(shiny)
 runApp()
 ```
 
+### Release note
+
+v1.1
+
+
+v1.2
+
+* new: enrichment panel is added; results can be downloaded
+* changed: purity information fixed(v5a5) v030716
+* changed: add PubChem AIDs for the lately released assays in PubChem
+* changed: default was set to activity clustering (columns)
+* changed: structural clustering fixed for missing Tox21 chemicals due to low purity
+
 ***
 
 ### Input
 Two types of input are allowed: chemicals and data matrix
 
 ##### chemicals
-1. creat two columns of data (i.e., chemical ID and its attribute) in excel
-  + chemical ID: one type is allowed, **CAS**
-      + CAS: Chemical Abstracts Service registration ID, e.g., 83-79-4
-  + attribute: any class attribute associated with the chemical that could be compared with the in vitro qHTS data
-2. create column names (case sensitive): **CAS** and **Cluster**
+1. creat one column (column name: CAS) or two columns of data (column names: CAS and Cluster) in Excel
+  + CAS, chemical ID: one type is allowed, **CAS**
+      + CAS: Chemical Abstracts Service registration ID, e.g., 83-79-4. Please put at least two CASRNs. 
+  + Cluster, chemical annotation: any annotation associated with the chemical that could be compared with the in vitro qHTS data
+2. column names are case sensitive: **CAS** and **Cluster**
 3. copy and paste to the text area
-
-or the **Cluster** column is optional
 
 ###### Examples
 CAS | Cluster
@@ -41,14 +53,15 @@ CAS | Cluster
 
 
 ##### data matrix
-1. the downloaded activitiy data can be modified and re-uploaded (e.g., add an external assay results)
-2. the file names have to contain **nwauc.logit|npod|nac50**. So it will recognize the type of activity and use respective coloring scheme. 
-2. other data matrix with **CAS** as ID and comparable activity information can be uploaded (Note: data with CAS not available in Tox21 library will be excluded.).
+
+1. the downloaded activitiy data can be modified and re-uploaded (e.g., add results from external assays)
+2. the file names have to contain **nwauc.logit|npod|nac50**. So it will recognize the type of activity and use the respective coloring scheme. 
+2. other data matrix with **CAS** as ID and comparable activity information can be uploaded (However, currently data from non-Tox21 chemicals will be excluded).
 3. **Cluster** information is optional.
 4. **input_Chemical.Name** can be used to change the column names in the heatmap (optional).
 
 ###### Notes
-* _Activity filtering_ function becomes invalid. 
+* _Activity filtering_ and _Enrichment Analysis_ function become invalid. 
 * _Assay filtering_ function is still functional. 
 
 ***
@@ -66,7 +79,7 @@ results interpretation, e.g., whether the compound is active
 
     * activity type
         + wauc: overall effect of the chemical
-        + pod: assay-dependent point-of-departure 
+        + pod: point-of-departure (depending on noise leve in the assay)
         + ac50: half-maximal effect concentration
     
 ###### activity type
@@ -85,13 +98,13 @@ The default activity results are based on Curvep-wAUC pipeline (i.e. known artif
 
 * wAUC threshold: see above
 * Emax threshold: half-maximal concentration (e.g., 30% relative to the positive control)
-* POD threshold: see above
-* AC50 threshold: see above
+* POD threshold: (uM)
+* AC50 threshold: (uM)
 * log10(ratio of signal to cytotoxicity) (for inhibition-type assays): (e.g., 1 => 10 fold between signal and cytotoxicity).
-* no cytotoxicity observed in tested concentration range (for inhibition-type assays): toggle ON to exclude any activity with cytotoxicity (information from the respective multiplexed assay) seen in the tested concentration range
+* no cytotoxicity observed in tested concentration range (for nuclear receptor antagonism assays & aromatase inhibition assay): toggle ON to exclude any activity with cytotoxicity (information from the respective multiplexed assay) seen in the tested concentration range
 * only curve class 1.1, 1.2, 2.1: toggle ON to include only activities from  two asymptote + strong/weak Emax + good fit or one asymptote + strong Emax + good fit in at least one run
 * exclude high activity variation between sources: toggle OFF to include more potential activity. The included activities can still be recognized in the heatmap by the # sign
-* exclude inconclusive label: ON makes all inconclusives (cytotoxic, artifacts) as inactives 
+* exclude inconclusive label: ON makes all inconclusives (cytotoxic, artifacts, value = 1E-4) as inactives (value = 0) 
 
 ***
 
@@ -99,7 +112,7 @@ The default activity results are based on Curvep-wAUC pipeline (i.e. known artif
 The columns of the heatmap can be ordered in three methods:
 
 1. structure similarity
-    + Tanimoto cofficient based on Leadscope structural fingerprints
+    + Tanimoto cofficient based on Leadscope proprietary structural fingerprints
     + hierarchical clustering with average linkage
     + chemicals are grouped by cutoff 0.7
     + a new parameter is created, chemClust, where chemClust = 0, are the compounds that cannot form clusters or compounds without structures
@@ -137,7 +150,7 @@ Simple regular expression rules:
 2. limit the heatmap/potency plot in one page (toggle ON keep heatmap size one page)
 3. adjust font size when downloading heatmap or online
 
-  * Download Activities: If the data have not been released to PubChem, they will not be able to download
+  * Download Activities: if the data have not been released to PubChem, they will not be able to download
   * Save Plot (currently only for heatmap)
 
 ***
@@ -176,6 +189,12 @@ Only shown for pod or ac50 as activity.
 
 background data used for heatmap and potency plot
 
+#### Enrichment analysis
+
+* DAVID (more strigent) Fisher's exact test is applied
+* n: number of compounds in a class; n\_p: number of actives in a class; N\_P: number of actives in the population;n: number of compounds in the population
+
+
 #### Assays
 
 assay information
@@ -185,13 +204,12 @@ assay information
 
 ### References
 
-Curvep-wAUC pipeline: .Hsieh, J.-H. et al. A Data Analysis Pipeline Accounting for Artifacts in Tox21 Quantitative High-Throughput Screening Assays. J Biomol Screen 2015
-
 contact [Jui-Hua Hsieh](mailto:juihua.hsieh@gmail.com) for more information 
 
 ***
 
 ### Troubleshooting
 
+* DNA damage assays (activation\_DNA\_damage/dsb and activation\_DNA\_damage/srf) tend to have more false positives.
 * Error: 'breaks' are not unique. It is possible that the input compounds are not active in any of the assays. Please add another compound (e.g. 80-05-7).
-* my compound is missing on the heatmap. The compound may not be testesd or none of its sources passes the chemcial QC. 
+* The compound is missing on the heatmap. The compound may not be testesd or none of its sources passes the chemcial QC. 
