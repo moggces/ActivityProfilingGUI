@@ -97,21 +97,36 @@ get_heatmap_annotation <- function (d, input, master, input_chemical_name=NULL, 
       group_cp[group == names(group_t)[i]] <- i
     }
   }
-  
+  print(str_c("get:line100", names(group_cp)))
   # create annotations: chemClust
   annotation <- data.frame(chemClust = as.factor(group_cp))
   rownames(annotation) <- names(group_cp)
+  print("get:line104")
+  print(annotation)
   
   # create annoations: userClust
   annotation2 <- data.frame(userClust = as.factor(input[['Cluster']]))
   
   if (nrow(annotation2) > 0)
   {
-    rownames(annotation2) <- as.character(input[['GSID']])
-    if (is.null(chemical_name_ref)) chemical_name_ref <- conversion(master, inp='GSID', out='Chemical.Name')
-    rownames(annotation2) <- chemical_name_ref[as.character(rownames(annotation2))]
+    # can get the chemical name outside this function
+    # do not need this because there is input name chemical name
+    #rownames(annotation2) <- as.character(input[['GSID']])
+    #if (is.null(chemical_name_ref)) chemical_name_ref <- conversion(master, inp='GSID', out='Chemical.Name')
     
+    if (is.null(chemical_name_ref)) {
+      chemical_name_ref <- make.unique(input[['Chemical.Name']])
+      rownames(annotation2) <- chemical_name_ref
+      print(str_c("get:line115", chemical_name_ref))
+    } else
+    {
+      rownames(annotation2) <- input[['Chemical.Name']]
+      rownames(annotation2) <- chemical_name_ref[as.character(rownames(annotation2))]
+    }
+  
     annotation <- merge(annotation, annotation2, by="row.names")
+    print("get:line122")
+    print(annotation)
     rownames(annotation) <- annotation$Row.names
     annotation <- annotation[,-which(colnames(annotation) == 'Row.names')]
   }
@@ -181,7 +196,9 @@ get_output_df <- function (act, annotation, id_data, isUpload=FALSE)
       id_data[, "Chemical.Name"] <- id_data$input_Chemical.Name
     } else { id_data <- master}
   }
-  result <- join(result, subset(id_data, select=c(CAS, Chemical.Name)),type = "left") # join by Chemical.Name
+  result[,"Chemical.Name_original"] <- result$Chemical.Name
+  result[,"Chemical.Name_original"] <- sub("\\.[0-9]+$", "", result$Chemical.Name_original)
+  result <- left_join(result, subset(id_data, select=c(CAS, Chemical.Name)), by=c("Chemical.Name_original" = "Chemical.Name")) # join by Chemical.Name
   result <- result[, c("CAS", grep("CAS", colnames(result), invert=TRUE, value=TRUE))] 
   return(result)
 }

@@ -25,6 +25,7 @@ library(ggplot2)
 library(scales)
 library(tidyr)
 library(dplyr)
+library(stringr)
 options(stringsAsFactors = FALSE)
 
 
@@ -229,10 +230,11 @@ shinyServer(function(input, output) {
     input_chemical_name <- NULL
     chem_id_df <- get_lookup_list(chemical_loader()[['id']], master)
     if (! is.null(chem_id_df$input_Chemical.Name)) {
-      input_chemical_name <- conversion(chem_id_df, inp='GSID', out='input_Chemical.Name')
+      input_chemical_name <- conversion(chem_id_df, inp='Chemical.Name', out='input_Chemical.Name')
     }
     # the basic identifies , GSID + Cluster
-    ip <- subset(chem_id_df, GSID != '' & CAS != '', select=c(GSID, Cluster))
+    # can add the Chemical.Name here
+    ip <- subset(chem_id_df, GSID != '' & CAS != '', select=c(GSID, Cluster,Chemical.Name))
     
     # the cleaned matrices
     dt <- matrix_editor() 
@@ -246,6 +248,9 @@ shinyServer(function(input, output) {
       cv <-  matrix("", nrow(act), ncol(act), dimnames=dimnames(act))
     } else
     {
+      # it has to be here to add more lines for the duplicates
+      dt <- duplicate_chemical_row(dt, ip)
+      
       if (profile_type == 'activity')
       {
         activity_type <- input$acttype
@@ -264,6 +269,7 @@ shinyServer(function(input, output) {
     struct <- dt[['struct']]
     
     # first, cluster the chemicals
+    print(str_c("line271", rownames(struct)))
     dcols <- dist(struct, method = "binary") ## chemicals
     
     # very, very cumbersome functions. better to split, merge dt + activity_type
@@ -291,6 +297,11 @@ shinyServer(function(input, output) {
     paras <- heatmap_para_generator()
     if (is.null(paras)) return(NULL)
     
+    # chemical information
+    chem_id_df <- get_lookup_list(chemical_loader()[['id']], master)
+    ip <- subset(chem_id_df, GSID != '' & CAS != '', select=c(GSID, Cluster,Chemical.Name))
+    
+    # parameters
     reg_sel <- input$reg_sel # select the assays
     inv_sel <- input$inv_sel # inverse the selection
     rename_assay <- TRUE # use the assay_names df
@@ -305,6 +316,14 @@ shinyServer(function(input, output) {
     if (length(partial) == 2) return(NULL)
     #filtered activies < 0, active >0, inactive =0 or inconclusive in the beginning, NA non tested
     partial[[act_mat_names]][ (is.na(partial[[act_mat_names]]) | partial[[act_mat_names]] == 0.0001)   & ! is.na(partial[['cc2']]) ] <- 0
+    
+    print(str_c("line319", names(partial)))
+    print(str_c("line320", rownames(partial[[act_mat_names]])))
+    
+    # add duplicate rows due to duplicate cluster information
+    partial <- duplicate_chemical_row(partial, ip)
+    print(str_c("line324", rownames(partial[[act_mat_names]])))
+    
     
     # load all the activity filter parameters
     nwauc_thres <- input$nwauc_thres
@@ -343,6 +362,8 @@ shinyServer(function(input, output) {
     #filtered activies < 0, active >0, inactive =0 or inconclusive in the beginning, NA non tested
     full[[act_mat_names]][ (is.na(full[[act_mat_names]]) | full[[act_mat_names]] == 0.0001)   & ! is.na(full[['cc2']]) ] <- 0
     
+    print(paras[['annotation']])
+    print(rownames(paras[['annotation']]))
     result <- get_clust_assay_enrichment(partial[[act_mat_names]], full[[act_mat_names]], paras[['annotation']], calZscore=FALSE)
     
     return(result)
@@ -496,7 +517,7 @@ shinyServer(function(input, output) {
           isUpload <- TRUE
         }
         result <- get_output_df(act, annotation, id_data, isUpload)
-        
+        result <- select(result, -Chemical.Name_original) # remove the new added column after get_output_df
         p <- get_pod_boxplot(result, fontsize=fsize, sortby=sort_meth, dcols=dcols, global_para=assay_names)
       }
     }

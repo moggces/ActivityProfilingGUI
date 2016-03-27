@@ -167,3 +167,19 @@ remove_inconclusive_label <- function (partial, act_mat_names=c('npod', 'nec50',
   }
   return(result)
 }
+
+# duplicate chemical names for the id has multiple clusters
+duplicate_chemical_row <- function (dt_list, input_ids)
+{
+  c <- table(input_ids[['Chemical.Name']])
+  dup <- names(c[c > 1])
+  dt_list <- sapply(dt_list, function (x)
+  {
+    u <- x[! rownames(x) %in% dup,]
+    d <- x[rownames(x) %in% dup,] 
+    d <- d[rep(rownames(d), c[as.character(rownames(d))]),]
+    return(rbind(u,d))
+      
+  }, simplify=FALSE, USE.NAMES=TRUE)
+  return(dt_list)
+}

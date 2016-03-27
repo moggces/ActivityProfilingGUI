@@ -29,8 +29,8 @@ load_text_2_df <- function (textarea)
   if (is.null(result$Cluster)) result[, "Cluster"] <- 'unassigned'
   
   # remove duplicates
-  result <- result[! duplicated(result$CAS),]
-  #resuult <- distinct(result)
+  #result <- result[! duplicated(result$CAS),]
+  result <- distinct(result)
   return(list(id=result))
 }
 
@@ -52,6 +52,7 @@ load_data_matrix <- function (input_file, file_name)
   
   # remove duplicates
   input <- input[! duplicated(input$CAS),]
+  
   
   id_df <- input[, colnames(input) %in% pot_id_cols]
   data_df <- input[,! colnames(input) %in% pot_id_cols]

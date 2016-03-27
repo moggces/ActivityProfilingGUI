@@ -1,15 +1,15 @@
-# #split the activity text file into pieces
-profile_file <- 'Z:/hsiehj2/Projects/TOX21/hitcall_collection/Tox21_qHTS_all_030716.txt'
-master <- load_profile(profile_file)
-props <- get_property_name(master)
-# 
-# # to reduce the size, only used parameters are included
-activities <- split_master_2_matrix(master, 
-      props=grep('nemax|label|cc2|cv\\.wauc|pod_med_diff|wauc_fold_change|a_normal|hitcall|npod|ncmax|nec50|n?wauc\\.logit|wauc\\.logit|wauc|pod|ec50|cmax|nac50|nemax)', 
-                 props, value=TRUE), id='GSID') # change ID (GSID)
-activities[['label']][, 'label'] <- NULL # a label column that is accidentally included
-lapply(activities, ncol) #the number has to match up with the number in tox21_assay_collection$assay
-save(activities, file='activities.RData')
+# # #split the activity text file into pieces
+# profile_file <- 'Z:/hsiehj2/Projects/TOX21/hitcall_collection/Tox21_qHTS_all_030716.txt'
+# master <- load_profile(profile_file)
+# props <- get_property_name(master)
+# # 
+# # # to reduce the size, only used parameters are included
+# activities <- split_master_2_matrix(master, 
+#       props=grep('nemax|label|cc2|cv\\.wauc|pod_med_diff|wauc_fold_change|a_normal|hitcall|npod|ncmax|nec50|n?wauc\\.logit|wauc\\.logit|wauc|pod|ec50|cmax|nac50|nemax)', 
+#                  props, value=TRUE), id='GSID') # change ID (GSID)
+# activities[['label']][, 'label'] <- NULL # a label column that is accidentally included
+# lapply(activities, ncol) #the number has to match up with the number in tox21_assay_collection$assay
+# save(activities, file='activities.RData')
 # # 
 # # load the structure fingerprint
 # source(paste(getwd(), "/source/customized.R", sep=""), local=TRUE)
