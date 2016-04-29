@@ -8,10 +8,24 @@ Library dependencies are managed using the [packrat](https://rstudio.github.io/p
 
     install.packages("packrat")
 
-Next, create a new Rstudio project for this application. Dependencies should install automatically for this application.
+## Starting the application (development)
 
-## Running the application
+If starting a development environment, create a new RStudio project in the root project path. RStudio should recognize the packrat module and begin installing requirements. Alternatively, the following commands could be given:
+    
+    library(packrat)
+    packrat::restore()
 
-To run the application from the command-line, change directories to the root path of the applcation, then enter the following command in the terminal:
+To run the application:
+    
+    library(shiny)
+    runApp()
 
-    R -e "library(shiny); runApp(port=1234)"
+## Starting the application (from the terminal)
+
+When using a terminal, packrat does not bootstrap the initialization scripts and install dependencies. This can be done manually (again, from the root-path of the project):
+
+    R -e "library(packrat); packrat::restore();"
+
+After dependencies have been installed, we can star the application:
+
+    R -e "source(\"packrat/init.R\"); library(shiny); runApp(port=1234);"
