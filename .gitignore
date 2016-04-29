@@ -1,0 +1,11 @@
+# configuration file
+config.json
+
+# packrat ignores
+packrat/lib*/
+packrat/bundles/*
+packrat/src/
+# Rstudio ignores
+.Rproj.user
+.Rhistory
+.Rprofile
