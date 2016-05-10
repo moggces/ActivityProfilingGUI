@@ -25,6 +25,8 @@ library(ggplot2)
 library(scales)
 library(tidyr)
 library(dplyr)
+library(Cairo)
+
 options(stringsAsFactors = FALSE)
 
 

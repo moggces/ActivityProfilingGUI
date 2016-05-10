@@ -8,6 +8,11 @@ Source: CRAN
 Version: 1.60.0-1
 Hash: 889445e87a2acd4cc58440957f3b0d1a
 
+Package: Cairo
+Source: CRAN
+Version: 1.5-9
+Hash: 6acb4ad0cff51c9f8148e344db173f70
+
 Package: DBI
 Source: CRAN
 Version: 0.3.1
