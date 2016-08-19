@@ -12,6 +12,11 @@ Library dependencies are managed using the [packrat](https://rstudio.github.io/p
 
     install.packages("packrat")
 
+## Download datasets
+
+Datasets are too large to be kept in the github repository. Request datasets
+from repository owner (latest version: 2016-03-16).
+
 ## Starting the application (development)
 
 To develop the application, use the [Rstudio](https://www.rstudio.com/) development enviornment. Create a new RStudio project in the root project path. RStudio should recognize the packrat module and begin installing requirements.
