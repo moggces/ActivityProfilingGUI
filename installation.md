@@ -15,7 +15,7 @@ Library dependencies are managed using the [packrat](https://rstudio.github.io/p
 ## Download datasets
 
 Datasets are too large to be kept in the github repository. Request datasets
-from repository owner (latest version: 2016-03-16).
+from repository owner (latest version: 2016-03-08).
 
 ## Starting the application (development)
 
