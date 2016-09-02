@@ -4,7 +4,6 @@ config.json
 # keep data folder, but no data
 data/*
 !data/.gitkeep
-
 # packrat ignores
 packrat/lib*/
 packrat/bundles/*
@@ -13,4 +12,3 @@ packrat/src/
 .Rproj.user
 .Rhistory
 .Rprofile
-
