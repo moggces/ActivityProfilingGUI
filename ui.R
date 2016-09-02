@@ -3,6 +3,10 @@ library(markdown)
 
 shinyUI(
   bootstrapPage(
+    tags$head(
+      tags$meta(`http-equiv`="pragma", content="no-cache"),
+      tags$meta(`http-equiv`="Cache-control", content="no-cache, no-store")
+    ),
     tags$head(tags$script(src="extra.js")),
     tags$head(tags$link(rel="stylesheet", type="text/css", href="headerfooter.css")),
     tags$head(tags$link(rel="stylesheet", type="text/css", href="custom.css")),
@@ -13,11 +17,6 @@ shinyUI(
         pageWithSidebar(
           headerPanel('', windowTitle='Tox21 Activity Profiler'),
           sidebarPanel(
-            tags$head(
-              tags$meta(`http-equiv`="pragma", content="no-cache"),
-              tags$meta(`http-equiv`="Cache-control", content="no-cache, no-store")
-            ),
-
             # input control
             h4('CAS & Cluster (optional)'),
             tags$textarea(id="cmpds", class='col-xs-12', rows=5, ""),
