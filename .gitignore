@@ -13,4 +13,6 @@ packrat/src/
 .Rproj.user
 .Rhistory
 .Rprofile
+.Rdata
+Thumbs.db
 
