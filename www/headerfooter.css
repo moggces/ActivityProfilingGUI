@@ -1,0 +1,87 @@
+/* *************************************
+    &Forms
+************************************ */
+/* for the odd fieldsets */
+/* for the even fieldsets */
+/* Masthead styles */
+/* line 8, ../sass/headerfooter.scss */
+#masthead {
+  position: relative;
+  background: #375998;
+  background-image: url("//ntp.niehs.nih.gov/images/template/masthead_right.gif");
+  background-size: 297px 80px;
+  background-position: right;
+  background-repeat: no-repeat;
+  clear: both;
+  height: 80px;
+}
+
+/* line 18, ../sass/headerfooter.scss */
+#mastheadwrapper {
+  background-image: url("//ntp.niehs.nih.gov/images/mastheadwrapperback.gif");
+  background-position: center;
+  background-repeat: repeat-y;
+  overflow: hidden;
+  border-top-style: solid;
+  border-top-width: 15px;
+  border-top-color: #b4b68e;
+  background-color: #181c3e;
+}
+
+/* line 28, ../sass/headerfooter.scss */
+#masthead h1 {
+  position: absolute;
+  top: -10000px;
+  left: -10000px;
+}
+
+
+/******************************************
+    &Main Navigation Styles
+*******************************************/
+/* use same band for both header and footer */
+/* line 203, ../sass/headerfooter.scss */
+#footer {
+  border-top-style: solid;
+  border-top-width: 15px;
+  border-top-color: #b4b68e;
+  clear: both;
+  text-align: center;
+  font-size: .95em;
+  background: #181c3e;
+  color: white;
+  padding: 0.3em 0;
+}
+/* line 214, ../sass/headerfooter.scss */
+#footer a:link, #footer a:hover, #footer a:visited {
+  color: white;
+}
+/* line 217, ../sass/headerfooter.scss */
+#footer a:hover {
+  text-decoration: underline;
+}
+/* line 222, ../sass/headerfooter.scss */
+#footer img {
+  margin: 0 5px;
+}
+/* line 225, ../sass/headerfooter.scss */
+#footer li {
+  border-left: solid 1px #908FB7;
+  display: inline;
+  line-height: 1.1em;
+  padding: 0 0.625em 0 1em;
+}
+/* line 230, ../sass/headerfooter.scss */
+#footer li:first-child {
+  border-left: 0;
+  padding-left: 0;
+}
+
+/* line 236, ../sass/headerfooter.scss */
+#footerCloser {
+  text-align: center;
+  padding-top: 1em;
+  padding-bottom: 1em;
+  font-size: 0.9em;
+}
+
