@@ -227,3 +227,12 @@ assay information
 * changed: add PubChem AIDs for the lately released assays in PubChem
 * changed: default was set to activity clustering (columns)
 * changed: structural clustering fixed for missing Tox21 chemicals due to low purity
+
+***
+
+### Contact
+
+For further information, contact:
+
+Jui-Hua Hsieh, Ph.D.
+[Biomolecular Screening Branch](http://www.niehs.nih.gov/research/atniehs/labs/bmsb/toxico/staff/hsieh/index.cfm)
