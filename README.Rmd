@@ -1,7 +1,7 @@
 # Tox21 Activity Profiler
 
 
-This interactive application allows users to browse activity profiles from the Tox21 dataset.  The activities of chemicals (based on CASRN) are presented. The activities caused by known artifacts (e.g., cytotoxicity, quenching/autofluorescence) are flagged.
+This interactive application allows users to browse activity profiles from the Tox21 dataset.  The activities of chemicals (based on CASRN) are presented. 
 
 For a summary of data processing, see [this summary](https://www.dropbox.com/s/4ptkna93n3nel8v/pipeline_summary.pdf?dl=0). The underlying data are available for browsing in a related application, the [Tox21 curve browser](/sandbox/tox21-curve-visualization/).
 
@@ -31,7 +31,6 @@ Paste the following data-table into the "CAS & Cluster" text-box.
 
 ***
 
-## Input details
 
 ### Required inputs
 
@@ -39,7 +38,7 @@ One of the two inputs below are required.
 
 #### CAS & Cluster
 
-A tab-delimited dataset (with header included). Two columns are allowed: chemicals and cluster. The clustercolumn is optional.
+A tab-delimited dataset (with header included). Two columns are allowed: chemicals and cluster. The cluster column is optional.
 
 1. create one column (column name: CAS) or two columns of data (column names: CAS and Cluster) in Excel
   - CAS, chemical ID: one type is allowed, **CAS**
@@ -52,17 +51,17 @@ A tab-delimited dataset (with header included). Two columns are allowed: chemica
 
 Alternatively, a data-matrix file can be uploaded.
 
-1. the downloaded activity data can be modified and re-uploaded (e.g., add results from external assays)
+1. the downloaded activity data can be modified and re-uploaded (e.g., add results from other external assays)
 2. the file names have to contain **nwauc.logit|npod|nac50**. So it will recognize the type of activity and use the respective coloring scheme.
 2. other data matrix with **CAS** as ID and comparable activity information can be uploaded (However, currently data from non-Tox21 chemicals will be excluded).
 3. **Cluster** information is optional.
 4. **input_Chemical.Name** can be used to change the column names in the heatmap (optional).
 
 **Notes:**
-- _Activity filtering_ and _Enrichment Analysis_ function become invalid.
+- _Activity limiting_ and _Enrichment Analysis_ function become invalid.
 - _Assay filtering_ function is still functional.
 
-### Additional inputs
+#### Activity type
 
 * Profiling: Select from one of two profiling types:
   - signal: results observation, e.g., whether the compound causes increasing or decreasing signal
@@ -71,7 +70,7 @@ Alternatively, a data-matrix file can be uploaded.
     + An activity type can also be specified
     + **activity type**
       * wauc: overall effect of the chemical
-      * pod: point-of-departure (depending on noise leve in the assay)
+      * pod: point-of-departure (depending on noise level in the assay)
       * ac50: half-maximal effect concentration
 
 <table class='table table-condensed table-striped'>
@@ -98,23 +97,40 @@ Alternatively, a data-matrix file can be uploaded.
 ac50 type is same as pod type.
 
 ***
+### Other settings
 
-### Activity filtering
-The default activity results are based on Curvep-wAUC pipeline (i.e. known artifacts are excluded). But the activities can be **further** filtered by following parameters.
+#### Limit activities
+The default activity results are based on Curvep-wAUC pipeline (i.e. activities from known assay interferences are flagged and labeled as **inconclusive**). But the activities can be **further** limited by following parameters and labeled as **inconclusive**.
 
 * wAUC threshold: see above
-* Emax threshold: half-maximal concentration (e.g., 30% relative to the positive control)
+* Emax threshold: half-maximal effect concentration (e.g., 30% relative to the positive control)
 * POD threshold: (uM)
 * AC50 threshold: (uM)
 * log10(ratio of signal to cytotoxicity) (for inhibition-type assays): (e.g., 1 => 10 fold between signal and cytotoxicity).
-* no cytotoxicity observed in tested concentration range (for nuclear receptor antagonism assays & aromatase inhibition assay): toggle ON to exclude any activity with cytotoxicity (information from the respective multiplexed assay) seen in the tested concentration range
-* only curve class 1.1, 1.2, 2.1: toggle ON to include only activities from  two asymptote + strong/weak Emax + good fit or one asymptote + strong Emax + good fit in at least one run
-* exclude high activity variation between sources: toggle OFF to include more potential activity. The included activities can still be recognized in the heatmap by the # sign
-* exclude inconclusive label: ON makes all inconclusive (cytotoxic, artifacts, value = 1E-4) as inactives (value = 0)
+* exclude activity due to cytotoxicity (loose): the default setting in pipeline (see summary file)
+* exclude activity due to cytotoxicity (strict): toggle ON to exclude any activity with cytotoxicity (information from the respective multiplexed assay) seen in the tested concentration range.(For nuclear receptor antagonism assays & aromatase inhibition assay only) 
+* exclude activity with suboptimal NCATS fits: toggle ON to exclude activities NOT having curve class (NCATS method) 1.1, 1.2, 2.1 in at least one run
+* exclude activity varied between sources: toggle OFF to include more potential activity. The included activities can still be recognized in the heatmap by the # sign
+
 
 ***
 
-### Compound sorting
+#### Filter assays
+
+Please see the __Assays__ tab to get complete assay (column name: common_name) information
+
+Simple regular expression rules:
+
+1. how to get all specific assays
+    + put _cytotoxicity_ in the text box plus toggle _ON_ invert your selection
+2. how to get all antagonism or inhibition and specific assays
+    + put antagonism\_|inhibition\_ in the text box plus toggle _OFF_ invert your selection (Note: _|_ means _OR_)
+3. how to get all agonism and specific assays
+    + put \\bagonism\_ in the text box plus toggle _OFF_ invert your selection
+
+***
+
+#### Sort chemicals
 The columns of the heatmap can be ordered in three methods:
 
 1. structure similarity
@@ -134,30 +150,16 @@ The columns of the heatmap can be ordered in three methods:
 
 ***
 
-### Assay filtering
+### Formatting & outputs
 
-Please see the __Assays__ tab to get complete assay (common_name column) information
+1. make inconclusive as inactive: ON makes all inconclusive (value = 1E-4) as inactives (value = 0)
+2. show compound similarity dendrogram: the clustered dendrogram will replace the the heatmap
+3. keep heatmap size one page
+4. adjust font size when downloading heatmap or online
 
-Simple regular expression rules:
-
-1. how to get all specific assays
-    + put _cytotoxicity_ in the text box plus toggle _ON_ invert your selection
-2. how to get all antagonism or inhibition and specific assays
-    + put antagonism\_|inhibition\_ in the text box plus toggle _OFF_ invert your selection (Note: _|_ means _OR_)
-3. how to get all agonism and specific assays
-    + put \\bagonism\_ in the text box plus toggle _OFF_ invert your selection
-
-***
-
-
-### Others
-
-1. show the clustered dendrogram instead of the heatmap (toggle ON show compound similarity dendrogram)
-2. limit the heatmap/potency plot in one page (toggle ON keep heatmap size one page)
-3. adjust font size when downloading heatmap or online
-
-  * Download Activities: if the data have not been released to PubChem, they will not be able to download
+  * Download Activities
   * Save Plot (currently only for heatmap)
+  * Download Enrichment analysis
 
 ***
 
@@ -178,7 +180,7 @@ The heatmap will be displayed here.
 * rows are assays
 * cells are activities
 * coloring scheme: please refer the color bar
-* gray color: not tested. However if \"exclude inconclusive label\" ON, it could also mean _inconclusive_.
+* gray color: not tested. However if "exclude inconclusive label" ON, it could also mean _inconclusive_.
 
 ##### annotation map
 
@@ -207,10 +209,10 @@ assay information
 
 ### Troubleshooting
 
-* DNA damage assays (activation\_DNA\_damage/dsb and activation\_DNA\_damage/srf) tend to have more false positives.
 * Error: 'breaks' are not unique. It is possible that the input compounds are not active in any of the assays. Please add another compound (e.g. 80-05-7).
 * The compound is missing on the heatmap. The compound may not be tested or none of its sources passes the chemical QC.
 
+***
 
 ### Release notes
 
