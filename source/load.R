@@ -41,12 +41,14 @@ load_data_matrix <- function (input_file, file_name)
   
   dm_id <- 'unknown'
   dm_id  <- sub(".*(nwauc\\.logit|npod|nec50).*", "\\1", file_name )
+  print(dm_id)
   input <- read.table( input_file, header = TRUE, sep = "\t", quote = '', check.names=FALSE, comment.char = "") 
   if (is.null(input$Cluster)) 
   {
     input[, "Cluster"] <- 'unassigned'
     if ( ! is.null(input$userClust)) input[, "Cluster"] <- input$userClust 
   }
+  
   pot_id_cols <- c('CAS','GSID', 'Chemical.Name','chemClust', 'userClust',  'toxScore', 'Cluster', 'input_Chemical.Name')
   
   

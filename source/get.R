@@ -36,7 +36,17 @@ get_input_chemical_mat <- function (input, full)
     {
       # for the ones that are removed due to purity issue
       partial[[name]] <- full[[name]][as.character(rownames(full[[name]])) %in% as.character(input[['GSID']]),] # CAS here
-      partial[[name]] <- partial[[name]][as.character(rownames(partial[[name]])) %in% as.character(rownames(partial[['npod']])),]
+      if (! is.null(partial[['npod']]))
+      {
+        partial[[name]] <- partial[[name]][as.character(rownames(partial[[name]])) %in% as.character(rownames(partial[['npod']])),]
+      } else if (! is.null(partial[['nwauc.logit']]))
+      {
+        partial[[name]] <- partial[[name]][as.character(rownames(partial[[name]])) %in% as.character(rownames(partial[['nwauc.logit']])),]
+      } else if (! is.null(partial[['nec50']]))
+      {
+        partial[[name]] <- partial[[name]][as.character(rownames(partial[[name]])) %in% as.character(rownames(partial[['nec50']])),]
+      }
+      
     } else
     {
       partial[[name]] <- full[[name]][as.character(rownames(full[[name]])) %in% as.character(input[['GSID']]),] # CAS here

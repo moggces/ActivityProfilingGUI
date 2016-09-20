@@ -267,7 +267,6 @@ shinyServer(function(input, output) {
     
     # struct matrix
     struct <- dt[['struct']]
-    
     # first, cluster the chemicals
     print(str_c("line271", rownames(struct)))
     dcols <- dist(struct, method = "binary") ## chemicals
