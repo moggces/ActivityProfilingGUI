@@ -1,5 +1,5 @@
 # # #split the activity text file into pieces
-# profile_file <- 'Z:/hsiehj2/Projects/TOX21/hitcall_collection/Tox21_qHTS_all_030716.txt'
+# profile_file <- 'Z:/hsiehj2/Projects/TOX21/hitcall_collection/Tox21_qHTS_all_170224.txt' #030716
 # master <- load_profile(profile_file)
 # props <- get_property_name(master)
 # # 

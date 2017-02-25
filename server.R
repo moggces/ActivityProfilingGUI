@@ -439,7 +439,7 @@ shinyServer(function(input, output) {
     paras <- heatmap_para_generator() #heatmap_para_generator
     act <- paras[['act']]
     annotation <- paras[['annotation']]
-    
+
     id_info <- chemical_loader()
     id_data <- master
     isUpload <- FALSE
