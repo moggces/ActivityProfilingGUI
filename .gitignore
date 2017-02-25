@@ -1,6 +1,17 @@
+# configuration file
+config.json
+
+# keep data folder, but no data
+data/*
+!data/.gitkeep
+# packrat ignores
+packrat/lib*/
+packrat/bundles/*
+packrat/src/
+# Rstudio ignores
 .Rproj.user
 .Rhistory
-.RData
-tox21_assay_collection.txt
-tox21_compound_id.txt
-packrat/lib*/
+.Rprofile
+.Rdata
+Thumbs.db
+

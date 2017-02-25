@@ -26,6 +26,7 @@ library(scales)
 library(tidyr)
 library(dplyr)
 library(stringr)
+library(Cairo)
 options(stringsAsFactors = FALSE)
 
 

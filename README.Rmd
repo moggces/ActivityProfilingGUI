@@ -1,136 +1,123 @@
----
-output: html_document
----
-## A R Shiny interface to explore compound activity in Tox21 assays
-
-The activities of chemicals (based on CASRN) are presented. The activities caused by known artifacts (e.g., cytotoxicity, quenching/autofluorescence) are flagged. For summary of the data processing, please refer to the file [summary](https://www.dropbox.com/s/4ptkna93n3nel8v/pipeline_summary.pdf?dl=0). The underlying data for the actives, please refer to the Sciome site [Sciome:curve_browser](http://apps.sciome.com:3838/CurveVisualization/).
-  
-### Requirement
-
-* Firefox or Chrome browser with the link on the NIEHS internal JOBS server [JOBS](http://jobs.niehs.nih.gov:3838/myapps/tox21actprofiler/) or on the Sciome site [Sciome:activity_profiler](http://apps.sciome.com:3838/ActivityProfiling/) or Rstudio public Shiny server [shinyapps.io](https://hsiehjh.shinyapps.io/tox21actprofiler)
-
-or
-
-* download the shiny app from [ActivityProfilingGUI](https://github.com/moggces/ActivityProfilingGUI) and contact & contact [Jui-Hua Hsieh](mailto:juihua.hsieh@gmail.com) for background data
+# Tox21 Activity Profiler
 
 
-```{r eval=FALSE }
-library(shiny)
-runApp()
-```
+This interactive application allows users to browse activity profiles from the Tox21 dataset.  The activities of chemicals (based on CASRN) are presented. 
 
-### Release note
+For a summary of data processing, see [this summary](https://www.dropbox.com/s/4ptkna93n3nel8v/pipeline_summary.pdf?dl=0). The underlying data are available for browsing in a related application, the [Tox21 curve browser](/sandbox/tox21-curve-visualization/).
 
-v1.1
+## Quick start
 
+Paste the following data-table into the "CAS & Cluster" text-box.
 
-v1.2
+<table class='table table-condensed table-striped'>
+<thead>
+<tr>
+  <th>CAS</th>
+  <th>Cluster</th>
+</tr>
+</thead>
+<tbody><tr>
+  <td>83-79-4</td>
+  <td>positive_zfish</td>
+</tr>
+<tr>
+  <td>80-05-7</td>
+  <td>negative_zfish</td>
+</tr>
+</tbody>
+</table>
 
-* new: enrichment panel is added; results can be downloaded
-* changed: purity information fixed(v5a5) v030716
-* changed: add PubChem AIDs for the lately released assays in PubChem
-* changed: default was set to activity clustering (columns)
-* changed: structural clustering fixed for missing Tox21 chemicals due to low purity
+**Note**: paste the data AND the header column
 
 ***
 
-### Input
-Two types of input are allowed: chemicals and data matrix
 
-##### chemicals
-1. creat one column (column name: CAS) or two columns of data (column names: CAS and Cluster) in Excel
-  + CAS, chemical ID: one type is allowed, **CAS**
-      + CAS: Chemical Abstracts Service registration ID, e.g., 83-79-4. Please put at least two CASRNs. 
-  + Cluster, chemical annotation: any annotation associated with the chemical that could be compared with the in vitro qHTS data
+### Required inputs
+
+One of the two inputs below are required.
+
+#### CAS & Cluster
+
+A tab-delimited dataset (with header included). Two columns are allowed: chemicals and cluster. The cluster column is optional.
+
+1. create one column (column name: CAS) or two columns of data (column names: CAS and Cluster) in Excel
+  - CAS, chemical ID: one type is allowed, **CAS**
+      - CAS: Chemical Abstracts Service registration ID, e.g., 83-79-4. Please put at least two CASRNs.
+  - Cluster, chemical annotation: any annotation associated with the chemical that could be compared with the in vitro qHTS data
 2. column names are case sensitive: **CAS** and **Cluster**
 3. copy and paste to the text area
 
-###### Examples
-CAS | Cluster
-----| -------
-83-79-4 | positive_zfish
-80-05-7 | negative_zfish
+#### Data matrix
 
+Alternatively, a data-matrix file can be uploaded.
 
-##### data matrix
-
-1. the downloaded activitiy data can be modified and re-uploaded (e.g., add results from external assays)
-2. the file names have to contain **nwauc.logit|npod|nac50**. So it will recognize the type of activity and use the respective coloring scheme. 
+1. the downloaded activity data can be modified and re-uploaded (e.g., add results from other external assays)
+2. the file names have to contain **nwauc.logit|npod|nac50**. So it will recognize the type of activity and use the respective coloring scheme.
 2. other data matrix with **CAS** as ID and comparable activity information can be uploaded (However, currently data from non-Tox21 chemicals will be excluded).
 3. **Cluster** information is optional.
 4. **input_Chemical.Name** can be used to change the column names in the heatmap (optional).
 
-###### Notes
-* _Activity filtering_ and _Enrichment Analysis_ function become invalid. 
-* _Assay filtering_ function is still functional. 
+**Notes:**
+- _Activity limiting_ and _Enrichment Analysis_ function become invalid.
+- _Assay filtering_ function is still functional.
+
+#### Activity type
+
+* Profiling: Select from one of two profiling types:
+  - signal: results observation, e.g., whether the compound causes increasing or decreasing signal
+    + **signal type**: currently only wauc is available, suitable for compound grouping
+  - activity: Results interpretation, e.g., whether the compound is active
+    + An activity type can also be specified
+    + **activity type**
+      * wauc: overall effect of the chemical
+      * pod: point-of-departure (depending on noise level in the assay)
+      * ac50: half-maximal effect concentration
+
+<table class='table table-condensed table-striped'>
+<thead>
+<tr>
+  <th>Type</th>
+  <th>Value range</th>
+  <th>Value description</th>
+</tr>
+</thead>
+<tbody><tr>
+  <td>wauc</td>
+  <td>0 ~ 1</td>
+  <td>higher value -&gt; higher activity <br> 0 -&gt; inactive <br> 1E-4 -&gt; inconclusive</td>
+</tr>
+<tr>
+  <td>pod</td>
+  <td>log10(M)*(-1)</td>
+  <td>higher value -&gt; more potent <br> 1E-4 -&gt; inconclusive <br> 0 -&gt; inactive</td>
+</tr>
+</tbody>
+</table>
+
+ac50 type is same as pod type.
 
 ***
+### Other settings
 
-### Profiling
-
-##### signal
-results observation, e.g., whether the compound causes increasing or decreasing signal
-
-    * signal type
-    currently only wauc is available, suitable for compound grouping
-        
-##### activity
-results interpretation, e.g., whether the compound is active
-
-    * activity type
-        + wauc: overall effect of the chemical
-        + pod: point-of-departure (depending on noise leve in the assay)
-        + ac50: half-maximal effect concentration
-    
-###### activity type
-
-type | value range | value description
------|-------------| -----------------
-wauc | 0 ~ 1 | higher value -> higher activity <br> 0 -> inactive <br> 1E-4 -> inconlusive
-pod | log10(M)\*(-1) | higher value -> more potent <br> 1E-4 -> inconlusive <br> 0 -> inactive
-
-ac50 type is same as pod type. 
-
-***
-
-### Activity filtering
-The default activity results are based on Curvep-wAUC pipeline (i.e. known artifacts are excluded). But the activities can be **further** filtered by following parameters. 
+#### Limit activities
+The default activity results are based on Curvep-wAUC pipeline (i.e. activities from known assay interferences are flagged and labeled as **inconclusive**). But the activities can be **further** limited by following parameters and labeled as **inconclusive**.
 
 * wAUC threshold: see above
-* Emax threshold: half-maximal concentration (e.g., 30% relative to the positive control)
+* Emax threshold: half-maximal effect concentration (e.g., 30% relative to the positive control)
 * POD threshold: (uM)
 * AC50 threshold: (uM)
 * log10(ratio of signal to cytotoxicity) (for inhibition-type assays): (e.g., 1 => 10 fold between signal and cytotoxicity).
-* no cytotoxicity observed in tested concentration range (for nuclear receptor antagonism assays & aromatase inhibition assay): toggle ON to exclude any activity with cytotoxicity (information from the respective multiplexed assay) seen in the tested concentration range
-* only curve class 1.1, 1.2, 2.1: toggle ON to include only activities from  two asymptote + strong/weak Emax + good fit or one asymptote + strong Emax + good fit in at least one run
-* exclude high activity variation between sources: toggle OFF to include more potential activity. The included activities can still be recognized in the heatmap by the # sign
-* exclude inconclusive label: ON makes all inconclusives (cytotoxic, artifacts, value = 1E-4) as inactives (value = 0) 
+* exclude activity due to cytotoxicity (loose): the default setting in pipeline (see summary file)
+* exclude activity due to cytotoxicity (strict): toggle ON to exclude any activity with cytotoxicity (information from the respective multiplexed assay) seen in the tested concentration range.(For nuclear receptor antagonism assays & aromatase inhibition assay only) 
+* exclude activity with suboptimal NCATS fits: toggle ON to exclude activities NOT having curve class (NCATS method) 1.1, 1.2, 2.1 in at least one run
+* exclude activity varied between sources: toggle OFF to include more potential activity. The included activities can still be recognized in the heatmap by the # sign
+
 
 ***
 
-### Compound sorting
-The columns of the heatmap can be ordered in three methods:
+#### Filter assays
 
-1. structure similarity
-    + Tanimoto cofficient based on Leadscope proprietary structural fingerprints
-    + hierarchical clustering with average linkage
-    + chemicals are grouped by cutoff 0.7
-    + a new parameter is created, chemClust, where chemClust = 0, are the compounds that cannot form clusters or compounds without structures
-    
-2. activity similarity
-    + Euclidean distance based on respective activities
-    + hierarchical clustering with average linkage
-    
-3. toxicity score (only for __activity__)
-    + sum of the activities (unbounded, dependent on # of assasy used)
-        + wauc: sum of wauc values
-        + pod or ac50: sum of wauc-weighted pod or ac50 values (in data matrix input, sum of pod/ac50 values instead)
-
-***
-
-### Assay filtering
-
-Please see the __Assays__ tab to get complete assay (common_name column) information
+Please see the __Assays__ tab to get complete assay (column name: common_name) information
 
 Simple regular expression rules:
 
@@ -143,15 +130,36 @@ Simple regular expression rules:
 
 ***
 
+#### Sort chemicals
+The columns of the heatmap can be ordered in three methods:
 
-### Others
+1. structure similarity
+    + Tanimoto coefficient based on Leadscope proprietary structural fingerprints
+    + hierarchical clustering with average linkage
+    + chemicals are grouped by cutoff 0.7
+    + a new parameter is created, chemClust, where chemClust = 0, are the compounds that cannot form clusters or compounds without structures
 
-1. show the clustered dendrogram instead of the heatmap (toggle ON show compound similarity dendrogram)
-2. limit the heatmap/potency plot in one page (toggle ON keep heatmap size one page)
-3. adjust font size when downloading heatmap or online
+2. activity similarity
+    + Euclidean distance based on respective activities
+    + hierarchical clustering with average linkage
 
-  * Download Activities: if the data have not been released to PubChem, they will not be able to download
+3. toxicity score (only for __activity__)
+    + sum of the activities (unbounded, dependent on # of assays used)
+        + wauc: sum of wauc values
+        + pod or ac50: sum of wauc-weighted pod or ac50 values (in data matrix input, sum of pod/ac50 values instead)
+
+***
+
+### Formatting & outputs
+
+1. make inconclusive as inactive: ON makes all inconclusive (value = 1E-4) as inactives (value = 0)
+2. show compound similarity dendrogram: the clustered dendrogram will replace the the heatmap
+3. keep heatmap size one page
+4. adjust font size when downloading heatmap or online
+
+  * Download Activities
   * Save Plot (currently only for heatmap)
+  * Download Enrichment analysis
 
 ***
 
@@ -159,20 +167,20 @@ Simple regular expression rules:
 
 #### Input chemicals
 
-If the input chemicals are not available, they will not have _GSID_. 
-Current information is based on EPA DSSTOX. 
+If the input chemicals are not available, they will not have _GSID_.
+Current information is based on EPA DSSTOX.
 
 #### Profile
 
-The heatmap will be displayed here. 
+The heatmap will be displayed here.
 
-##### main map
+##### Main map
 
 * columns are compounds
 * rows are assays
 * cells are activities
 * coloring scheme: please refer the color bar
-* gray color: not tested. However if \"exclude inconclusive label\" ON, it could also mean _inconclusive_.
+* gray color: not tested. However if "exclude inconclusive label" ON, it could also mean _inconclusive_.
 
 ##### annotation map
 
@@ -185,13 +193,13 @@ The heatmap will be displayed here.
 
 Only shown for pod or ac50 as activity.
 
-#### Activity data 
+#### Activity data
 
 background data used for heatmap and potency plot
 
 #### Enrichment analysis
 
-* DAVID (more strigent) Fisher's exact test is applied
+* DAVID (more stringent) Fisher's exact test is applied
 * n: number of compounds in a class; n\_p: number of actives in a class; N\_P: number of actives in the population;n: number of compounds in the population
 
 
@@ -199,17 +207,32 @@ background data used for heatmap and potency plot
 
 assay information
 
-
-***
-
-### References
-
-contact [Jui-Hua Hsieh](mailto:juihua.hsieh@gmail.com) for more information 
-
-***
-
 ### Troubleshooting
 
-* DNA damage assays (activation\_DNA\_damage/dsb and activation\_DNA\_damage/srf) tend to have more false positives.
 * Error: 'breaks' are not unique. It is possible that the input compounds are not active in any of the assays. Please add another compound (e.g. 80-05-7).
-* The compound is missing on the heatmap. The compound may not be testesd or none of its sources passes the chemcial QC. 
+* The compound is missing on the heatmap. The compound may not be tested or none of its sources passes the chemical QC.
+
+***
+
+### Release notes
+
+*v1.1*
+
+* initial public release
+
+*v1.2*
+
+* new: enrichment panel is added; results can be downloaded
+* changed: purity information fixed(v5a5) v030716
+* changed: add PubChem AIDs for the lately released assays in PubChem
+* changed: default was set to activity clustering (columns)
+* changed: structural clustering fixed for missing Tox21 chemicals due to low purity
+
+***
+
+### Contact
+
+For further information, contact:
+
+Jui-Hua Hsieh, Ph.D.
+[Biomolecular Screening Branch](http://www.niehs.nih.gov/research/atniehs/labs/bmsb/toxico/staff/hsieh/index.cfm)
