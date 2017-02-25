@@ -1,0 +1,6 @@
+.Rproj.user
+.Rhistory
+.RData
+tox21_assay_collection.txt
+tox21_compound_id.txt
+packrat/lib*/
