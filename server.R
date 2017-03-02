@@ -15,6 +15,8 @@
 # todo:
 # 1. download potency plot
 # 2. broaden the "unknown" color scheme
+# 3. not apply purity 
+# 4. not apply cytotoxic filter
 
 library(shiny)
 library(plyr)
@@ -40,11 +42,11 @@ source(paste(getwd(), "/source/mis.R", sep=""), local=TRUE)
 #environment(pheatmap_new_label) <- environment(pheatmap) pheatmap v. < 1.0
 
 # load assay related parameters
-logit_para_file <- './data/tox21_assay_collection.txt'
+logit_para_file <- './data/tox21_call_description_011717.txt' #tox21_assay_collection.txt
 assay_names <- load_profile(logit_para_file) # global, dataframe output
 
 # load chemical information (will include purity later)
-profile_file <- './data/tox21_compound_id.txt' #colunm name has to be GSID # v5a3
+profile_file <- './data/tox21_compound_id_v5a7.txt' #colunm name has to be GSID # v5a3
 master <- load_profile(profile_file) # global, dataframe output
 
 # load the activities (all data) and the structure fp matrix
@@ -101,7 +103,7 @@ shinyServer(function(input, output) {
     partial <- NULL
     reg_sel <- input$reg_sel # select the assays
     inv_sel <- input$inv_sel # inverse the selection
-    rename_assay <- TRUE # use the assay_names df
+    rename_assay <- FALSE # use the assay_names df
     
     # get all chemical information
     id_info <- chemical_loader()
@@ -464,8 +466,13 @@ shinyServer(function(input, output) {
   
   output$assay_info <- renderDataTable({
   
-    col_n <- c('common_name','technology','cell_type','species','abbreviation', 'PubChem AID')
-    result <- assay_names[, colnames(assay_names) %in% col_n]
+    #col_n <- c('common_name','technology','cell_type','species','abbreviation', 'PubChem AID')
+    #result <- assay_names[, colnames(assay_names) %in% col_n]
+    not_want <- c('_for_FDA_A_name', 'target_type_gene_go.biological.process',	'target_type_gene_ctd.disease','technology_long.description','technology_short.description')
+    result <- assay_names[, ! colnames(assay_names) %in% not_want]
+    result <- result %>%
+        filter(protocol_call_db.name != '') # %>% #the ones with call definition
+        #select(noquote(order(colnames(.)))) #reorder the columns alphabetically
     return(result)
     
   })
