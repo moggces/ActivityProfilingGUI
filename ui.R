@@ -71,11 +71,15 @@ shinyUI(
                             "log10(ratio of signal to cytotoxicity)(inhibition-type assays only)", min=0, max=3, value=0, step=0.2),
                 tags$hr(),
               
-                
-                checkboxInput("cytofilter", "exclude activity due to cytotoxicity (loose)", TRUE),
-                
+                checkboxInput("excludecytob", "exclude activity potentially confounded by cytotoxicity", TRUE),
                 tags$br(),
-                checkboxInput("nocyto", "exclude activity due to cytotoxicity (strict)", FALSE),
+                
+                conditionalPanel(
+                  condition = "input.excludecytob == true",
+                  checkboxInput("cytofilter", "exclude activity due to cytotoxicity (loose)", TRUE),
+                  tags$br(),
+                  checkboxInput("nocyto", "exclude activity due to cytotoxicity (strict)", FALSE)
+                ),
                 
                 tags$br(),
                 checkboxInput("isgoodcc2", "exclude activity with suboptimal NCATS fits", FALSE),
