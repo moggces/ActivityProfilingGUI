@@ -178,7 +178,7 @@ shinyServer(function(input, output) {
    
     act_mat_names <- c('npod', 'nec50', 'nwauc.logit')
     # reverse direction of mitotox could be meaningful
-    partial <- fix_mitotox_reverse(partial,act_mat_names=act_mat_names )
+    #partial <- fix_mitotox_reverse(partial,act_mat_names=act_mat_names )
     
     # filtering
     partial <- filter_activity_by_type(partial, 'nwauc.logit', nwauc_thres, act_mat_names=act_mat_names)
