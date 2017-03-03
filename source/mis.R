@@ -95,7 +95,7 @@ filter_activity_by_type <- function(partial, type, thres=NULL, decision=FALSE, a
     ids <- matrix(FALSE, nrow(partial[[name]]), ncol(partial[[name]]))
     if (type == 'pod_med_diff')
     {
-      ant_ids <- grepl('antagonism_|inhibition_', colnames(partial[[name]]))
+      ant_ids <- grepl('antagonist', colnames(partial[[name]]))
       if (sum(ant_ids) > 0) 
       {
         ids <- matrix(FALSE, nrow(partial[[name]][, ant_ids]), ncol(partial[[name]][, ant_ids]))
@@ -106,7 +106,7 @@ filter_activity_by_type <- function(partial, type, thres=NULL, decision=FALSE, a
       # to include the agonism_assay
       if (decision)
       {
-        ant_ago_ids <- grepl('antagonism_|inhibition_aromatase', colnames(partial[[name]]))
+        ant_ago_ids <- grepl('antagonist', colnames(partial[[name]]))
         if (sum(ant_ago_ids) > 0)
         {
           ids <- matrix(FALSE, nrow(partial[[name]][, ant_ago_ids]), ncol(partial[[name]][, ant_ago_ids]))
@@ -116,11 +116,46 @@ filter_activity_by_type <- function(partial, type, thres=NULL, decision=FALSE, a
         }
       }
       
-    }else if (type == 'label')
+    }else if (type == 'label_cyto' | type == 'label_ch2' | type == 'label_autof')
     {
-      if (! decision) ids <- partial[[type]] == 'd_cytotoxic' # cytofilter
-      sig_name <- sub("^n", "", name) 
-      partial[[name]][ids] <- abs(partial[[sig_name]][ids])
+      if (! decision) 
+      {
+        sig_name <- sub("^n", "", name) 
+        if (type == 'label_cyto')
+        {
+          ids <- partial[['label']] == 'd_cytotoxic' # cytofilter
+          partial[[name]][ids] <- abs(partial[[sig_name]][ids])
+        } else if (type == 'label_ch2')
+        {
+          tempd <- partial[[name]] 
+          ago_ids <- grepl('-agonist', colnames(partial[[name]]))
+          if (sum(ago_ids) > 0) 
+          {
+            #ids <- matrix(FALSE, nrow(partial[[name]][, ago_ids]), ncol(partial[[name]][, ago_ids]))
+            ids <- partial[['label']][, ago_ids] == 'c_contradict' &  partial[[sig_name]][, ago_ids] > 0 & ! is.na(partial[[sig_name]][, ago_ids])
+            tempd[, ago_ids][ids] <- abs(partial[[sig_name]][, ago_ids][ids])
+          }
+          ant_ids <- grepl('antagonist', colnames(partial[[name]]))
+          if (sum(ant_ids) > 0) 
+          {
+            #ids <- matrix(FALSE, nrow(partial[[name]][, ant_ids]), ncol(partial[[name]][, ant_ids]))
+            ids <- partial[['label']][, ant_ids] == 'c_contradict' &  partial[[sig_name]][, ant_ids] < 0 & ! is.na(partial[[sig_name]][, ant_ids])
+            tempd[, ant_ids][ids] <- abs(partial[[sig_name]][, ant_ids][ids])
+          }
+          partial[[name]] <- tempd
+          
+        } else if (type == 'label_autof')
+        {
+          ago_ids <- grepl('-agonist', colnames(partial[[name]]))
+          if (sum(ago_ids) > 0) 
+          {
+            #ids <- matrix(FALSE, nrow(partial[[name]][, ago_ids]), ncol(partial[[name]][, ago_ids]))
+            ids <- partial[['label']][, ago_ids] == 'b_autofluor' &  partial[[sig_name]][, ago_ids] > 0 & ! is.na(partial[[sig_name]][, ago_ids])
+            partial[[name]][, ago_ids][ids] <- abs(partial[[sig_name]][, ago_ids][ids])
+          }
+        }
+      }
+      
     } else 
     {
       if (type == 'nwauc.logit' | type == 'npod' | type == 'nec50') ids <- partial[[type]] < thres & ! is.na(partial[[type]]) & ! is.na(partial[[name]]) & partial[[name]] > 0.0001

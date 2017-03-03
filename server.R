@@ -16,7 +16,8 @@
 # 1. download potency plot
 # 2. broaden the "unknown" color scheme
 # 3. not apply purity 
-# 4. not apply cytotoxic filter
+# 4. source data (long format)
+# 5. label (can it be download zip file?)
 
 library(shiny)
 library(plyr)
@@ -170,6 +171,8 @@ shinyServer(function(input, output) {
     isgoodcc2 <- input$isgoodcc2
     nohighcv <- input$nohighcv
     cytofilter <- input$cytofilter
+    noauto <- input$noauto
+    noch2issue <- input$noch2issue
     
     partial <- matrix_subsetter()
     
@@ -189,7 +192,9 @@ shinyServer(function(input, output) {
     #partial <- filter_activity_by_type(partial, 'hitcall', thres=NULL, decision=isstrong,act_mat_names=act_mat_names)
     partial <- filter_activity_by_type(partial, 'pod_med_diff', thres=NULL, decision=nocyto,act_mat_names=act_mat_names)
     partial <- filter_activity_by_type(partial, 'cc2', thres=NULL, decision=isgoodcc2,act_mat_names=act_mat_names)
-    partial <- filter_activity_by_type(partial, 'label', thres=NULL, decision=cytofilter,act_mat_names=act_mat_names)
+    partial <- filter_activity_by_type(partial, 'label_cyto', thres=NULL, decision=cytofilter,act_mat_names=act_mat_names)
+    partial <- filter_activity_by_type(partial, 'label_autof', thres=NULL, decision=noauto,act_mat_names=act_mat_names)
+    partial <- filter_activity_by_type(partial, 'label_ch2', thres=NULL, decision=noch2issue,act_mat_names=act_mat_names)
     
     # it has to be the end
     partial <- filter_activity_by_type(partial, 'cv.wauc', thres=NULL, decision=nohighcv,act_mat_names=act_mat_names)
@@ -306,7 +311,7 @@ shinyServer(function(input, output) {
     # parameters
     reg_sel <- input$reg_sel # select the assays
     inv_sel <- input$inv_sel # inverse the selection
-    rename_assay <- TRUE # use the assay_names df
+    rename_assay <- FALSE # use the assay_names df
     profile_type <- input$proftype
     activity_type <- input$acttype
     act_mat_names <- activity_type

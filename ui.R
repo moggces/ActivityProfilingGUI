@@ -78,6 +78,12 @@ shinyUI(
                 checkboxInput("nocyto", "exclude activity due to cytotoxicity (strict)", FALSE),
                 
                 tags$br(),
+                checkboxInput("noauto", "exclude activity due to auto-fluorescencent", TRUE),
+                
+                tags$br(),
+                checkboxInput("noch2issue", "exclude activity with no ch2 support (BLA)", TRUE),
+                
+                tags$br(),
                 checkboxInput("isgoodcc2", "exclude activity with suboptimal NCATS fits", FALSE),
                 
                 tags$br(),
@@ -89,7 +95,7 @@ shinyUI(
             wellPanel(
               h4('Filter assays'),
               tags$br(),
-              textInput('reg_sel', 'names (regular expression)', 'cytotoxicity'),
+              textInput('reg_sel', 'names (regular expression)', 'via'),
               checkboxInput("inv_sel", "invert your selection", TRUE)
               
             ),
