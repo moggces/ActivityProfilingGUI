@@ -228,7 +228,8 @@ get_pod_boxplot <- function (pod, fontsize, sortby, dcols, global_para)
   mat <- pod_m
   
   #create conversion
-  let <- conversion(global_para, inp='common_name', out='letters')
+  #let <- conversion(global_para, inp='common_name', out='letters')
+  let <- conversion(global_para, inp='protocol_call_db.name', out='_letters4boxplot')
   let2 <- paste(let, names(let), sep="=") # color legend
   names(let2) <- names(let)
 
@@ -242,9 +243,10 @@ get_pod_boxplot <- function (pod, fontsize, sortby, dcols, global_para)
     scale_x_discrete("", drop=FALSE) + # keep the no activity ones
      theme(text=element_text(size=fontsize), 
            axis.text.x = element_text( angle=90, color="black")) + 
-    scale_y_continuous('uM', breaks=seq(-10+6, -3+6, by=1), limits=c(-10+6, -3+6), labels = math_format(10^.x)) + 
+    scale_y_continuous(expression(paste("concentration ", "(", mu, "M", ")", sep="")), breaks=seq(-10+6, -3+6, by=1), limits=c(-10+6, -3+6), labels = math_format(10^.x)) + 
     #theme_bw(base_size = fontsize) + 
     annotation_logticks(sides = "l") 
+  
   return(p)
 }
 

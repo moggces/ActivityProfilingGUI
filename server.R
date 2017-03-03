@@ -278,7 +278,7 @@ shinyServer(function(input, output) {
     # struct matrix
     struct <- dt[['struct']]
     # first, cluster the chemicals
-    print(str_c("line271", rownames(struct)))
+    #print(str_c("line271", rownames(struct)))
     dcols <- dist(struct, method = "binary") ## chemicals
     
     # very, very cumbersome functions. better to split, merge dt + activity_type
@@ -472,10 +472,18 @@ shinyServer(function(input, output) {
   
     #col_n <- c('common_name','technology','cell_type','species','abbreviation', 'PubChem AID')
     #result <- assay_names[, colnames(assay_names) %in% col_n]
-    not_want <- c('_for_FDA_A_name', 'target_type_gene_go.biological.process',	'target_type_gene_ctd.disease','technology_long.description','technology_short.description')
+    partial <- matrix_subsetter()
+    not_want <- c('_for_FDA_A_name', '_target_type_gene_go.biological.process',	
+                  '_target_type_gene_ctd.disease', '_technology_long.description',
+                  '_technology_short.description','protocol_call_db.name_parent',
+                  'protocol_call_db.name_readout_primary','protocol_CEBS.batch',
+                  'protocol_call_db.name_readout_secondary',
+                  'protocol_db.name','protocol_time_release',
+                  'protocol_slp','protocol_description')
     result <- assay_names[, ! colnames(assay_names) %in% not_want]
     result <- result %>%
-        filter(protocol_call_db.name != '') # %>% #the ones with call definition
+        filter(protocol_call_db.name != '')  %>% #the ones with call definition
+        filter(protocol_call_db.name %in% colnames(partial[['npod']]))
         #select(noquote(order(colnames(.)))) #reorder the columns alphabetically
     return(result)
     
