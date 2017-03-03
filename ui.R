@@ -67,21 +67,23 @@ shinyUI(
                 numericInput("nec50_thres", label = "EC50 threshold (uM)", value = NA),
                 
                 tags$br(),
-                sliderInput("pod_diff_thres",
-                            "log10(ratio of signal to cytotoxicity)(inhibition-type assays only)", min=0, max=3, value=0, step=0.2),
+                #sliderInput("pod_diff_thres",
+                #            "log10(ratio of signal to cytotoxicity)(antagonist-type assays only)", min=0, max=3, value=0, step=0.2),
+                sliderInput("wauc_fold_thres",
+                            "wAUC fold change (vs cytotoxicity)(antagonist-type calls)", min=1, max=15, value=0, step=1),
                 tags$hr(),
               
                 
-                checkboxInput("cytofilter", "exclude activity due to cytotoxicity (loose)", TRUE),
+                checkboxInput("cytofilter", "exclude activity (antagonist-type calls) due to cytotoxicity", TRUE),
                 
                 tags$br(),
-                checkboxInput("nocyto", "exclude activity due to cytotoxicity (strict)", FALSE),
+                checkboxInput("nocyto", "exclude activity with observed cytotoxicity", FALSE),
                 
                 tags$br(),
                 checkboxInput("noauto", "exclude activity due to auto-fluorescencent", TRUE),
                 
                 tags$br(),
-                checkboxInput("noch2issue", "exclude activity with no ch2 support (BLA)", TRUE),
+                checkboxInput("noch2issue", "exclude activity with no reporter gene activity readout support", TRUE),
                 
                 tags$br(),
                 checkboxInput("isgoodcc2", "exclude activity with suboptimal NCATS fits", FALSE),

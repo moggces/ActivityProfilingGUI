@@ -165,7 +165,8 @@ shinyServer(function(input, output) {
     ncmax_thres <- input$ncmax_thres
     npod_thres <- ifelse(is.na(input$npod_thres), 3, log10(input$npod_thres/1000000)*-1)
     nec50_thres <- ifelse(is.na(input$nec50_thres), 3, log10(input$nec50_thres/1000000)*-1)
-    pod_diff_thres <- input$pod_diff_thres
+    #pod_diff_thres <- input$pod_diff_thres
+    wauc_fold_thres <- input$wauc_fold_thres
     #isstrong <- input$isstrong
     nocyto <- input$nocyto
     isgoodcc2 <- input$isgoodcc2
@@ -188,11 +189,12 @@ shinyServer(function(input, output) {
     partial <- filter_activity_by_type(partial, 'ncmax', ncmax_thres,act_mat_names=act_mat_names)
     partial <- filter_activity_by_type(partial, 'npod', npod_thres,act_mat_names=act_mat_names)
     partial <- filter_activity_by_type(partial, 'nec50', nec50_thres,act_mat_names=act_mat_names)
-    partial <- filter_activity_by_type(partial, 'pod_med_diff', pod_diff_thres,act_mat_names=act_mat_names)
+    #partial <- filter_activity_by_type(partial, 'pod_med_diff', pod_diff_thres,act_mat_names=act_mat_names)
+    partial <- filter_activity_by_type(partial, 'label_cyto', thres=NULL, decision=cytofilter,act_mat_names=act_mat_names)
+    partial <- filter_activity_by_type(partial, 'wauc_fold_change', wauc_fold_thres,act_mat_names=act_mat_names)
     #partial <- filter_activity_by_type(partial, 'hitcall', thres=NULL, decision=isstrong,act_mat_names=act_mat_names)
     partial <- filter_activity_by_type(partial, 'pod_med_diff', thres=NULL, decision=nocyto,act_mat_names=act_mat_names)
     partial <- filter_activity_by_type(partial, 'cc2', thres=NULL, decision=isgoodcc2,act_mat_names=act_mat_names)
-    partial <- filter_activity_by_type(partial, 'label_cyto', thres=NULL, decision=cytofilter,act_mat_names=act_mat_names)
     partial <- filter_activity_by_type(partial, 'label_autof', thres=NULL, decision=noauto,act_mat_names=act_mat_names)
     partial <- filter_activity_by_type(partial, 'label_ch2', thres=NULL, decision=noch2issue,act_mat_names=act_mat_names)
     
