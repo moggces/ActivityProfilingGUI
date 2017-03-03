@@ -148,7 +148,7 @@ shinyServer(function(input, output) {
     
     # subset the matrices by assay names
     partial <- get_assay_mat(partial, reg_sel, invSel=inv_sel)
-    
+    #print(partial[[1]][1, ])
     # sort the matrix
     partial <- sort_matrix(partial)
     
@@ -326,12 +326,9 @@ shinyServer(function(input, output) {
     #filtered activies < 0, active >0, inactive =0 or inconclusive in the beginning, NA non tested
     partial[[act_mat_names]][ (is.na(partial[[act_mat_names]]) | partial[[act_mat_names]] == 0.0001)   & ! is.na(partial[['cc2']]) ] <- 0
     
-    print(str_c("line319", names(partial)))
-    print(str_c("line320", rownames(partial[[act_mat_names]])))
-    
     # add duplicate rows due to duplicate cluster information
     partial <- duplicate_chemical_row(partial, ip)
-    print(str_c("line324", rownames(partial[[act_mat_names]])))
+    #print(str_c("line324", rownames(partial[[act_mat_names]])))
     
     
     # load all the activity filter parameters
@@ -371,8 +368,8 @@ shinyServer(function(input, output) {
     #filtered activies < 0, active >0, inactive =0 or inconclusive in the beginning, NA non tested
     full[[act_mat_names]][ (is.na(full[[act_mat_names]]) | full[[act_mat_names]] == 0.0001)   & ! is.na(full[['cc2']]) ] <- 0
     
-    print(paras[['annotation']])
-    print(rownames(paras[['annotation']]))
+    #print(paras[['annotation']])
+    #print(rownames(paras[['annotation']]))
     result <- get_clust_assay_enrichment(partial[[act_mat_names]], full[[act_mat_names]], paras[['annotation']], calZscore=FALSE)
     
     return(result)

@@ -107,12 +107,12 @@ get_heatmap_annotation <- function (d, input, master, input_chemical_name=NULL, 
       group_cp[group == names(group_t)[i]] <- i
     }
   }
-  print(str_c("get:line100", names(group_cp)))
+  #print(str_c("get:line100", names(group_cp)))
   # create annotations: chemClust
   annotation <- data.frame(chemClust = as.factor(group_cp))
   rownames(annotation) <- names(group_cp)
-  print("get:line104")
-  print(annotation)
+  #print("get:line104")
+  #print(annotation)
   
   # create annoations: userClust
   annotation2 <- data.frame(userClust = as.factor(input[['Cluster']]))
@@ -127,7 +127,7 @@ get_heatmap_annotation <- function (d, input, master, input_chemical_name=NULL, 
     if (is.null(chemical_name_ref)) {
       chemical_name_ref <- make.unique(input[['Chemical.Name']])
       rownames(annotation2) <- chemical_name_ref
-      print(str_c("get:line115", chemical_name_ref))
+      #print(str_c("get:line115", chemical_name_ref))
     } else
     {
       rownames(annotation2) <- input[['Chemical.Name']]
@@ -135,8 +135,8 @@ get_heatmap_annotation <- function (d, input, master, input_chemical_name=NULL, 
     }
   
     annotation <- merge(annotation, annotation2, by="row.names")
-    print("get:line122")
-    print(annotation)
+    #print("get:line122")
+    #print(annotation)
     rownames(annotation) <- annotation$Row.names
     annotation <- annotation[,-which(colnames(annotation) == 'Row.names')]
   }
