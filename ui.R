@@ -24,10 +24,12 @@ shinyUI(
               h4('CAS & Cluster (optional)'),
               tags$textarea(id="cmpds", class='col-xs-12', rows=5, ""),
               helpText("Note: copy & paste from excel file with two columns: "),
+              checkboxInput("nolowQC", "exclude activity from chemicals with suboptimal QC grade", TRUE),
               
               h6('or'),
               fileInput('file1', 'Import a data matrix', multiple=FALSE),
               tags$hr(),
+
               
               h4('Activity type'),
               conditionalPanel(

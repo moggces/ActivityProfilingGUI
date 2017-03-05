@@ -36,7 +36,7 @@ options(stringsAsFactors = FALSE)
 #Sys.setlocale(locale="C")
 #setwd("~/ShinyApps/profiling/")
 source(paste(getwd(), "/source/customized.R", sep=""), local=TRUE)
-source(paste(getwd(), "/source/pheatmap_display_number.R", sep=""), local=TRUE)
+#source(paste(getwd(), "/source/pheatmap_display_number.R", sep=""), local=TRUE)
 source(paste(getwd(), "/source/get.R", sep=""), local=TRUE)
 source(paste(getwd(), "/source/load.R", sep=""), local=TRUE)
 source(paste(getwd(), "/source/mis.R", sep=""), local=TRUE)
@@ -51,10 +51,12 @@ profile_file <- './data/tox21_compound_id_v5a7.txt' #colunm name has to be GSID 
 master <- load_profile(profile_file) # global, dataframe output
 
 # load the activities (all data) and the structure fp matrix
-activities_rdata <- './data/activities.RData'
+#activities_rdata <- './data/activities.RData'
 struct_mat_rdata <- './data/struct_mat.RData'
-load(activities_rdata, verbose=TRUE) # global, matrix output, activities
+#load(activities_rdata, verbose=TRUE) # global, matrix output, activities
 load(struct_mat_rdata, verbose=TRUE) # global, matrix output, struct_mat
+activities <- readRDS('./data/activities_web_compati_170226.rds')
+activities_nofilter <- readRDS('./data/activities_web_compati_170302.rds')
 
 # remove the structures with low purity
 #struct_mat <- struct_mat[rownames(struct_mat) %in% rownames(activities[[1]]),]
@@ -104,6 +106,7 @@ shinyServer(function(input, output) {
     partial <- NULL
     reg_sel <- input$reg_sel # select the assays
     inv_sel <- input$inv_sel # inverse the selection
+    nolowQC <- input$nolowQC # remove low QC 
     rename_assay <- FALSE # use the assay_names df
     
     # get all chemical information
@@ -119,6 +122,7 @@ shinyServer(function(input, output) {
     
     full <- list()
     full <- activities 
+    if(! nolowQC) full <- activities_nofilter
     
     # if it is a data matrix input, only CAS ID is allowd
     input_chemical_name <- NULL
@@ -313,6 +317,7 @@ shinyServer(function(input, output) {
     # parameters
     reg_sel <- input$reg_sel # select the assays
     inv_sel <- input$inv_sel # inverse the selection
+    nolowQC <- input$nolowQC # remove the low QC
     rename_assay <- FALSE # use the assay_names df
     profile_type <- input$proftype
     activity_type <- input$acttype
@@ -344,6 +349,7 @@ shinyServer(function(input, output) {
     cytofilter <- input$cytofilter
     
     full <- activities
+    if (! nolowQC) full <- activities_nofilter
     # subset the matrices by assay names
     
     # rename the assays & chemicals
