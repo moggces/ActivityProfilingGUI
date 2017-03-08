@@ -193,12 +193,43 @@ get_heatmap_annotation_color <- function(annotation, actType='')
 }
 
 
-get_output_df <- function (act, annotation, id_data, isUpload=FALSE)
+get_output_df <- function (paras, id_data, isUpload=FALSE, actwithflag=FALSE)
 {
+  act <- paras[['act']]
+  annotation <- paras[['annotation']]
+  label <- paras[['label']]
+  cv <- paras[['cv']]
   
-  act$Chemical.Name <- rownames(act)
-  annotation$Chemical.Name <- rownames(annotation)
-  result <- join(annotation, act)
+  # the reverse act flag won't show up (but will show up if not removing inconclusive)
+  # the high_source_variation will only show up if you include the acts
+  # not removing inconclusive could be confusing in the output
+  if (actwithflag )
+  {
+    result <- 
+      act %>% rownames_to_column("Chemical.Name") %>% gather(call_name, act, -Chemical.Name) %>%
+      inner_join( label %>% rownames_to_column("Chemical.Name") %>% gather(call_name, label, -Chemical.Name)) %>% #label df
+      inner_join( cv %>% rownames_to_column("Chemical.Name") %>% gather(call_name, cv, -Chemical.Name)) %>%      
+      mutate(label = ifelse(label == 'b_autofluor', 'autofluorescent', 
+                    ifelse(label == 'c_contradict', 'not_supported_by_ch2', 
+                    ifelse(label == 'd_cytotoxic', 'cytotoxicity',
+                    ifelse(label == 'e_weaknoisy', 'weaknoisy_in_rep',
+                           label))))) %>%
+      mutate(comb_data = 
+               ifelse(
+                label != 'a_normal', str_c(round(act,4), " (", label, ")"), 
+                ifelse( label == "", str_c(round(act,4), " (not_tested)"), 
+                ifelse( cv != '', str_c(round(act,4), " (high_source_variation)"),
+                        round(act,4))))) %>% #merge act & label
+      select( -label, -act, -cv) %>%
+      spread(call_name, comb_data) %>%
+      inner_join(annotation %>% rownames_to_column("Chemical.Name")) # add the annotation
+  } else
+  {
+    result <- 
+      inner_join(act %>% rownames_to_column("Chemical.Name"), 
+                 annotation %>% rownames_to_column("Chemical.Name"))
+  }
+  
   if (isUpload)
   {
     if(!is.null(id_data$input_Chemical.Name))

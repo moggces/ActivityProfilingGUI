@@ -8,16 +8,16 @@
 # chemical_loader() out: list(id, ?(nwauc.logit or npod or nec50 or unknown))
 # matrix_subsetter() out: list(activities or ?(nwauc.logit or npod or nec50 or unknown), struct)
 # activity_filter() out: same as above 
-# matrix_editor() out: list(nwauc.logit, npod, nec50,wauc.logit, struct, cv_mark)
-# heatmap_para_generator() out: list(dcols, drows, annotation, annt_colors, act=act, struct, cv)
+# matrix_editor() out: list(nwauc.logit, npod, nec50,wauc.logit, struct, cv_mark, label)
+# heatmap_para_generator() out: list(dcols, drows, annotation, annt_colors, act=act, struct, cv, label)
 # select_plot()
 
 # todo:
 # 1. download potency plot
 # 2. broaden the "unknown" color scheme
-# 3. not apply purity 
 # 4. source data (long format)
-# 5. label (can it be download zip file?)
+# 5. label (can it be download zip file?) combine label to the activity? currently cv for high source, label na = not tested, others reverse, get_output_df (used by boxplot)
+# 6. filter by call meta
 
 library(shiny)
 library(plyr)
@@ -26,6 +26,7 @@ library(pheatmap)
 library(RColorBrewer)
 library(ggplot2)
 library(scales)
+library(tibble)
 library(tidyr)
 library(dplyr)
 library(stringr)
@@ -223,14 +224,14 @@ shinyServer(function(input, output) {
     cv_mark <- get_cv_mark_mat(partial[['cv.wauc']], partial[['nwauc.logit']])
     partial[['cv_mark']] <- cv_mark
     
-    # make activities matrix as 0.0001
+    # make activities matrix (< 0 and NA) as 0.0001
     partial <- assign_reverse_na_number(partial, act_mat_names=act_mat_names)
     
     
-    # remove inconclusive label (but keep the untested ones)
+    # remove inconclusive label (0.0001 as 0 ) (but keep the untested ones = 0.0001)
     if (noincon_label) partial <- remove_inconclusive_label(partial, act_mat_names=act_mat_names)
 
-    acts <- partial[c( act_mat_names, 'wauc.logit', 'struct', 'cv_mark')]
+    acts <- partial[c( act_mat_names, 'wauc.logit', 'struct', 'cv_mark', 'label')]
     return(acts)
   })
   
@@ -260,6 +261,7 @@ shinyServer(function(input, output) {
       activity_type <- names(dt)[1]
       act <- dt[[1]]
       cv <-  matrix("", nrow(act), ncol(act), dimnames=dimnames(act))
+      label <- matrix("", nrow(act), ncol(act), dimnames=dimnames(act))
     } else
     {
       # it has to be here to add more lines for the duplicates
@@ -276,6 +278,7 @@ shinyServer(function(input, output) {
       }
       
       cv <- dt[['cv_mark']]
+      label <- dt[['label']]
       
     }
     
@@ -299,10 +302,11 @@ shinyServer(function(input, output) {
       tox_order <- rownames(annotation)[order(annotation$toxScore)]
       act <- act[tox_order, ]
       cv <- cv[tox_order, ]
+      label <- label[tox_order, ]
     }
     # cluster assays by similarity 
     drows <- dist(t(act) , method = "euclidean") ## assays
-    return(list(dcols=dcols, drows=drows, annotation=annotation, annt_colors=annt_colors, act=act, struct=struct, cv=cv))
+    return(list(dcols=dcols, drows=drows, annotation=annotation, annt_colors=annt_colors, act=act, struct=struct, cv=cv, label=label))
     
   })
 
@@ -341,12 +345,17 @@ shinyServer(function(input, output) {
     ncmax_thres <- input$ncmax_thres
     npod_thres <- ifelse(is.na(input$npod_thres), 3, log10(input$npod_thres/1000000)*-1)
     nec50_thres <- ifelse(is.na(input$nec50_thres), 3, log10(input$nec50_thres/1000000)*-1)
-    pod_diff_thres <- input$pod_diff_thres
+    #pod_diff_thres <- input$pod_diff_thres
     #isstrong <- input$isstrong
     nocyto <- input$nocyto
     isgoodcc2 <- input$isgoodcc2
     nohighcv <- input$nohighcv
     cytofilter <- input$cytofilter
+    wauc_fold_thres <- input$wauc_fold_thres
+    noauto <- input$noauto
+    noch2issue <- input$noch2issue
+    
+    
     
     full <- activities
     if (! nolowQC) full <- activities_nofilter
@@ -362,11 +371,15 @@ shinyServer(function(input, output) {
     full <- filter_activity_by_type(full, 'ncmax', ncmax_thres,act_mat_names=act_mat_names)
     full <- filter_activity_by_type(full, 'npod', npod_thres,act_mat_names=act_mat_names)
     full <- filter_activity_by_type(full, 'nec50', nec50_thres,act_mat_names=act_mat_names)
-    full <- filter_activity_by_type(full, 'pod_med_diff', pod_diff_thres,act_mat_names=act_mat_names)
+    #full <- filter_activity_by_type(full, 'pod_med_diff', pod_diff_thres,act_mat_names=act_mat_names)
+    full <- filter_activity_by_type(full, 'label_cyto', thres=NULL, decision=cytofilter,act_mat_names=act_mat_names)
+    full <- filter_activity_by_type(full, 'wauc_fold_change', wauc_fold_thres,act_mat_names=act_mat_names)
     #full <- filter_activity_by_type(full, 'hitcall', thres=NULL, decision=isstrong,act_mat_names=act_mat_names)
     full <- filter_activity_by_type(full, 'pod_med_diff', thres=NULL, decision=nocyto,act_mat_names=act_mat_names)
     full <- filter_activity_by_type(full, 'cc2', thres=NULL, decision=isgoodcc2,act_mat_names=act_mat_names)
-    full <- filter_activity_by_type(full, 'label', thres=NULL, decision=cytofilter,act_mat_names=act_mat_names)
+    full <- filter_activity_by_type(full, 'label_autof', thres=NULL, decision=noauto,act_mat_names=act_mat_names)
+    full <- filter_activity_by_type(full, 'label_ch2', thres=NULL, decision=noch2issue,act_mat_names=act_mat_names)
+    
     
     # it has to be the end
     full <- filter_activity_by_type(full, 'cv.wauc', thres=NULL, decision=nohighcv,act_mat_names=act_mat_names)
@@ -445,14 +458,12 @@ shinyServer(function(input, output) {
     if ( ! is.null(chemical_loader()) ) get_lookup_list(chemical_loader()[['id']], master)
   })
 
-  output$dd <- renderDataTable({
+  output$casdata <- renderDataTable({
     
      #return(matrix_subsetter()[['nwauc.logit']])
-    
+    actwithflag <- input$actwithflag
     paras <- heatmap_para_generator() #heatmap_para_generator
-    act <- paras[['act']]
-    annotation <- paras[['annotation']]
-
+    
     id_info <- chemical_loader()
     id_data <- master
     isUpload <- FALSE
@@ -460,7 +471,7 @@ shinyServer(function(input, output) {
       id_data <- id_info[['id']]
       isUpload <- TRUE
     }
-    result <- get_output_df(act, annotation, id_data, isUpload)
+    result <- get_output_df(paras, id_data, isUpload=isUpload, actwithflag=actwithflag)
     return(result)
     
     # for testing
@@ -541,7 +552,7 @@ shinyServer(function(input, output) {
           id_data <- id_info[['id']]
           isUpload <- TRUE
         }
-        result <- get_output_df(act, annotation, id_data, isUpload)
+        result <- get_output_df(paras, id_data, isUpload,actwithflag=FALSE)
         result <- select(result, -Chemical.Name_original) # remove the new added column after get_output_df
         p <- get_pod_boxplot(result, fontsize=fsize, sortby=sort_meth, dcols=dcols, global_para=assay_names)
       }
@@ -551,6 +562,7 @@ shinyServer(function(input, output) {
   },  width=getVarWidth)
 
   output$downloadData <-  downloadHandler(
+    
     filename = function() {
       if (input$proftype == 'signal')
       {
@@ -561,10 +573,12 @@ shinyServer(function(input, output) {
       }
        },
     content = function(file) {
+      actwithflag <- input$actwithflag
       paras <- heatmap_para_generator()
-      act <- paras[['act']]
-      annotation <- paras[['annotation']]
-      result <- get_output_df(act, annotation, master)
+      #act <- paras[['act']]
+      #annotation <- paras[['annotation']]
+      #label <- paras[['label']]
+      result <- get_output_df(paras, master, isUpload=FALSE,actwithflag=actwithflag)
       #result <- get_published_data_only_commonname(result, assay_names)  # to remove unpublished data
       write.table(result, file, row.names = FALSE, col.names = TRUE, sep="\t", quote=FALSE, append=FALSE)
     }

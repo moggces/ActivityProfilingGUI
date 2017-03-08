@@ -117,6 +117,7 @@ shinyUI(
               checkboxInput("noinconlab", "make inconclusive as inactive", TRUE),
               checkboxInput("showdendro", "show compound similarity dendrogram", FALSE),
               checkboxInput("keepsize", "keep heatmap size one page", FALSE),
+              checkboxInput("actwithflag", "download activity data with flags", FALSE),
               
               tags$br(),
               # fontsize
@@ -138,7 +139,7 @@ shinyUI(
               tabPanel('Input chemicals', dataTableOutput('contents')),
               tabPanel("Profile", plotOutput("profiling", height=1000, width="500%")), # i think the height don't affect
               tabPanel("Potency boxplot", plotOutput("box",  height=1000, width="500%")),
-              tabPanel('Activity data', dataTableOutput('dd')),
+              tabPanel('Activity data', dataTableOutput('casdata')),
               tabPanel('Enrichment analysis', dataTableOutput('enrich')),
               tabPanel('Assays', dataTableOutput('assay_info'))
             )
