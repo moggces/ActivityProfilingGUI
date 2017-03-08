@@ -52,13 +52,11 @@ profile_file <- './data/tox21_compound_id_v5a7.txt' #colunm name has to be GSID 
 master <- load_profile(profile_file) # global, dataframe output
 
 # load the activities (all data) and the structure fp matrix
-#activities_rdata <- './data/activities.RData'
 struct_mat_rdata <- './data/struct_mat.RData'
-#load(activities_rdata, verbose=TRUE) # global, matrix output, activities
 load(struct_mat_rdata, verbose=TRUE) # global, matrix output, struct_mat
-activities <- readRDS('./data/activities_web_compati_170226.rds')
-activities_nofilter <- readRDS('./data/activities_web_compati_170302.rds')
-activities_tox21agencyid <- readRDS('./data/activities_170306_tox21agencyid.rds')
+activities <- readRDS('./data/activities_noinconclusive_170226.rds')
+activities_nofilter <- readRDS('./data/activities_nofiltergrade_noinconclusive_170302.rds')
+activities_tox21agencyid <- readRDS('./data/activities_tox21agencyid_nofiltergrade_170306.rds')
 
 # remove the structures with low purity
 #struct_mat <- struct_mat[rownames(struct_mat) %in% rownames(activities[[1]]),]
