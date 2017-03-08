@@ -95,14 +95,37 @@ filter_activity_by_type <- function(partial, type, thres=NULL, decision=FALSE, a
     ids <- matrix(FALSE, nrow(partial[[name]]), ncol(partial[[name]]))
     if (type == 'wauc_fold_change')
     {
+       tempd <- partial[[name]] 
       ant_ids <- grepl("^tox21.*antagonist|^tox21-dt40-srf-agonist-p1|^tox21-dt40-dsb-agonist-p1", colnames(partial[[name]]))
-      if (sum(ant_ids) > 0) 
+      if (sum(ant_ids) > 0)
       {
         ids <- matrix(FALSE, nrow(partial[[name]][, ant_ids]), ncol(partial[[name]][, ant_ids]))
-        if (thres > 1 ) ids <- (partial[[type]][, ant_ids]) < thres & (partial[[type]][, ant_ids]) > 0 & ! is.na(partial[[type]][, ant_ids]) & ! is.na(partial[[name]][, ant_ids]) & partial[[name]][, ant_ids] > 0.0001
-        #if ( decision ) ids <- ! is.na(partial[['wauc_fold_change']][, ant_ids]) & ! is.na(partial[[name]][, ant_ids]) & partial[[name]][, ant_ids] > 0.0001
-        partial[[name]][, ant_ids][ids] <- (partial[[name]][, ant_ids][ids])*-1
+        if ( thres > 1 ) 
+        {
+          ids <- (partial[[type]][, ant_ids]) < thres & (partial[[type]][, ant_ids]) > 0 & ! is.na(partial[[type]][, ant_ids]) & ! is.na(partial[[name]][, ant_ids]) & partial[[name]][, ant_ids] > 0.0001
+        } 
+        if (decision) 
+        {
+          ids <- ! is.na(partial[['wauc_fold_change']][, ant_ids]) & partial[['wauc_fold_change']][, ant_ids] > 0 & ! is.na(partial[[name]][, ant_ids]) & partial[[name]][, ant_ids] > 0.0001
+        }
+        tempd[, ant_ids][ids] <- (partial[[name]][, ant_ids][ids])*-1
       }
+      ago_ids <- grep('^tox21.*\\-agonist', colnames(partial[[name]]), value=TRUE)
+      ago_ids <- ago_ids[! ago_ids %in% c('tox21-dt40-srf-agonist-p1', 'tox21-dt40-dsb-agonist-p1')]
+      if (length(ago_ids) > 0)
+      {
+        ids <- matrix(FALSE, nrow(partial[[name]][, ago_ids]), ncol(partial[[name]][, ago_ids]))
+        if ( thres > 1 ) 
+        {
+          ids <- (partial[[type]][, ago_ids]) > thres*-1 & (partial[[type]][, ago_ids]) < 0 & ! is.na(partial[[type]][, ago_ids]) & ! is.na(partial[[name]][, ago_ids]) & partial[[name]][, ago_ids] > 0.0001
+        } 
+        if (decision) 
+        {
+          ids <- ! is.na(partial[['wauc_fold_change']][, ago_ids]) & partial[['wauc_fold_change']][, ago_ids] < 0 & ! is.na(partial[[name]][, ago_ids]) & partial[[name]][, ago_ids] > 0.0001
+        }
+        tempd[, ago_ids][ids] <- (partial[[name]][, ago_ids][ids])*-1
+      }
+      partial[[name]] <- tempd
     } else if (type == 'pod_med_diff')
     {
       ant_ids <- grepl("^tox21.*antagonist|^tox21-dt40-srf-agonist-p1|^tox21-dt40-dsb-agonist-p1", colnames(partial[[name]]))
@@ -113,31 +136,8 @@ filter_activity_by_type <- function(partial, type, thres=NULL, decision=FALSE, a
         #if ( decision ) ids <- ! is.na(partial[['wauc_fold_change']][, ant_ids]) & ! is.na(partial[[name]][, ant_ids]) & partial[[name]][, ant_ids] > 0.0001
         partial[[name]][, ant_ids][ids] <- (partial[[name]][, ant_ids][ids])*-1
       }
-      # for completely no cytotoxicity (including agonist)
-      if (decision)
-      {
-        tempd <- partial[[name]] 
-        ant_ids <- grepl("^tox21.*antagonist|^tox21-dt40-srf-agonist-p1|^tox21-dt40-dsb-agonist-p1", colnames(partial[[name]]))
-        if (sum(ant_ids) > 0)
-        {
-          #ids <- matrix(FALSE, nrow(partial[[name]][, ant_ids]), ncol(partial[[name]][, ant_ids]))
-          #if (! is.null(thres) ) ids <- (partial[[type]][, ant_ids]*-1) < thres & ! is.na(partial[[type]][, ant_ids]) & ! is.na(partial[[name]][, ant_ids]) & partial[[name]][, ant_ids] > 0.0001
-          ids <- ! is.na(partial[['wauc_fold_change']][, ant_ids]) & partial[['wauc_fold_change']][, ant_ids] > 0 & ! is.na(partial[[name]][, ant_ids]) & partial[[name]][, ant_ids] > 0.0001
-          tempd[, ant_ids][ids] <- (partial[[name]][, ant_ids][ids])*-1
-        }
-        ago_ids <- grep('tox21^.*-agonist', colnames(partial[[name]]), value=TRUE)
-        ago_ids <- ago_ids[! ago_ids %in% c('tox21-dt40-srf-agonist-p1', 'tox21-dt40-dsb-agonist-p1')]
-        if (length(ago_ids) > 0)
-        {
-          #ids <- matrix(FALSE, nrow(partial[[name]][, ago_ids]), ncol(partial[[name]][, ago_ids]))
-          #if (! is.null(thres) ) ids <- (partial[[type]][, ago_ids]*-1) < thres & ! is.na(partial[[type]][, ago_ids]) & ! is.na(partial[[name]][, ago_ids]) & partial[[name]][, ago_ids] > 0.0001
-          ids <- ! is.na(partial[['wauc_fold_change']][, ago_ids]) & partial[['wauc_fold_change']][, ago_ids] < 0 & ! is.na(partial[[name]][, ago_ids]) & partial[[name]][, ago_ids] > 0.0001
-          tempd[, ago_ids][ids] <- (partial[[name]][, ago_ids][ids])*-1
-        }
-        partial[[name]] <- tempd
-      }
       
-    }else if (type == 'label_cyto' | type == 'label_ch2' | type == 'label_autof')
+    } else if (type == 'label_cyto' | type == 'label_ch2' | type == 'label_autof')
     {
       if (! decision) 
       {
@@ -167,7 +167,7 @@ filter_activity_by_type <- function(partial, type, thres=NULL, decision=FALSE, a
           
         } else if (type == 'label_autof')
         {
-          ago_ids <- grepl('^tox21.*-agonist', colnames(partial[[name]]))
+          ago_ids <- grepl('^tox21.*\\-agonist', colnames(partial[[name]]))
           if (sum(ago_ids) > 0) 
           {
             #ids <- matrix(FALSE, nrow(partial[[name]][, ago_ids]), ncol(partial[[name]][, ago_ids]))

@@ -72,7 +72,7 @@ shinyUI(
                 #sliderInput("pod_diff_thres",
                 #            "log10(ratio of signal to cytotoxicity)(antagonist-type assays only)", min=0, max=3, value=0, step=0.2),
                 sliderInput("wauc_fold_thres",
-                            "wAUC fold change (vs cytotoxicity)(antagonist-type calls)", min=1, max=15, value=0, step=1),
+                            "wAUC fold change (vs cytotoxicity)", min=1, max=15, value=0, step=1),
                 tags$hr(),
               
                 
