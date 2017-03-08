@@ -10,13 +10,13 @@
 # activity_filter() out: same as above 
 # matrix_editor() out: list(nwauc.logit, npod, nec50,wauc.logit, struct, cv_mark, label)
 # heatmap_para_generator() out: list(dcols, drows, annotation, annt_colors, act=act, struct, cv, label)
+# tox21_data_generator()
+# cas_data_generator()
 # select_plot()
 
 # todo:
 # 1. download potency plot
 # 2. broaden the "unknown" color scheme
-# 4. source data (long format)
-# 5. label (can it be download zip file?) combine label to the activity? currently cv for high source, label na = not tested, others reverse, get_output_df (used by boxplot)
 # 6. filter by call meta
 
 library(shiny)
@@ -58,6 +58,7 @@ struct_mat_rdata <- './data/struct_mat.RData'
 load(struct_mat_rdata, verbose=TRUE) # global, matrix output, struct_mat
 activities <- readRDS('./data/activities_web_compati_170226.rds')
 activities_nofilter <- readRDS('./data/activities_web_compati_170302.rds')
+activities_tox21agencyid <- readRDS('./data/activities_170306_tox21agencyid.rds')
 
 # remove the structures with low purity
 #struct_mat <- struct_mat[rownames(struct_mat) %in% rownames(activities[[1]]),]
@@ -454,13 +455,24 @@ shinyServer(function(input, output) {
     return(p)
   })
 
-  output$contents <- renderDataTable({
-    if ( ! is.null(chemical_loader()) ) get_lookup_list(chemical_loader()[['id']], master)
+  tox21id_data_generator <- reactive({
+    paras <- heatmap_para_generator() #heatmap_para_generator
+    actf <- paras[['act']]
+    id_info <- chemical_loader()
+    id_data <- master
+    isUpload <- FALSE
+    if(length(id_info) > 1) {
+      id_data <- id_info[['id']]
+      isUpload <- TRUE
+    }
+    if (! isUpload)
+    {
+      result <- get_source_data_long(source_acts=activities_tox21agencyid, chem_id_master=master, filtered_act=actf)
+    } else {result <- NULL}
+    return(result)
   })
-
-  output$casdata <- renderDataTable({
-    
-     #return(matrix_subsetter()[['nwauc.logit']])
+  
+  cas_data_generator <- reactive({
     actwithflag <- input$actwithflag
     paras <- heatmap_para_generator() #heatmap_para_generator
     
@@ -473,11 +485,25 @@ shinyServer(function(input, output) {
     }
     result <- get_output_df(paras, id_data, isUpload=isUpload, actwithflag=actwithflag)
     return(result)
+  })
     
+  output$contents <- renderDataTable({
+    if ( ! is.null(chemical_loader()) ) get_lookup_list(chemical_loader()[['id']], master)
+  })
+
+  output$casdata <- renderDataTable({
+    
+     #return(matrix_subsetter()[['nwauc.logit']])
+    return(cas_data_generator())
     # for testing
 #       paras <- heatmap_para_generator()
 #       return(data.frame(rownames(paras[['act']])))
     
+  })
+  
+  output$tox21iddata <- renderDataTable({
+
+    return(tox21id_data_generator())
   })
   
   output$enrich <- renderDataTable({
@@ -561,7 +587,7 @@ shinyServer(function(input, output) {
     
   },  width=getVarWidth)
 
-  output$downloadData <-  downloadHandler(
+  output$downloadCASData <-  downloadHandler(
     
     filename = function() {
       if (input$proftype == 'signal')
@@ -573,13 +599,19 @@ shinyServer(function(input, output) {
       }
        },
     content = function(file) {
-      actwithflag <- input$actwithflag
-      paras <- heatmap_para_generator()
-      #act <- paras[['act']]
-      #annotation <- paras[['annotation']]
-      #label <- paras[['label']]
-      result <- get_output_df(paras, master, isUpload=FALSE,actwithflag=actwithflag)
+      result <- cas_data_generator()
       #result <- get_published_data_only_commonname(result, assay_names)  # to remove unpublished data
+      write.table(result, file, row.names = FALSE, col.names = TRUE, sep="\t", quote=FALSE, append=FALSE)
+    }
+  )
+  
+  output$downloadTox21IDData <-  downloadHandler(
+    
+    filename = function() {
+      paste(as.numeric(as.POSIXct(Sys.time())), ".txt", sep="")
+    },
+    content = function(file) {
+      result <- tox21id_data_generator()
       write.table(result, file, row.names = FALSE, col.names = TRUE, sep="\t", quote=FALSE, append=FALSE)
     }
   )

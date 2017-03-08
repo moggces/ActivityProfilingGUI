@@ -336,3 +336,38 @@ get_fisher_pvalue <- function (n, n_p, N_P, N)
   return(fish)
 }
 
+get_source_data_long <- function(source_acts, chem_id_master, filtered_act)
+{
+
+  chem_id_filtered <- chem_id_master %>% select(CAS, Chemical.Name, Tox21.ID,
+                            Purity_Rating_T0, Purity_Rating_T4, Purity_Rating_Comb) %>%
+         unnest(Tox21.ID = str_split(Tox21.ID, "\\|"), 
+              Purity_Rating_T0 = str_split(Purity_Rating_T0, "\\|"), 
+              Purity_Rating_T4 = str_split(Purity_Rating_T4, "\\|"),
+              Purity_Rating_Comb = str_split(Purity_Rating_Comb, "\\|")) %>%
+          filter(Chemical.Name %in% rownames(filtered_act)) # filter by the filtered act Chemical.Name
+  #source_acts <- activities
+  value_type <- c('hitcall', 'label', 'nwauc', 'npod', 'nec50', 'ncmax', 'nwauc.logit' )
+  source_acts <- source_acts[value_type]
+  #id_temp <- c('Tox21_112780', 'Tox21_200003')
+  #assay_temp <- c('tox21-aromatase-antagonist-p1', 'tox21-ar-mda-kb2-luc-antagonist-p2')
+  
+  acts_collect <- lapply(names(source_acts), function (x){
+    result <- source_acts[[x]] %>% rownames_to_column("Tox21AgencyID") %>%
+      separate(Tox21AgencyID, c("Tox21.ID", "Library"), sep="@") %>%
+      filter(Tox21.ID %in% chem_id_filtered$Tox21.ID) %>%
+      gather_("call_name", x, grep("Tox21.ID|Library", colnames(.), value=TRUE, invert=TRUE)) %>%
+      filter(call_name %in% colnames(filtered_act))
+    return(result)
+  })
+  acts_collect <-  left_join(chem_id_filtered, Reduce("full_join", acts_collect)) %>%
+    mutate(label = ifelse(label == 'b_autofluor', 'autofluorescent', 
+            ifelse(label == 'c_contradict', 'not_supported_by_ch2', 
+            ifelse(label == 'd_cytotoxic', 'cytotoxicity',
+            ifelse(label == 'e_weaknoisy', 'weaknoisy_in_rep',
+            ifelse(label == 'a_normal', '', 
+            ifelse(label == '', 'not_tested', label))))))) %>%
+    rename(flag = label, efficacy = ncmax, POD=npod, EC50=nec50, wAUC=nwauc, wAUC.logit=nwauc.logit)
+  return(acts_collect)
+  
+}

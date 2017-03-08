@@ -117,7 +117,7 @@ shinyUI(
               checkboxInput("noinconlab", "make inconclusive as inactive", TRUE),
               checkboxInput("showdendro", "show compound similarity dendrogram", FALSE),
               checkboxInput("keepsize", "keep heatmap size one page", FALSE),
-              checkboxInput("actwithflag", "download activity data with flags", FALSE),
+              checkboxInput("actwithflag", "show(download) activity data with flags", FALSE),
               
               tags$br(),
               # fontsize
@@ -127,9 +127,10 @@ shinyUI(
               
               # output functions
               tags$hr(),
-              downloadButton('downloadData', 'Download Activities'),
-              downloadButton('downloadPlot', 'Save Plot'),
-              downloadButton('downloadEnrich', 'Download Enrichment analysis')
+              downloadButton('downloadCASData', 'Download Activities(CAS)'),
+              downloadButton('downloadTox21IDData', 'Download Activities(Tox21ID)'),
+              downloadButton('downloadPlot', 'Save Heatmap'),
+              downloadButton('downloadEnrich', 'Download Enrichment Analysis')
               
             )    
             ),
@@ -139,7 +140,8 @@ shinyUI(
               tabPanel('Input chemicals', dataTableOutput('contents')),
               tabPanel("Profile", plotOutput("profiling", height=1000, width="500%")), # i think the height don't affect
               tabPanel("Potency boxplot", plotOutput("box",  height=1000, width="500%")),
-              tabPanel('Activity data', dataTableOutput('casdata')),
+              tabPanel('Activity data\n(CAS)', dataTableOutput('casdata')),
+              tabPanel('Activity data\n(Tox21ID)', dataTableOutput('tox21iddata')),
               tabPanel('Enrichment analysis', dataTableOutput('enrich')),
               tabPanel('Assays', dataTableOutput('assay_info'))
             )
