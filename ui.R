@@ -21,9 +21,9 @@ shinyUI(
             # input control
             h3('Required inputs'),
             wellPanel(
-              h4('CAS & Cluster (optional)'),
+              h4('CAS & Cluster (Cluster is optional)'),
               tags$textarea(id="cmpds", class='col-xs-12', rows=5, ""),
-              helpText("Note: copy & paste from excel file with two columns: "),
+              helpText("Note: copy & paste from excel file with two columns (with headers) or just CAS column: "),
               checkboxInput("nolowQC", "exclude activity from chemicals with suboptimal QC grade", TRUE),
               
               h6('or'),
@@ -91,13 +91,13 @@ shinyUI(
                 checkboxInput("isgoodcc2", "exclude activity with suboptimal NCATS fits", FALSE),
                 
                 tags$br(),
-                checkboxInput("nohighcv", "exclude activity varied between sources", TRUE)
+                checkboxInput("nohighcv", "exclude activity varied a lot between sources", TRUE)
           
               )
               
             ),
             wellPanel(
-              h4('Filter assays'),
+              h4('Filter calls'),
               tags$br(),
               textInput('reg_sel', 'names (regular expression)', 'via'),
               checkboxInput("inv_sel", "invert your selection", TRUE)
@@ -115,9 +115,9 @@ shinyUI(
             wellPanel(
               
               checkboxInput("noinconlab", "make inconclusive as inactive", TRUE),
-              checkboxInput("showdendro", "show compound similarity dendrogram", FALSE),
+              checkboxInput("showdendro", "show chemical similarity dendrogram", FALSE),
               checkboxInput("keepsize", "keep heatmap size one page", FALSE),
-              checkboxInput("actwithflag", "show(download) activity data with flags", FALSE),
+              checkboxInput("actwithflag", "show(download) activity with flags", FALSE),
               
               tags$br(),
               # fontsize
@@ -143,7 +143,7 @@ shinyUI(
               tabPanel('Activity data\n(CAS)', dataTableOutput('casdata')),
               tabPanel('Activity data\n(Tox21ID)', dataTableOutput('tox21iddata')),
               tabPanel('Enrichment analysis', dataTableOutput('enrich')),
-              tabPanel('Assays', dataTableOutput('assay_info'))
+              tabPanel('Call descriptions', dataTableOutput('assay_info'))
             )
           )
         )
