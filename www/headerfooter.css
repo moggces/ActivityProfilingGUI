@@ -8,7 +8,7 @@
 #masthead {
   position: relative;
   background: #375998;
-  background-image: url("//ntp.niehs.nih.gov/images/template/masthead_right.gif");
+  background-image: url("//ntp.niehs.nih.gov/sandbox/images/template/masthead_right.gif");
   background-size: 297px 80px;
   background-position: right;
   background-repeat: no-repeat;
@@ -18,7 +18,7 @@
 
 /* line 18, ../sass/headerfooter.scss */
 #mastheadwrapper {
-  background-image: url("//ntp.niehs.nih.gov/images/mastheadwrapperback.gif");
+  background-image: url("//ntp.niehs.nih.gov/sandbox/images/mastheadwrapperback.gif");
   background-position: center;
   background-repeat: repeat-y;
   overflow: hidden;
