@@ -343,11 +343,10 @@ get_source_data_long <- function(source_acts, chem_id_master, filtered_act)
               Purity_Rating_T4 = str_split(Purity_Rating_T4, "\\|"),
               Purity_Rating_Comb = str_split(Purity_Rating_Comb, "\\|")) %>%
           filter(Chemical.Name %in% rownames(filtered_act)) # filter by the filtered act Chemical.Name
-  #source_acts <- activities
-  value_type <- c('hitcall', 'label', 'nwauc', 'npod', 'nec50', 'ncmax', 'nwauc.logit' )
+
+  # the activity type to retrieve  
+  value_type <- c('hitcall', 'label', 'nwauc', 'npod', 'nec50', 'ncmax', 'nwauc.logit', 'wauc_fold_change' )
   source_acts <- source_acts[value_type]
-  #id_temp <- c('Tox21_112780', 'Tox21_200003')
-  #assay_temp <- c('tox21-aromatase-antagonist-p1', 'tox21-ar-mda-kb2-luc-antagonist-p2')
   
   acts_collect <- lapply(names(source_acts), function (x){
     result <- source_acts[[x]] %>% rownames_to_column("Tox21AgencyID") %>%
@@ -364,7 +363,8 @@ get_source_data_long <- function(source_acts, chem_id_master, filtered_act)
             ifelse(label == 'e_weaknoisy', 'weaknoisy_in_rep',
             ifelse(label == 'a_normal', '', 
             ifelse(label == '', 'not_tested', label))))))) %>%
-    rename(flag = label, efficacy = ncmax, POD=npod, EC50=nec50, wAUC=nwauc, wAUC.logit=nwauc.logit)
+    rename(flag = label, efficacy = ncmax, POD=npod, EC50=nec50, wAUC=nwauc, 
+           wAUC.logit=nwauc.logit, wAUC.fold.change = wauc_fold_change)
   return(acts_collect)
   
 }
