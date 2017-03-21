@@ -21,13 +21,15 @@ shinyUI(
             # input control
             h3('Required inputs'),
             wellPanel(
-              h4('CAS & Cluster (optional)'),
+              h4('CAS & Cluster (Cluster is optional)'),
               tags$textarea(id="cmpds", class='col-xs-12', rows=5, ""),
-              helpText("Note: copy & paste from excel file with two columns: "),
+              helpText("Note: copy & paste from excel file with two columns (with headers) or just CAS column: "),
+              checkboxInput("nolowQC", "exclude activity from chemicals with suboptimal QC grade", TRUE),
               
               h6('or'),
               fileInput('file1', 'Import a data matrix', multiple=FALSE),
               tags$hr(),
+
               
               h4('Activity type'),
               conditionalPanel(
@@ -67,29 +69,37 @@ shinyUI(
                 numericInput("nec50_thres", label = "EC50 threshold (uM)", value = NA),
                 
                 tags$br(),
-                sliderInput("pod_diff_thres",
-                            "log10(ratio of signal to cytotoxicity)(inhibition-type assays only)", min=0, max=3, value=0, step=0.2),
+                #sliderInput("pod_diff_thres",
+                #            "log10(ratio of signal to cytotoxicity)(antagonist-type assays only)", min=0, max=3, value=0, step=0.2),
+                sliderInput("wauc_fold_thres",
+                            "wAUC fold change (vs cytotoxicity)", min=1, max=15, value=0, step=1),
                 tags$hr(),
               
                 
-                checkboxInput("cytofilter", "exclude activity due to cytotoxicity (loose)", TRUE),
+                checkboxInput("cytofilter", "exclude activity (antagonist-type calls) due to cytotoxicity", TRUE),
                 
                 tags$br(),
-                checkboxInput("nocyto", "exclude activity due to cytotoxicity (strict)", FALSE),
+                checkboxInput("nocyto", "exclude activity with observed cytotoxicity", FALSE),
+                
+                tags$br(),
+                checkboxInput("noauto", "exclude activity due to auto-fluorescencent", TRUE),
+                
+                tags$br(),
+                checkboxInput("noch2issue", "exclude activity with no reporter gene activity readout support", TRUE),
                 
                 tags$br(),
                 checkboxInput("isgoodcc2", "exclude activity with suboptimal NCATS fits", FALSE),
                 
                 tags$br(),
-                checkboxInput("nohighcv", "exclude activity varied between sources", TRUE)
+                checkboxInput("nohighcv", "exclude activity varied a lot between sources", TRUE)
           
               )
               
             ),
             wellPanel(
-              h4('Filter assays'),
+              h4('Filter calls'),
               tags$br(),
-              textInput('reg_sel', 'names (regular expression)', 'cytotoxicity'),
+              textInput('reg_sel', 'names (regular expression)', 'via'),
               checkboxInput("inv_sel", "invert your selection", TRUE)
               
             ),
@@ -105,8 +115,9 @@ shinyUI(
             wellPanel(
               
               checkboxInput("noinconlab", "make inconclusive as inactive", TRUE),
-              checkboxInput("showdendro", "show compound similarity dendrogram", FALSE),
+              checkboxInput("showdendro", "show chemical similarity dendrogram", FALSE),
               checkboxInput("keepsize", "keep heatmap size one page", FALSE),
+              checkboxInput("actwithflag", "show(download) activity with flags", FALSE),
               
               tags$br(),
               # fontsize
@@ -116,9 +127,10 @@ shinyUI(
               
               # output functions
               tags$hr(),
-              downloadButton('downloadData', 'Download Activities'),
-              downloadButton('downloadPlot', 'Save Plot'),
-              downloadButton('downloadEnrich', 'Download Enrichment analysis')
+              downloadButton('downloadCASData', 'Download Activities(CAS)'),
+              downloadButton('downloadTox21IDData', 'Download Activities(Tox21ID)'),
+              downloadButton('downloadPlot', 'Save Heatmap'),
+              downloadButton('downloadEnrich', 'Download Enrichment Analysis')
               
             )    
             ),
@@ -128,9 +140,10 @@ shinyUI(
               tabPanel('Input chemicals', dataTableOutput('contents')),
               tabPanel("Profile", plotOutput("profiling", height=1000, width="500%")), # i think the height don't affect
               tabPanel("Potency boxplot", plotOutput("box",  height=1000, width="500%")),
-              tabPanel('Activity data', dataTableOutput('dd')),
+              tabPanel('Activity data\n(CAS)', dataTableOutput('casdata')),
+              tabPanel('Activity data\n(Tox21ID)', dataTableOutput('tox21iddata')),
               tabPanel('Enrichment analysis', dataTableOutput('enrich')),
-              tabPanel('Assays', dataTableOutput('assay_info'))
+              tabPanel('Call descriptions', dataTableOutput('assay_info'))
             )
           )
         )

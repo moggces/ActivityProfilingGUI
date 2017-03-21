@@ -8,13 +8,16 @@
 # chemical_loader() out: list(id, ?(nwauc.logit or npod or nec50 or unknown))
 # matrix_subsetter() out: list(activities or ?(nwauc.logit or npod or nec50 or unknown), struct)
 # activity_filter() out: same as above 
-# matrix_editor() out: list(nwauc.logit, npod, nec50,wauc.logit, struct, cv_mark)
-# heatmap_para_generator() out: list(dcols, drows, annotation, annt_colors, act=act, struct, cv)
+# matrix_editor() out: list(nwauc.logit, npod, nec50,wauc.logit, struct, cv_mark, label)
+# heatmap_para_generator() out: list(dcols, drows, annotation, annt_colors, act=act, struct, cv, label)
+# tox21_data_generator()
+# cas_data_generator()
 # select_plot()
 
 # todo:
 # 1. download potency plot
 # 2. broaden the "unknown" color scheme
+# 6. filter by call meta
 
 library(shiny)
 library(plyr)
@@ -23,35 +26,35 @@ library(pheatmap)
 library(RColorBrewer)
 library(ggplot2)
 library(scales)
+library(tibble)
 library(tidyr)
 library(dplyr)
+library(stringr)
 library(Cairo)
-
 options(stringsAsFactors = FALSE)
 
 
 #Sys.setlocale(locale="C")
 #setwd("~/ShinyApps/profiling/")
 source(paste(getwd(), "/source/customized.R", sep=""), local=TRUE)
-source(paste(getwd(), "/source/pheatmap_display_number.R", sep=""), local=TRUE)
+#source(paste(getwd(), "/source/pheatmap_display_number.R", sep=""), local=TRUE)
 source(paste(getwd(), "/source/get.R", sep=""), local=TRUE)
 source(paste(getwd(), "/source/load.R", sep=""), local=TRUE)
 source(paste(getwd(), "/source/mis.R", sep=""), local=TRUE)
 #environment(pheatmap_new_label) <- environment(pheatmap) pheatmap v. < 1.0
 
 # load assay related parameters
-logit_para_file <- './data/tox21_assay_collection.txt'
+logit_para_file <- './data/tox21_call_descriptions_v2.txt' #tox21_assay_collection.txt
 assay_names <- load_profile(logit_para_file) # global, dataframe output
 
 # load chemical information (will include purity later)
-profile_file <- './data/tox21_compound_id.txt' #colunm name has to be GSID # v5a3
+profile_file <- './data/tox21_compound_id_v5a7.txt' #colunm name has to be GSID # v5a3
 master <- load_profile(profile_file) # global, dataframe output
 
 # load the activities (all data) and the structure fp matrix
-activities_rdata <- './data/activities.RData'
 struct_mat_rdata <- './data/struct_mat.RData'
-load(activities_rdata, verbose=TRUE) # global, matrix output, activities
 load(struct_mat_rdata, verbose=TRUE) # global, matrix output, struct_mat
+activities <- readRDS('./data/activities_combined_170306.rds')
 
 # remove the structures with low purity
 #struct_mat <- struct_mat[rownames(struct_mat) %in% rownames(activities[[1]]),]
@@ -101,7 +104,8 @@ shinyServer(function(input, output) {
     partial <- NULL
     reg_sel <- input$reg_sel # select the assays
     inv_sel <- input$inv_sel # inverse the selection
-    rename_assay <- TRUE # use the assay_names df
+    nolowQC <- input$nolowQC # remove low QC 
+    rename_assay <- FALSE # use the assay_names df
     
     # get all chemical information
     id_info <- chemical_loader()
@@ -115,7 +119,8 @@ shinyServer(function(input, output) {
     # collect all the matrices and store in full (list)
     
     full <- list()
-    full <- activities 
+    full <- activities$cas_qc 
+    if(! nolowQC) full <- activities$cas
     
     # if it is a data matrix input, only CAS ID is allowd
     input_chemical_name <- NULL
@@ -145,7 +150,7 @@ shinyServer(function(input, output) {
     
     # subset the matrices by assay names
     partial <- get_assay_mat(partial, reg_sel, invSel=inv_sel)
-    
+    #print(partial[[1]][1, ])
     # sort the matrix
     partial <- sort_matrix(partial)
     
@@ -162,12 +167,15 @@ shinyServer(function(input, output) {
     ncmax_thres <- input$ncmax_thres
     npod_thres <- ifelse(is.na(input$npod_thres), 3, log10(input$npod_thres/1000000)*-1)
     nec50_thres <- ifelse(is.na(input$nec50_thres), 3, log10(input$nec50_thres/1000000)*-1)
-    pod_diff_thres <- input$pod_diff_thres
+    #pod_diff_thres <- input$pod_diff_thres
+    wauc_fold_thres <- input$wauc_fold_thres
     #isstrong <- input$isstrong
     nocyto <- input$nocyto
     isgoodcc2 <- input$isgoodcc2
     nohighcv <- input$nohighcv
     cytofilter <- input$cytofilter
+    noauto <- input$noauto
+    noch2issue <- input$noch2issue
     
     partial <- matrix_subsetter()
     
@@ -176,18 +184,21 @@ shinyServer(function(input, output) {
    
     act_mat_names <- c('npod', 'nec50', 'nwauc.logit')
     # reverse direction of mitotox could be meaningful
-    partial <- fix_mitotox_reverse(partial,act_mat_names=act_mat_names )
+    #partial <- fix_mitotox_reverse(partial,act_mat_names=act_mat_names )
     
     # filtering
     partial <- filter_activity_by_type(partial, 'nwauc.logit', nwauc_thres, act_mat_names=act_mat_names)
     partial <- filter_activity_by_type(partial, 'ncmax', ncmax_thres,act_mat_names=act_mat_names)
     partial <- filter_activity_by_type(partial, 'npod', npod_thres,act_mat_names=act_mat_names)
     partial <- filter_activity_by_type(partial, 'nec50', nec50_thres,act_mat_names=act_mat_names)
-    partial <- filter_activity_by_type(partial, 'pod_med_diff', pod_diff_thres,act_mat_names=act_mat_names)
+    #partial <- filter_activity_by_type(partial, 'pod_med_diff', pod_diff_thres,act_mat_names=act_mat_names)
+    partial <- filter_activity_by_type(partial, 'label_cyto', thres=NULL, decision=cytofilter,act_mat_names=act_mat_names)
+    partial <- filter_activity_by_type(partial, 'wauc_fold_change', wauc_fold_thres,act_mat_names=act_mat_names)
     #partial <- filter_activity_by_type(partial, 'hitcall', thres=NULL, decision=isstrong,act_mat_names=act_mat_names)
-    partial <- filter_activity_by_type(partial, 'pod_med_diff', thres=NULL, decision=nocyto,act_mat_names=act_mat_names)
+    partial <- filter_activity_by_type(partial, 'wauc_fold_change', thres=1, decision=nocyto,act_mat_names=act_mat_names)
     partial <- filter_activity_by_type(partial, 'cc2', thres=NULL, decision=isgoodcc2,act_mat_names=act_mat_names)
-    partial <- filter_activity_by_type(partial, 'label', thres=NULL, decision=cytofilter,act_mat_names=act_mat_names)
+    partial <- filter_activity_by_type(partial, 'label_autof', thres=NULL, decision=noauto,act_mat_names=act_mat_names)
+    partial <- filter_activity_by_type(partial, 'label_ch2', thres=NULL, decision=noch2issue,act_mat_names=act_mat_names)
     
     # it has to be the end
     partial <- filter_activity_by_type(partial, 'cv.wauc', thres=NULL, decision=nohighcv,act_mat_names=act_mat_names)
@@ -210,14 +221,14 @@ shinyServer(function(input, output) {
     cv_mark <- get_cv_mark_mat(partial[['cv.wauc']], partial[['nwauc.logit']])
     partial[['cv_mark']] <- cv_mark
     
-    # make activities matrix as 0.0001
+    # make activities matrix (< 0 and NA) as 0.0001
     partial <- assign_reverse_na_number(partial, act_mat_names=act_mat_names)
     
     
-    # remove inconclusive label (but keep the untested ones)
+    # remove inconclusive label (0.0001 as 0 ) (but keep the untested ones = 0.0001)
     if (noincon_label) partial <- remove_inconclusive_label(partial, act_mat_names=act_mat_names)
 
-    acts <- partial[c( act_mat_names, 'wauc.logit', 'struct', 'cv_mark')]
+    acts <- partial[c( act_mat_names, 'wauc.logit', 'struct', 'cv_mark', 'label')]
     return(acts)
   })
   
@@ -231,10 +242,11 @@ shinyServer(function(input, output) {
     input_chemical_name <- NULL
     chem_id_df <- get_lookup_list(chemical_loader()[['id']], master)
     if (! is.null(chem_id_df$input_Chemical.Name)) {
-      input_chemical_name <- conversion(chem_id_df, inp='GSID', out='input_Chemical.Name')
+      input_chemical_name <- conversion(chem_id_df, inp='Chemical.Name', out='input_Chemical.Name')
     }
     # the basic identifies , GSID + Cluster
-    ip <- subset(chem_id_df, GSID != '' & CAS != '', select=c(GSID, Cluster))
+    # can add the Chemical.Name here
+    ip <- subset(chem_id_df, GSID != '' & CAS != '', select=c(GSID, Cluster,Chemical.Name))
     
     # the cleaned matrices
     dt <- matrix_editor() 
@@ -246,8 +258,12 @@ shinyServer(function(input, output) {
       activity_type <- names(dt)[1]
       act <- dt[[1]]
       cv <-  matrix("", nrow(act), ncol(act), dimnames=dimnames(act))
+      label <- matrix("", nrow(act), ncol(act), dimnames=dimnames(act))
     } else
     {
+      # it has to be here to add more lines for the duplicates
+      dt <- duplicate_chemical_row(dt, ip)
+      
       if (profile_type == 'activity')
       {
         activity_type <- input$acttype
@@ -259,13 +275,14 @@ shinyServer(function(input, output) {
       }
       
       cv <- dt[['cv_mark']]
+      label <- dt[['label']]
       
     }
     
     # struct matrix
     struct <- dt[['struct']]
-    
     # first, cluster the chemicals
+    #print(str_c("line271", rownames(struct)))
     dcols <- dist(struct, method = "binary") ## chemicals
     
     # very, very cumbersome functions. better to split, merge dt + activity_type
@@ -282,10 +299,11 @@ shinyServer(function(input, output) {
       tox_order <- rownames(annotation)[order(annotation$toxScore)]
       act <- act[tox_order, ]
       cv <- cv[tox_order, ]
+      label <- label[tox_order, ]
     }
     # cluster assays by similarity 
     drows <- dist(t(act) , method = "euclidean") ## assays
-    return(list(dcols=dcols, drows=drows, annotation=annotation, annt_colors=annt_colors, act=act, struct=struct, cv=cv))
+    return(list(dcols=dcols, drows=drows, annotation=annotation, annt_colors=annt_colors, act=act, struct=struct, cv=cv, label=label))
     
   })
 
@@ -293,9 +311,15 @@ shinyServer(function(input, output) {
     paras <- heatmap_para_generator()
     if (is.null(paras)) return(NULL)
     
+    # chemical information
+    chem_id_df <- get_lookup_list(chemical_loader()[['id']], master)
+    ip <- subset(chem_id_df, GSID != '' & CAS != '', select=c(GSID, Cluster,Chemical.Name))
+    
+    # parameters
     reg_sel <- input$reg_sel # select the assays
     inv_sel <- input$inv_sel # inverse the selection
-    rename_assay <- TRUE # use the assay_names df
+    nolowQC <- input$nolowQC # remove the low QC
+    rename_assay <- FALSE # use the assay_names df
     profile_type <- input$proftype
     activity_type <- input$acttype
     act_mat_names <- activity_type
@@ -308,19 +332,30 @@ shinyServer(function(input, output) {
     #filtered activies < 0, active >0, inactive =0 or inconclusive in the beginning, NA non tested
     partial[[act_mat_names]][ (is.na(partial[[act_mat_names]]) | partial[[act_mat_names]] == 0.0001)   & ! is.na(partial[['cc2']]) ] <- 0
     
+    # add duplicate rows due to duplicate cluster information
+    partial <- duplicate_chemical_row(partial, ip)
+    #print(str_c("line324", rownames(partial[[act_mat_names]])))
+    
+    
     # load all the activity filter parameters
     nwauc_thres <- input$nwauc_thres
     ncmax_thres <- input$ncmax_thres
     npod_thres <- ifelse(is.na(input$npod_thres), 3, log10(input$npod_thres/1000000)*-1)
     nec50_thres <- ifelse(is.na(input$nec50_thres), 3, log10(input$nec50_thres/1000000)*-1)
-    pod_diff_thres <- input$pod_diff_thres
+    #pod_diff_thres <- input$pod_diff_thres
     #isstrong <- input$isstrong
     nocyto <- input$nocyto
     isgoodcc2 <- input$isgoodcc2
     nohighcv <- input$nohighcv
     cytofilter <- input$cytofilter
+    wauc_fold_thres <- input$wauc_fold_thres
+    noauto <- input$noauto
+    noch2issue <- input$noch2issue
     
-    full <- activities
+    
+    
+    full <- activities$cas_qc
+    if (! nolowQC) full <- activities$cas
     # subset the matrices by assay names
     
     # rename the assays & chemicals
@@ -333,11 +368,15 @@ shinyServer(function(input, output) {
     full <- filter_activity_by_type(full, 'ncmax', ncmax_thres,act_mat_names=act_mat_names)
     full <- filter_activity_by_type(full, 'npod', npod_thres,act_mat_names=act_mat_names)
     full <- filter_activity_by_type(full, 'nec50', nec50_thres,act_mat_names=act_mat_names)
-    full <- filter_activity_by_type(full, 'pod_med_diff', pod_diff_thres,act_mat_names=act_mat_names)
+    #full <- filter_activity_by_type(full, 'pod_med_diff', pod_diff_thres,act_mat_names=act_mat_names)
+    full <- filter_activity_by_type(full, 'label_cyto', thres=NULL, decision=cytofilter,act_mat_names=act_mat_names)
+    full <- filter_activity_by_type(full, 'wauc_fold_change', wauc_fold_thres, act_mat_names=act_mat_names)
     #full <- filter_activity_by_type(full, 'hitcall', thres=NULL, decision=isstrong,act_mat_names=act_mat_names)
-    full <- filter_activity_by_type(full, 'pod_med_diff', thres=NULL, decision=nocyto,act_mat_names=act_mat_names)
+    full <- filter_activity_by_type(full, 'wauc_fold_change', thres=1, decision=nocyto,act_mat_names=act_mat_names)
     full <- filter_activity_by_type(full, 'cc2', thres=NULL, decision=isgoodcc2,act_mat_names=act_mat_names)
-    full <- filter_activity_by_type(full, 'label', thres=NULL, decision=cytofilter,act_mat_names=act_mat_names)
+    full <- filter_activity_by_type(full, 'label_autof', thres=NULL, decision=noauto,act_mat_names=act_mat_names)
+    full <- filter_activity_by_type(full, 'label_ch2', thres=NULL, decision=noch2issue,act_mat_names=act_mat_names)
+    
     
     # it has to be the end
     full <- filter_activity_by_type(full, 'cv.wauc', thres=NULL, decision=nohighcv,act_mat_names=act_mat_names)
@@ -345,6 +384,8 @@ shinyServer(function(input, output) {
     #filtered activies < 0, active >0, inactive =0 or inconclusive in the beginning, NA non tested
     full[[act_mat_names]][ (is.na(full[[act_mat_names]]) | full[[act_mat_names]] == 0.0001)   & ! is.na(full[['cc2']]) ] <- 0
     
+    #print(paras[['annotation']])
+    #print(rownames(paras[['annotation']]))
     result <- get_clust_assay_enrichment(partial[[act_mat_names]], full[[act_mat_names]], paras[['annotation']], calZscore=FALSE)
     
     return(result)
@@ -410,17 +451,26 @@ shinyServer(function(input, output) {
     return(p)
   })
 
-  output$contents <- renderDataTable({
-    if ( ! is.null(chemical_loader()) ) get_lookup_list(chemical_loader()[['id']], master)
-  })
-
-  output$dd <- renderDataTable({
-    
-     #return(matrix_subsetter()[['nwauc.logit']])
-    
+  tox21id_data_generator <- reactive({
     paras <- heatmap_para_generator() #heatmap_para_generator
-    act <- paras[['act']]
-    annotation <- paras[['annotation']]
+    actf <- paras[['act']]
+    id_info <- chemical_loader()
+    id_data <- master
+    isUpload <- FALSE
+    if(length(id_info) > 1) {
+      id_data <- id_info[['id']]
+      isUpload <- TRUE
+    }
+    if (! isUpload)
+    {
+      result <- get_source_data_long(source_acts=activities$tox21agencyid, chem_id_master=master, filtered_act=actf)
+    } else {result <- NULL}
+    return(result)
+  })
+  
+  cas_data_generator <- reactive({
+    actwithflag <- input$actwithflag
+    paras <- heatmap_para_generator() #heatmap_para_generator
     
     id_info <- chemical_loader()
     id_data <- master
@@ -429,13 +479,27 @@ shinyServer(function(input, output) {
       id_data <- id_info[['id']]
       isUpload <- TRUE
     }
-    result <- get_output_df(act, annotation, id_data, isUpload)
+    result <- get_output_df(paras, id_data, isUpload=isUpload, actwithflag=actwithflag)
     return(result)
+  })
     
+  output$contents <- renderDataTable({
+    if ( ! is.null(chemical_loader()) ) get_lookup_list(chemical_loader()[['id']], master)
+  })
+
+  output$casdata <- renderDataTable({
+    
+     #return(matrix_subsetter()[['nwauc.logit']])
+    return(cas_data_generator())
     # for testing
 #       paras <- heatmap_para_generator()
 #       return(data.frame(rownames(paras[['act']])))
     
+  })
+  
+  output$tox21iddata <- renderDataTable({
+
+    return(tox21id_data_generator())
   })
   
   output$enrich <- renderDataTable({
@@ -445,8 +509,25 @@ shinyServer(function(input, output) {
   
   output$assay_info <- renderDataTable({
   
-    col_n <- c('common_name','technology','cell_type','species','abbreviation', 'PubChem AID')
-    result <- assay_names[, colnames(assay_names) %in% col_n]
+    #col_n <- c('common_name','technology','cell_type','species','abbreviation', 'PubChem AID')
+    #result <- assay_names[, colnames(assay_names) %in% col_n]
+    partial <- matrix_subsetter()
+    not_want <- c('_for_FDA_A_name', '_target_type_gene_go.biological.process',	
+                  '_target_type_gene_ctd.disease', '_technology_long.description',
+                  '_technology_short.description','protocol_call_db.name_parent',
+                  'protocol_call_db.name_readout_primary','protocol_CEBS.batch',
+                  'protocol_call_db.name_readout_secondary',
+                  'protocol_db.name','protocol_time_release',
+                  'protocol_slp','protocol_description')
+    result <- assay_names[, ! colnames(assay_names) %in% not_want]
+    result <- result %>%
+        filter(protocol_call_db.name != '')  %>% #the ones with call definition
+        filter(protocol_call_db.name %in% colnames(partial[['npod']])) %>%
+        #select(noquote(order(colnames(.)))) #reorder the columns alphabetically
+        select(protocol_call_db.name, protocol_call_db.name_display.name, 
+               starts_with("target"), starts_with("technology"), starts_with("format"),
+               starts_with("provider"), starts_with("protocol"))
+               
     return(result)
     
   })
@@ -497,8 +578,8 @@ shinyServer(function(input, output) {
           id_data <- id_info[['id']]
           isUpload <- TRUE
         }
-        result <- get_output_df(act, annotation, id_data, isUpload)
-        
+        result <- get_output_df(paras, id_data, isUpload,actwithflag=FALSE)
+        result <- select(result, -Chemical.Name_original) # remove the new added column after get_output_df
         p <- get_pod_boxplot(result, fontsize=fsize, sortby=sort_meth, dcols=dcols, global_para=assay_names)
       }
     }
@@ -506,7 +587,8 @@ shinyServer(function(input, output) {
     
   },  width=getVarWidth)
 
-  output$downloadData <-  downloadHandler(
+  output$downloadCASData <-  downloadHandler(
+    
     filename = function() {
       if (input$proftype == 'signal')
       {
@@ -517,11 +599,19 @@ shinyServer(function(input, output) {
       }
        },
     content = function(file) {
-      paras <- heatmap_para_generator()
-      act <- paras[['act']]
-      annotation <- paras[['annotation']]
-      result <- get_output_df(act, annotation, master)
+      result <- cas_data_generator()
       #result <- get_published_data_only_commonname(result, assay_names)  # to remove unpublished data
+      write.table(result, file, row.names = FALSE, col.names = TRUE, sep="\t", quote=FALSE, append=FALSE)
+    }
+  )
+  
+  output$downloadTox21IDData <-  downloadHandler(
+    
+    filename = function() {
+      paste(as.numeric(as.POSIXct(Sys.time())), ".txt", sep="")
+    },
+    content = function(file) {
+      result <- tox21id_data_generator()
       write.table(result, file, row.names = FALSE, col.names = TRUE, sep="\t", quote=FALSE, append=FALSE)
     }
   )

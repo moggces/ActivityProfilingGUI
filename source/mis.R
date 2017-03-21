@@ -93,9 +93,42 @@ filter_activity_by_type <- function(partial, type, thres=NULL, decision=FALSE, a
   for (name in act_mat_names)
   {
     ids <- matrix(FALSE, nrow(partial[[name]]), ncol(partial[[name]]))
-    if (type == 'pod_med_diff')
+    if (type == 'wauc_fold_change')
     {
-      ant_ids <- grepl('antagonism_|inhibition_', colnames(partial[[name]]))
+       tempd <- partial[[name]] 
+      ant_ids <- grepl("^tox21.*antagonist|^tox21-dt40-srf-agonist-p1|^tox21-dt40-dsb-agonist-p1", colnames(partial[[name]]))
+      if (sum(ant_ids) > 0)
+      {
+        ids <- matrix(FALSE, nrow(partial[[name]][, ant_ids]), ncol(partial[[name]][, ant_ids]))
+        if ( thres > 1 ) 
+        {
+          ids <- (partial[[type]][, ant_ids]) < thres & (partial[[type]][, ant_ids]) > 0 & ! is.na(partial[[type]][, ant_ids]) & ! is.na(partial[[name]][, ant_ids]) & partial[[name]][, ant_ids] > 0.0001
+        } 
+        if (decision) 
+        {
+          ids <- ! is.na(partial[['wauc_fold_change']][, ant_ids]) & partial[['wauc_fold_change']][, ant_ids] > 0 & ! is.na(partial[[name]][, ant_ids]) & partial[[name]][, ant_ids] > 0.0001
+        }
+        tempd[, ant_ids][ids] <- (partial[[name]][, ant_ids][ids])*-1
+      }
+      ago_ids <- grep('^tox21.*\\-agonist', colnames(partial[[name]]), value=TRUE)
+      ago_ids <- ago_ids[! ago_ids %in% c('tox21-dt40-srf-agonist-p1', 'tox21-dt40-dsb-agonist-p1')]
+      if (length(ago_ids) > 0)
+      {
+        ids <- matrix(FALSE, nrow(partial[[name]][, ago_ids]), ncol(partial[[name]][, ago_ids]))
+        if ( thres > 1 ) 
+        {
+          ids <- (partial[[type]][, ago_ids]) > thres*-1 & (partial[[type]][, ago_ids]) < 0 & ! is.na(partial[[type]][, ago_ids]) & ! is.na(partial[[name]][, ago_ids]) & partial[[name]][, ago_ids] > 0.0001
+        } 
+        if (decision) 
+        {
+          ids <- ! is.na(partial[['wauc_fold_change']][, ago_ids]) & partial[['wauc_fold_change']][, ago_ids] < 0 & ! is.na(partial[[name]][, ago_ids]) & partial[[name]][, ago_ids] > 0.0001
+        }
+        tempd[, ago_ids][ids] <- (partial[[name]][, ago_ids][ids])*-1
+      }
+      partial[[name]] <- tempd
+    } else if (type == 'pod_med_diff')
+    {
+      ant_ids <- grepl("^tox21.*antagonist|^tox21-dt40-srf-agonist-p1|^tox21-dt40-dsb-agonist-p1", colnames(partial[[name]]))
       if (sum(ant_ids) > 0) 
       {
         ids <- matrix(FALSE, nrow(partial[[name]][, ant_ids]), ncol(partial[[name]][, ant_ids]))
@@ -103,24 +136,47 @@ filter_activity_by_type <- function(partial, type, thres=NULL, decision=FALSE, a
         #if ( decision ) ids <- ! is.na(partial[['wauc_fold_change']][, ant_ids]) & ! is.na(partial[[name]][, ant_ids]) & partial[[name]][, ant_ids] > 0.0001
         partial[[name]][, ant_ids][ids] <- (partial[[name]][, ant_ids][ids])*-1
       }
-      # to include the agonism_assay
-      if (decision)
+      
+    } else if (type == 'label_cyto' | type == 'label_ch2' | type == 'label_autof')
+    {
+      if (! decision) 
       {
-        ant_ago_ids <- grepl('antagonism_|inhibition_aromatase', colnames(partial[[name]]))
-        if (sum(ant_ago_ids) > 0)
+        sig_name <- sub("^n", "", name) 
+        if (type == 'label_cyto')
         {
-          ids <- matrix(FALSE, nrow(partial[[name]][, ant_ago_ids]), ncol(partial[[name]][, ant_ago_ids]))
-          if (! is.null(thres) ) ids <- (partial[[type]][, ant_ago_ids]*-1) < thres & ! is.na(partial[[type]][, ant_ago_ids]) & ! is.na(partial[[name]][, ant_ago_ids]) & partial[[name]][, ant_ago_ids] > 0.0001
-          ids <- ! is.na(partial[['wauc_fold_change']][, ant_ago_ids]) & ! is.na(partial[[name]][, ant_ago_ids]) & partial[[name]][, ant_ago_ids] > 0.0001
-          partial[[name]][, ant_ago_ids][ids] <- (partial[[name]][, ant_ago_ids][ids])*-1
+          ids <- partial[['label']] == 'd_cytotoxic' # cytofilter
+          partial[[name]][ids] <- abs(partial[[sig_name]][ids])
+        } else if (type == 'label_ch2')
+        {
+          tempd <- partial[[name]] 
+          ago_ids <- grepl('^tox21.*-agonist', colnames(partial[[name]]))
+          if (sum(ago_ids) > 0) 
+          {
+            #ids <- matrix(FALSE, nrow(partial[[name]][, ago_ids]), ncol(partial[[name]][, ago_ids]))
+            ids <- partial[['label']][, ago_ids] == 'c_contradict' &  partial[[sig_name]][, ago_ids] > 0 & ! is.na(partial[[sig_name]][, ago_ids])
+            tempd[, ago_ids][ids] <- abs(partial[[sig_name]][, ago_ids][ids])
+          }
+          ant_ids <- grepl('^tox21.*antagonist', colnames(partial[[name]]))
+          if (sum(ant_ids) > 0) 
+          {
+            #ids <- matrix(FALSE, nrow(partial[[name]][, ant_ids]), ncol(partial[[name]][, ant_ids]))
+            ids <- partial[['label']][, ant_ids] == 'c_contradict' &  partial[[sig_name]][, ant_ids] < 0 & ! is.na(partial[[sig_name]][, ant_ids])
+            tempd[, ant_ids][ids] <- abs(partial[[sig_name]][, ant_ids][ids])
+          }
+          partial[[name]] <- tempd
+          
+        } else if (type == 'label_autof')
+        {
+          ago_ids <- grepl('^tox21.*\\-agonist', colnames(partial[[name]]))
+          if (sum(ago_ids) > 0) 
+          {
+            #ids <- matrix(FALSE, nrow(partial[[name]][, ago_ids]), ncol(partial[[name]][, ago_ids]))
+            ids <- partial[['label']][, ago_ids] == 'b_autofluor' &  partial[[sig_name]][, ago_ids] > 0 & ! is.na(partial[[sig_name]][, ago_ids])
+            partial[[name]][, ago_ids][ids] <- abs(partial[[sig_name]][, ago_ids][ids])
+          }
         }
       }
       
-    }else if (type == 'label')
-    {
-      if (! decision) ids <- partial[[type]] == 'd_cytotoxic' # cytofilter
-      sig_name <- sub("^n", "", name) 
-      partial[[name]][ids] <- abs(partial[[sig_name]][ids])
     } else 
     {
       if (type == 'nwauc.logit' | type == 'npod' | type == 'nec50') ids <- partial[[type]] < thres & ! is.na(partial[[type]]) & ! is.na(partial[[name]]) & partial[[name]] > 0.0001
@@ -166,4 +222,20 @@ remove_inconclusive_label <- function (partial, act_mat_names=c('npod', 'nec50',
     {result[[name]][ partial[[name]] == 0.0001 & ! is.na(partial[['cc2']]) ] <- 0}
   }
   return(result)
+}
+
+# duplicate chemical names for the id has multiple clusters
+duplicate_chemical_row <- function (dt_list, input_ids)
+{
+  c <- table(input_ids[['Chemical.Name']])
+  dup <- names(c[c > 1])
+  dt_list <- sapply(dt_list, function (x)
+  {
+    u <- x[! rownames(x) %in% dup,]
+    d <- x[rownames(x) %in% dup,] 
+    d <- d[rep(rownames(d), c[as.character(rownames(d))]),]
+    return(rbind(u,d))
+      
+  }, simplify=FALSE, USE.NAMES=TRUE)
+  return(dt_list)
 }

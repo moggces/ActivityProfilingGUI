@@ -36,7 +36,17 @@ get_input_chemical_mat <- function (input, full)
     {
       # for the ones that are removed due to purity issue
       partial[[name]] <- full[[name]][as.character(rownames(full[[name]])) %in% as.character(input[['GSID']]),] # CAS here
-      partial[[name]] <- partial[[name]][as.character(rownames(partial[[name]])) %in% as.character(rownames(partial[['npod']])),]
+      if (! is.null(partial[['npod']]))
+      {
+        partial[[name]] <- partial[[name]][as.character(rownames(partial[[name]])) %in% as.character(rownames(partial[['npod']])),]
+      } else if (! is.null(partial[['nwauc.logit']]))
+      {
+        partial[[name]] <- partial[[name]][as.character(rownames(partial[[name]])) %in% as.character(rownames(partial[['nwauc.logit']])),]
+      } else if (! is.null(partial[['nec50']]))
+      {
+        partial[[name]] <- partial[[name]][as.character(rownames(partial[[name]])) %in% as.character(rownames(partial[['nec50']])),]
+      }
+      
     } else
     {
       partial[[name]] <- full[[name]][as.character(rownames(full[[name]])) %in% as.character(input[['GSID']]),] # CAS here
@@ -97,21 +107,36 @@ get_heatmap_annotation <- function (d, input, master, input_chemical_name=NULL, 
       group_cp[group == names(group_t)[i]] <- i
     }
   }
-  
+  #print(str_c("get:line100", names(group_cp)))
   # create annotations: chemClust
   annotation <- data.frame(chemClust = as.factor(group_cp))
   rownames(annotation) <- names(group_cp)
+  #print("get:line104")
+  #print(annotation)
   
   # create annoations: userClust
   annotation2 <- data.frame(userClust = as.factor(input[['Cluster']]))
   
   if (nrow(annotation2) > 0)
   {
-    rownames(annotation2) <- as.character(input[['GSID']])
-    if (is.null(chemical_name_ref)) chemical_name_ref <- conversion(master, inp='GSID', out='Chemical.Name')
-    rownames(annotation2) <- chemical_name_ref[as.character(rownames(annotation2))]
+    # can get the chemical name outside this function
+    # do not need this because there is input name chemical name
+    #rownames(annotation2) <- as.character(input[['GSID']])
+    #if (is.null(chemical_name_ref)) chemical_name_ref <- conversion(master, inp='GSID', out='Chemical.Name')
     
+    if (is.null(chemical_name_ref)) {
+      chemical_name_ref <- make.unique(input[['Chemical.Name']])
+      rownames(annotation2) <- chemical_name_ref
+      #print(str_c("get:line115", chemical_name_ref))
+    } else
+    {
+      rownames(annotation2) <- input[['Chemical.Name']]
+      rownames(annotation2) <- chemical_name_ref[as.character(rownames(annotation2))]
+    }
+  
     annotation <- merge(annotation, annotation2, by="row.names")
+    #print("get:line122")
+    #print(annotation)
     rownames(annotation) <- annotation$Row.names
     annotation <- annotation[,-which(colnames(annotation) == 'Row.names')]
   }
@@ -168,20 +193,50 @@ get_heatmap_annotation_color <- function(annotation, actType='')
 }
 
 
-get_output_df <- function (act, annotation, id_data, isUpload=FALSE)
+get_output_df <- function (paras, id_data, isUpload=FALSE, actwithflag=FALSE)
 {
+  act <- paras[['act']]
+  annotation <- paras[['annotation']]
+  label <- paras[['label']]
+  cv <- paras[['cv']]
   
-  act$Chemical.Name <- rownames(act)
-  annotation$Chemical.Name <- rownames(annotation)
-  result <- join(annotation, act)
+  # the reverse act flag won't show up (but will show up if not removing inconclusive)
+  # the high_source_variation will only show up if you include the acts
+  # not removing inconclusive could be confusing in the output
+  result <- 
+    inner_join(act %>% rownames_to_column("Chemical.Name"), 
+               annotation %>% rownames_to_column("Chemical.Name"))
   if (isUpload)
   {
     if(!is.null(id_data$input_Chemical.Name))
     {
       id_data[, "Chemical.Name"] <- id_data$input_Chemical.Name
-    } else { id_data <- master}
-  }
-  result <- join(result, subset(id_data, select=c(CAS, Chemical.Name)),type = "left") # join by Chemical.Name
+    } #else { id_data <- master}
+  } else if (actwithflag )
+    {
+       
+      result <- 
+        act %>% rownames_to_column("Chemical.Name") %>% gather(call_name, act, -Chemical.Name) %>%
+        inner_join( label %>% rownames_to_column("Chemical.Name") %>% gather(call_name, label, -Chemical.Name)) %>% #label df
+        inner_join( cv %>% rownames_to_column("Chemical.Name") %>% gather(call_name, cv, -Chemical.Name)) %>%      
+        mutate(label = ifelse(label == 'b_autofluor', 'autofluorescent', 
+                              ifelse(label == 'c_contradict', 'not_supported_by_ch2', 
+                                     ifelse(label == 'd_cytotoxic', 'cytotoxicity',
+                                            ifelse(label == 'e_weaknoisy', 'weaknoisy_in_rep',
+                                                   label))))) %>%
+        mutate(comb_data = 
+                 ifelse(
+                   label != 'a_normal', str_c(round(act,4), " (", label, ")"), 
+                   ifelse( label == "", str_c(round(act,4), " (not_tested)"), 
+                           ifelse( cv != '', str_c(round(act,4), " (high_source_variation)"),
+                                   round(act,4))))) %>% #merge act & label
+        select( -label, -act, -cv) %>%
+        spread(call_name, comb_data) %>%
+        inner_join(annotation %>% rownames_to_column("Chemical.Name")) # add the annotation
+    } 
+  result[,"Chemical.Name_original"] <- result$Chemical.Name
+  result[,"Chemical.Name_original"] <- sub("\\.[0-9]+$", "", result$Chemical.Name_original)
+  result <- left_join(result, subset(id_data, select=c(CAS, Chemical.Name)), by=c("Chemical.Name_original" = "Chemical.Name")) # join by Chemical.Name
   result <- result[, c("CAS", grep("CAS", colnames(result), invert=TRUE, value=TRUE))] 
   return(result)
 }
@@ -201,7 +256,8 @@ get_pod_boxplot <- function (pod, fontsize, sortby, dcols, global_para)
   mat <- pod_m
   
   #create conversion
-  let <- conversion(global_para, inp='common_name', out='letters')
+  #let <- conversion(global_para, inp='common_name', out='letters')
+  let <- conversion(global_para, inp='protocol_call_db.name', out='_letters4boxplot')
   let2 <- paste(let, names(let), sep="=") # color legend
   names(let2) <- names(let)
 
@@ -209,15 +265,16 @@ get_pod_boxplot <- function (pod, fontsize, sortby, dcols, global_para)
   mat[, 'path_abb'] <- let[as.character(mat$pathway)]
 
   p <- ggplot(data=mat, aes(x=Chemical.Name, y=pod_value*-1+6)) + 
-    geom_boxplot(outlier.size = 0) +
+    geom_boxplot(outlier.shape = NA) +
     geom_text(aes(label=path_abb, color=pathway), size=7, alpha=0.7, position="jitter") + 
     scale_color_discrete("",labels=let2) + 
     scale_x_discrete("", drop=FALSE) + # keep the no activity ones
      theme(text=element_text(size=fontsize), 
            axis.text.x = element_text( angle=90, color="black")) + 
-    scale_y_continuous('uM', breaks=seq(-10+6, -3+6, by=1), limits=c(-10+6, -3+6), labels = math_format(10^.x)) + 
+    scale_y_continuous(expression(paste("concentration ", "(", mu, "M", ")", sep="")), breaks=seq(-10+6, -3+6, by=1), limits=c(-10+6, -3+6), labels = math_format(10^.x)) + 
     #theme_bw(base_size = fontsize) + 
     annotation_logticks(sides = "l") 
+  
   return(p)
 }
 
@@ -276,3 +333,38 @@ get_fisher_pvalue <- function (n, n_p, N_P, N)
   return(fish)
 }
 
+get_source_data_long <- function(source_acts, chem_id_master, filtered_act)
+{
+
+  chem_id_filtered <- chem_id_master %>% select(CAS, Chemical.Name, Tox21.ID,
+                            Purity_Rating_T0, Purity_Rating_T4, Purity_Rating_Comb) %>%
+         unnest(Tox21.ID = str_split(Tox21.ID, "\\|"), 
+              Purity_Rating_T0 = str_split(Purity_Rating_T0, "\\|"), 
+              Purity_Rating_T4 = str_split(Purity_Rating_T4, "\\|"),
+              Purity_Rating_Comb = str_split(Purity_Rating_Comb, "\\|")) %>%
+          filter(Chemical.Name %in% rownames(filtered_act)) # filter by the filtered act Chemical.Name
+
+  # the activity type to retrieve  
+  value_type <- c('hitcall', 'label', 'nwauc', 'npod', 'nec50', 'ncmax', 'nwauc.logit', 'wauc_fold_change' )
+  source_acts <- source_acts[value_type]
+  
+  acts_collect <- lapply(names(source_acts), function (x){
+    result <- source_acts[[x]] %>% rownames_to_column("Tox21AgencyID") %>%
+      separate(Tox21AgencyID, c("Tox21.ID", "Library"), sep="@") %>%
+      filter(Tox21.ID %in% chem_id_filtered$Tox21.ID) %>%
+      gather_("call_name", x, grep("Tox21.ID|Library", colnames(.), value=TRUE, invert=TRUE)) %>%
+      filter(call_name %in% colnames(filtered_act))
+    return(result)
+  })
+  acts_collect <-  left_join(chem_id_filtered, Reduce("full_join", acts_collect)) %>%
+    mutate(label = ifelse(label == 'b_autofluor', 'autofluorescent', 
+            ifelse(label == 'c_contradict', 'not_supported_by_ch2', 
+            ifelse(label == 'd_cytotoxic', 'cytotoxicity',
+            ifelse(label == 'e_weaknoisy', 'weaknoisy_in_rep',
+            ifelse(label == 'a_normal', '', 
+            ifelse(label == '', 'not_tested', label))))))) %>%
+    rename(flag = label, efficacy = ncmax, POD=npod, EC50=nec50, wAUC=nwauc, 
+           wAUC.logit=nwauc.logit, wAUC.fold.change = wauc_fold_change)
+  return(acts_collect)
+  
+}

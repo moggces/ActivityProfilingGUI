@@ -3,7 +3,11 @@
 
 This interactive application allows users to browse activity profiles from the Tox21 dataset.  The activities of chemicals (based on CASRN) are presented. 
 
-For a summary of data processing, see [this summary](https://www.dropbox.com/s/4ptkna93n3nel8v/pipeline_summary.pdf?dl=0). The underlying data are available for browsing in a related application, the [Tox21 curve browser](/sandbox/tox21-curve-visualization/).
+For a summary of data processing, see [this summary](https://www.dropbox.com/s/3s2k6258x377hid/pipeline_summary2.pdf?dl=0). The curves are available for browsing in a related application, the [Tox21 curve browser](/sandbox/tox21-curve-visualization/).
+
+Disclaimer:
+
+Although all reasonable efforts have been made to ensure the accuracy and reliability of the data, caution should be exercised when interpreting the results as artifacts are possible from nonspecific effects such as assay signal interference. The curve fitting and activity calls presented here are based on the Curvep pipeline [Hsieh J-H et al., JBC, 2015](http://journals.sagepub.com/doi/abs/10.1177/1087057115581317). Alternative analysis methods and interpretations of the data are available at NCATS (https://tripod.nih.gov/tox21/) and EPA (https://www.epa.gov/chemical-research/toxcast-dashboard)
 
 ## Quick start
 
@@ -47,15 +51,17 @@ A tab-delimited dataset (with header included). Two columns are allowed: chemica
 2. column names are case sensitive: **CAS** and **Cluster**
 3. copy and paste to the text area
 
+4. exclude activity from chemicals with suboptimal QC grade: (default ON), any chemicals with F, Fns, Fc QC grade will be removed. 
+
 #### Data matrix
 
 Alternatively, a data-matrix file can be uploaded.
 
 1. the downloaded activity data can be modified and re-uploaded (e.g., add results from other external assays)
 2. the file names have to contain **nwauc.logit|npod|nac50**. So it will recognize the type of activity and use the respective coloring scheme.
-2. other data matrix with **CAS** as ID and comparable activity information can be uploaded (However, currently data from non-Tox21 chemicals will be excluded).
-3. **Cluster** information is optional.
-4. **input_Chemical.Name** can be used to change the column names in the heatmap (optional).
+3. other data matrix with **CAS** as ID and comparable activity information can be uploaded (Note: non-Tox21 chemicals (defined by CAS) will be excluded).
+4. **Cluster** information is optional.
+5. **input_Chemical.Name** can be used to change the column names in the heatmap (optional).
 
 **Notes:**
 - _Activity limiting_ and _Enrichment Analysis_ function become invalid.
@@ -100,33 +106,33 @@ ac50 type is same as pod type.
 ### Other settings
 
 #### Limit activities
-The default activity results are based on Curvep-wAUC pipeline (i.e. activities from known assay interferences are flagged and labeled as **inconclusive**). But the activities can be **further** limited by following parameters and labeled as **inconclusive**.
+The default activity results are based on Curvep-wAUC pipeline. Activities from known assay interferences are flagged and labeled as **inconclusive**. 
 
-* wAUC threshold: see above
-* Emax threshold: half-maximal effect concentration (e.g., 30% relative to the positive control)
-* POD threshold: (uM)
-* AC50 threshold: (uM)
-* log10(ratio of signal to cytotoxicity) (for inhibition-type assays): (e.g., 1 => 10 fold between signal and cytotoxicity).
-* exclude activity due to cytotoxicity (loose): the default setting in pipeline (see summary file)
-* exclude activity due to cytotoxicity (strict): toggle ON to exclude any activity with cytotoxicity (information from the respective multiplexed assay) seen in the tested concentration range.(For nuclear receptor antagonism assays & aromatase inhibition assay only) 
-* exclude activity with suboptimal NCATS fits: toggle ON to exclude activities NOT having curve class (NCATS method) 1.1, 1.2, 2.1 in at least one run
-* exclude activity varied between sources: toggle OFF to include more potential activity. The included activities can still be recognized in the heatmap by the # sign
+* wAUC threshold: see above, only activity > threshold will be considered as active
+* Emax threshold: half-maximal effect concentration (e.g., 30% relative to the positive control), only activity > threshold will be considered as active
+* POD threshold: (uM), only activity more potent than the threshold will be considered as active
+* EC50 threshold: (uM), only activity more potent than the threshold will be considered as active
+* wAUC fold change (vs cytotoxicity): if > 1, the threshold is applied on both agonist and antagonist type calls
+* exclude activity (antagonist-type calls) due to cytotoxicity: (default ON), the default setting in pipeline (see summary file)
+* exclude activity with observed cytotoxicity: (default OFF)
+* exclude activity due to auto-fluorescencent: (default ON)
+* exclude activity with no reporter gene activity readout support: (default ON)
+* exclude activity with suboptimal NCATS fits: (default OFF)
+* exclude activity varied a lot between sources: (default OFF), the included activities can still be recognized in the heatmap by the # sign
 
 
 ***
 
-#### Filter assays
+#### Filter calls
 
-Please see the __Assays__ tab to get complete assay (column name: common_name) information
+Please see the __Call description__ tab to get complete call information
 
 Simple regular expression rules:
 
-1. how to get all specific assays
-    + put _cytotoxicity_ in the text box plus toggle _ON_ invert your selection
-2. how to get all antagonism or inhibition and specific assays
-    + put antagonism\_|inhibition\_ in the text box plus toggle _OFF_ invert your selection (Note: _|_ means _OR_)
-3. how to get all agonism and specific assays
-    + put \\bagonism\_ in the text box plus toggle _OFF_ invert your selection
+1. get all specific calls
+    + put _\^tox21_ in the text box `+ invert your selection = _OFF_
+2. get agonist-type & specific calls
+    + put _\^tox21.*-agonist_ in the text box `+ invert your selection = _OFF_
 
 ***
 
@@ -152,14 +158,16 @@ The columns of the heatmap can be ordered in three methods:
 
 ### Formatting & outputs
 
-1. make inconclusive as inactive: ON makes all inconclusive (value = 1E-4) as inactives (value = 0)
-2. show compound similarity dendrogram: the clustered dendrogram will replace the the heatmap
-3. keep heatmap size one page
+1. make inconclusive as inactive: (default ON), it makes all inconclusive (value = 1E-4) as inactives (value = 0)
+2. show chemical similarity dendrogram: (default OFF), the clustered dendrogram will replace the the heatmap
+3. keep heatmap size one page: (default OFF)
+4. show(download) activity data with flags: (default OFF), assay interferece information could be appended
 4. adjust font size when downloading heatmap or online
 
-  * Download Activities
-  * Save Plot (currently only for heatmap)
-  * Download Enrichment analysis
+  * Download Activities(CAS)
+  * Download Activities (Tox21ID)
+  * Save Heatmap
+  * Download Enrichment Analysis
 
 ***
 
@@ -176,26 +184,30 @@ The heatmap will be displayed here.
 
 ##### Main map
 
-* columns are compounds
-* rows are assays
+* columns are chemicals
+* rows are calls
 * cells are activities
 * coloring scheme: please refer the color bar
-* gray color: not tested. However if "exclude inconclusive label" ON, it could also mean _inconclusive_.
+* gray color: not tested. However if "make inconclusive as inactive" OFF, it could also mean _inconclusive_.
 
 ##### annotation map
 
-* columns are compounds
+* columns are chemicals
 * first row is toxScore (only available in __activity__)
 * second row is userClust (__Cluster__)
 * third row is chemCust
 
 #### Potency plot
 
-Only shown for pod or ac50 as activity.
+Only shown for pod or ec50 as activity.
 
-#### Activity data
+#### Activity data(CAS)
 
 background data used for heatmap and potency plot
+
+#### Activity data(Tox21ID)
+
+The background data before collapsing based on CAS
 
 #### Enrichment analysis
 
@@ -203,14 +215,16 @@ background data used for heatmap and potency plot
 * n: number of compounds in a class; n\_p: number of actives in a class; N\_P: number of actives in the population;n: number of compounds in the population
 
 
-#### Assays
+#### Call description
 
-assay information
+call information
 
 ### Troubleshooting
 
 * Error: 'breaks' are not unique. It is possible that the input compounds are not active in any of the assays. Please add another compound (e.g. 80-05-7).
 * The compound is missing on the heatmap. The compound may not be tested or none of its sources passes the chemical QC.
+* Error: non-numeric matrix extent. >1 call and >1 chemical are needed to form a heatmap
+
 
 ***
 
@@ -227,6 +241,17 @@ assay information
 * changed: add PubChem AIDs for the lately released assays in PubChem
 * changed: default was set to activity clustering (columns)
 * changed: structural clustering fixed for missing Tox21 chemicals due to low purity
+
+*v1.3*
+* new: allow duplicate CAS if Cluster information is different
+* new: add Tox21AgencyID/Tox21ID background data (Tox21AgencyID)
+* new: add CAS data without filtering by QC grade
+* new: allow to retrieve back activities due to autofluorescence and ch2 issue
+* new: add wAUC fold change filter
+* new: add flag information for the CAS data
+* fixed: no observed cytotoxicity function
+* changed: purity information updated (201608, v5a7)
+* changed: call description updated (80 calls, v2)
 
 ***
 
