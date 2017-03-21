@@ -3,7 +3,11 @@
 
 This interactive application allows users to browse activity profiles from the Tox21 dataset.  The activities of chemicals (based on CASRN) are presented. 
 
-For a summary of data processing, see [this summary](https://www.dropbox.com/s/4ptkna93n3nel8v/pipeline_summary.pdf?dl=0). The underlying data are available for browsing in a related application, the [Tox21 curve browser](/sandbox/tox21-curve-visualization/).
+For a summary of data processing, see [this summary](https://www.dropbox.com/s/3s2k6258x377hid/pipeline_summary2.pdf?dl=0). The curves are available for browsing in a related application, the [Tox21 curve browser](/sandbox/tox21-curve-visualization/).
+
+Disclaimer:
+
+Although all reasonable efforts have been made to ensure the accuracy and reliability of the data, caution should be exercised when interpreting the results as artifacts are possible from nonspecific effects such as assay signal interference. The curve fitting and activity calls presented here are based on the Curvep pipeline [Hsieh J-H et al., JBC, 2015](http://journals.sagepub.com/doi/abs/10.1177/1087057115581317). Alternative analysis methods and interpretations of the data are available at NCATS (https://tripod.nih.gov/tox21/) and EPA (https://www.epa.gov/chemical-research/toxcast-dashboard)
 
 ## Quick start
 
@@ -126,9 +130,9 @@ Please see the __Call description__ tab to get complete call information
 Simple regular expression rules:
 
 1. get all specific calls
-    + put _^tox21_ in the text box plus toggle _ON_ invert your selection
+    + put _\^tox21_ in the text box `+ invert your selection = _OFF_
 2. get agonist-type & specific calls
-    + put _^tox21.*-agonist_ in the text box plus toggle _ON_ invert your selection
+    + put _\^tox21.*-agonist_ in the text box `+ invert your selection = _OFF_
 
 ***
 
@@ -219,6 +223,8 @@ call information
 
 * Error: 'breaks' are not unique. It is possible that the input compounds are not active in any of the assays. Please add another compound (e.g. 80-05-7).
 * The compound is missing on the heatmap. The compound may not be tested or none of its sources passes the chemical QC.
+* Error: non-numeric matrix extent. >1 call and >1 chemical are needed to form a heatmap
+
 
 ***
 
@@ -244,8 +250,8 @@ call information
 * new: add wAUC fold change filter
 * new: add flag information for the CAS data
 * fixed: no observed cytotoxicity function
-* changed: purity information updated (201608)
-* changed: call description updated (80 calls)
+* changed: purity information updated (201608, v5a7)
+* changed: call description updated (80 calls, v2)
 
 ***
 
