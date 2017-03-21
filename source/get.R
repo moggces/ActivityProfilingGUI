@@ -265,7 +265,7 @@ get_pod_boxplot <- function (pod, fontsize, sortby, dcols, global_para)
   mat[, 'path_abb'] <- let[as.character(mat$pathway)]
 
   p <- ggplot(data=mat, aes(x=Chemical.Name, y=pod_value*-1+6)) + 
-    geom_boxplot(outlier.size = 0) +
+    geom_boxplot(outlier.shape = NA) +
     geom_text(aes(label=path_abb, color=pathway), size=7, alpha=0.7, position="jitter") + 
     scale_color_discrete("",labels=let2) + 
     scale_x_discrete("", drop=FALSE) + # keep the no activity ones

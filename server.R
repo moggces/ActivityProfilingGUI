@@ -44,7 +44,7 @@ source(paste(getwd(), "/source/mis.R", sep=""), local=TRUE)
 #environment(pheatmap_new_label) <- environment(pheatmap) pheatmap v. < 1.0
 
 # load assay related parameters
-logit_para_file <- './data/tox21_call_description_011717.txt' #tox21_assay_collection.txt
+logit_para_file <- './data/tox21_call_descriptions_v2.txt' #tox21_assay_collection.txt
 assay_names <- load_profile(logit_para_file) # global, dataframe output
 
 # load chemical information (will include purity later)
@@ -54,9 +54,7 @@ master <- load_profile(profile_file) # global, dataframe output
 # load the activities (all data) and the structure fp matrix
 struct_mat_rdata <- './data/struct_mat.RData'
 load(struct_mat_rdata, verbose=TRUE) # global, matrix output, struct_mat
-activities <- readRDS('./data/activities_noinconclusive_170226.rds')
-activities_nofilter <- readRDS('./data/activities_nofiltergrade_noinconclusive_170302.rds')
-activities_tox21agencyid <- readRDS('./data/activities_tox21agencyid_nofiltergrade_170306.rds')
+activities <- readRDS('./data/activities_combined_170306.rds')
 
 # remove the structures with low purity
 #struct_mat <- struct_mat[rownames(struct_mat) %in% rownames(activities[[1]]),]
@@ -121,8 +119,8 @@ shinyServer(function(input, output) {
     # collect all the matrices and store in full (list)
     
     full <- list()
-    full <- activities 
-    if(! nolowQC) full <- activities_nofilter
+    full <- activities$cas_qc 
+    if(! nolowQC) full <- activities$cas
     
     # if it is a data matrix input, only CAS ID is allowd
     input_chemical_name <- NULL
@@ -356,8 +354,8 @@ shinyServer(function(input, output) {
     
     
     
-    full <- activities
-    if (! nolowQC) full <- activities_nofilter
+    full <- activities$cas_qc
+    if (! nolowQC) full <- activities$cas
     # subset the matrices by assay names
     
     # rename the assays & chemicals
@@ -465,7 +463,7 @@ shinyServer(function(input, output) {
     }
     if (! isUpload)
     {
-      result <- get_source_data_long(source_acts=activities_tox21agencyid, chem_id_master=master, filtered_act=actf)
+      result <- get_source_data_long(source_acts=activities$tox21agencyid, chem_id_master=master, filtered_act=actf)
     } else {result <- NULL}
     return(result)
   })
@@ -524,8 +522,12 @@ shinyServer(function(input, output) {
     result <- assay_names[, ! colnames(assay_names) %in% not_want]
     result <- result %>%
         filter(protocol_call_db.name != '')  %>% #the ones with call definition
-        filter(protocol_call_db.name %in% colnames(partial[['npod']]))
+        filter(protocol_call_db.name %in% colnames(partial[['npod']])) %>%
         #select(noquote(order(colnames(.)))) #reorder the columns alphabetically
+        select(protocol_call_db.name, protocol_call_db.name_display.name, 
+               starts_with("target"), starts_with("technology"), starts_with("format"),
+               starts_with("provider"), starts_with("protocol"))
+               
     return(result)
     
   })
