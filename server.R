@@ -202,7 +202,7 @@ shinyServer(function(input, output) {
     
     # it has to be the end
     partial <- filter_activity_by_type(partial, 'cv.wauc', thres=NULL, decision=nohighcv,act_mat_names=act_mat_names)
-    print(partial[['npod']])
+    #print(partial[['npod']])
     
     return(partial)
   })
