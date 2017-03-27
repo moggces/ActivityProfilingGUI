@@ -2,7 +2,9 @@
 
 First clone the git repository:
 
-    git clone git@github.com:moggces/ActivityProfilingGUI.git
+```bash
+git clone git@github.com:moggces/ActivityProfilingGUI.git
+```
 
 ## Prerequisites in R
 
@@ -10,7 +12,9 @@ R must be installed to with the cairo support for PNG rendering, and some sort o
 
 Library dependencies are managed using the [packrat](https://rstudio.github.io/packrat/) bundling system.  To install requirements, first ensure that packrat is installed globally in R:
 
-    install.packages("packrat")
+```R
+install.packages("packrat")
+```
 
 ## Download datasets
 
@@ -27,20 +31,41 @@ To develop the application, use the [Rstudio](https://www.rstudio.com/) developm
 
 If for some reason modules are not automatically installed, can be used:
 
-    library(packrat)
-    packrat::restore()
+```R
+library(packrat)
+packrat::restore()
+```
 
 To run the application:
 
-    library(shiny)
-    shiny::runApp()
+```R
+library(shiny)
+shiny::runApp()
+```
 
 ## Starting the application (from the terminal)
 
 When using a terminal, packrat does not bootstrap the initialization scripts and install dependencies. This can be done manually:
 
-    R -e "library(packrat); packrat::restore();"
+```bash
+R -e "library(packrat); packrat::restore();"
+```
 
 After dependencies have been installed, we can start the application:
 
-    R -e "source(\"packrat/init.R\"); library(shiny); shiny::runApp(port=1234);"
+```bash
+R -e "source(\"packrat/init.R\"); library(shiny); shiny::runApp(port=1234);"
+```
+
+### Development details
+
+To contribute code, use [formatR](https://cran.r-project.org/web/packages/formatR/)
+to automatically take a first pass at code-formatting.
+
+```R
+formatR::tidy_source('./server.R',indent=4, width.cutoff=78, recursive=F)
+formatR::tidy_dir('./source',indent=4, width.cutoff=78)
+```
+
+Additional modification of lines is required, however, after using this tool,
+it should only be used when creating a new file.
