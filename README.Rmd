@@ -1,13 +1,12 @@
 # Tox21 Activity Profiler
 
-
 This interactive application allows users to browse activity profiles from the Tox21 dataset.  The activities of chemicals (based on CASRN) are presented.
 
 For a summary of data processing, see [this summary](https://www.dropbox.com/s/3s2k6258x377hid/pipeline_summary2.pdf?dl=0). The curves are available for browsing in a related application, the [Tox21 curve browser](/sandbox/tox21-curve-visualization/).
 
-Disclaimer:
+### Disclaimer:
 
-Although all reasonable efforts have been made to ensure the accuracy and reliability of the data, caution should be exercised when interpreting the results as artifacts are possible from nonspecific effects such as assay signal interference. The curve fitting and activity calls presented here are based on the Curvep pipeline [Hsieh J-H et al., JBC, 2015](http://journals.sagepub.com/doi/abs/10.1177/1087057115581317). Alternative analysis methods and interpretations of the data are available at NCATS (https://tripod.nih.gov/tox21/) and EPA (https://www.epa.gov/chemical-research/toxcast-dashboard)
+> Although all reasonable efforts have been made to ensure the accuracy and reliability of the data, caution should be exercised when interpreting the results as artifacts are possible from nonspecific effects such as assay signal interference. The curve fitting and activity calls presented here are based on the Curvep pipeline [Hsieh J-H et al., JBC, 2015](http://journals.sagepub.com/doi/abs/10.1177/1087057115581317). Alternative analysis methods and interpretations of the data are available at [NCATS](https://tripod.nih.gov/tox21/) and [EPA](https://www.epa.gov/chemical-research/toxcast-dashboard).
 
 ## Quick start
 

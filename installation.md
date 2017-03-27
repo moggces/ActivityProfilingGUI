@@ -14,12 +14,16 @@ Library dependencies are managed using the [packrat](https://rstudio.github.io/p
 
 ## Download datasets
 
-Datasets are too large to be kept in the github repository. Request datasets
-from repository owner (latest version: 2016-03-08).
+Datasets are too large to be kept in the github repository. Request datasets from repository owner (latest version: 2017-03-21). The following files are required and expected to be in the `./data` path:
+
+- activities_combined_170306.rds
+- struct_mat.RData
+- tox21_call_descriptions_v2.txt
+- tox21_compound_id_v5a7.txt
 
 ## Starting the application (development)
 
-To develop the application, use the [Rstudio](https://www.rstudio.com/) development enviornment. Create a new RStudio project in the root project path. RStudio should recognize the packrat module and begin installing requirements.
+To develop the application, use the [Rstudio](https://www.rstudio.com/) development environment. Create a new RStudio project in the root project path. RStudio should recognize the packrat module and begin installing requirements.
 
 If for some reason modules are not automatically installed, can be used:
 
