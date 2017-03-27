@@ -29,7 +29,7 @@ If for some reason modules are not automatically installed, can be used:
 To run the application:
 
     library(shiny)
-    runApp()
+    shiny::runApp()
 
 ## Starting the application (from the terminal)
 
@@ -39,4 +39,4 @@ When using a terminal, packrat does not bootstrap the initialization scripts and
 
 After dependencies have been installed, we can start the application:
 
-    R -e "source(\"packrat/init.R\"); library(shiny); runApp(port=1234);"
+    R -e "source(\"packrat/init.R\"); library(shiny); shiny::runApp(port=1234);"
