@@ -1,9 +1,16 @@
-assay	clust_group	clust	n	n_p	N	N_P	pvalue
-tox21-are-bla-agonist-p1	allClust	all	2	2	7211	1125	0.155894590846047
-tox21-are-bla-agonist-p1	chemClust	0	2	2	7211	1125	0.155894590846047
-tox21-er-luc-bg1-4e2-antagonist-p2	allClust	all	2	2	7561	562	0.0742063492063492
-tox21-er-luc-bg1-4e2-antagonist-p2	chemClust	0	2	2	7561	562	0.0742063492063492
-tox21-pparg-bla-antagonist-p1	allClust	all	2	2	7211	349	0.0482662968099857
-tox21-pparg-bla-antagonist-p1	chemClust	0	2	2	7211	349	0.0482662968099857
-tox21-ror-cho-antagonist-p1	allClust	all	2	2	7561	625	0.0825396825396826
-tox21-ror-cho-antagonist-p1	chemClust	0	2	2	7561	625	0.0825396825396826
+CAS	Chemical.Name	input_Chemical.Name	tox21-er-bla-agonist-p2	tox21-er-bla-antagonist-p1	tox21-er-luc-bg1-4e2-agonist-p2	tox21-er-luc-bg1-4e2-antagonist-p1	tox21-er-luc-bg1-4e2-antagonist-p2	other_assay
+57-63-6	17alpha-Ethinylestradiol	EE2	9.109710097	0	9.029347193	0	4.17540148	6.626866263
+79-95-8	"2,2',6,6'-Tetrachlorobisphenol A"	TCBPA	4.545543145	0	0	0	4.22278618	0.0001
+79-97-0	"3,3'-Dimethylbisphenol A"	BPC	4.87566476	4.66663948	6.25709459	0	4.57171107	4.96091916
+79-94-7	"3,3',5,5'-Tetrabromobisphenol A"	TBBPA	4.306013635	0	0	0	0	0
+5613-46-7	"4,4'-Propane-2,2-diylbis(2,6-dimethylphenol)"	TMBPA	5.97586492	5.33106009	6.14833966	0	4.45512109	0
+41481-66-7	"4,4'-Sulfonylbis[2-(prop-2-en-1-yl)phenol]"	TGSA	0	4.36436517	0	4.22457702	4.43103051	4.65291
+80-09-1	"4,4'-Sulfonyldiphenol"	BPS	5.289459315	0	5.875071355	0	0	0
+94-18-8	Benzylparaben	PHBB	4.52459679	0	5.10320178	0	0	0
+620-92-8	Bis(4-hydroxyphenyl)methane	"4,4-BPF"	5.00938552	0	6.52884212	0	0	4.36664268
+80-05-7	Bisphenol A	BPA	5.982928061	4.797349796	6.669109672	0	4.161220326	4.717551727
+1478-61-1	Bisphenol AF	BPAF	6.46369584	5.35866536	7.295955193	4.16441207	4.27774838	4.98048875
+77-40-7	Bisphenol B	BPB	6.43824477	5.939473775	7.08549149	0	4.24970972	4.76977993
+2081-08-5	Bisphenol E	BPE	5.7319375	4.32169301	6.91451824	0	0	4.60112213
+2467-02-9	Bisphenol F	"2,2-BPF"	4.18881902	0	0	0	0	4.32114477
+843-55-0	Bisphenol Z	BPZ	0	6.28297018	6.88044325	0	4.19895089	5.40163985
