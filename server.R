@@ -150,9 +150,9 @@ shinyServer(function(input, output) {
     
     # subset the matrices by assay names
     partial <- get_assay_mat(partial, reg_sel, invSel=inv_sel)
-    #print(partial[[1]][1, ])
+    #print(partial[['npod']])
     # sort the matrix
-    partial <- sort_matrix(partial)
+    #partial <- sort_matrix(partial)
     
     return(partial)
   })
@@ -191,10 +191,10 @@ shinyServer(function(input, output) {
     partial <- filter_activity_by_type(partial, 'ncmax', ncmax_thres,act_mat_names=act_mat_names)
     partial <- filter_activity_by_type(partial, 'npod', npod_thres,act_mat_names=act_mat_names)
     partial <- filter_activity_by_type(partial, 'nec50', nec50_thres,act_mat_names=act_mat_names)
-    #partial <- filter_activity_by_type(partial, 'pod_med_diff', pod_diff_thres,act_mat_names=act_mat_names)
+      #partial <- filter_activity_by_type(partial, 'pod_med_diff', pod_diff_thres,act_mat_names=act_mat_names)
     partial <- filter_activity_by_type(partial, 'label_cyto', thres=NULL, decision=cytofilter,act_mat_names=act_mat_names)
     partial <- filter_activity_by_type(partial, 'wauc_fold_change', wauc_fold_thres,act_mat_names=act_mat_names)
-    #partial <- filter_activity_by_type(partial, 'hitcall', thres=NULL, decision=isstrong,act_mat_names=act_mat_names)
+      #partial <- filter_activity_by_type(partial, 'hitcall', thres=NULL, decision=isstrong,act_mat_names=act_mat_names)
     partial <- filter_activity_by_type(partial, 'wauc_fold_change', thres=1, decision=nocyto,act_mat_names=act_mat_names)
     partial <- filter_activity_by_type(partial, 'cc2', thres=NULL, decision=isgoodcc2,act_mat_names=act_mat_names)
     partial <- filter_activity_by_type(partial, 'label_autof', thres=NULL, decision=noauto,act_mat_names=act_mat_names)
@@ -202,7 +202,7 @@ shinyServer(function(input, output) {
     
     # it has to be the end
     partial <- filter_activity_by_type(partial, 'cv.wauc', thres=NULL, decision=nohighcv,act_mat_names=act_mat_names)
-    
+    #print(partial[['npod']])
     
     return(partial)
   })
@@ -214,6 +214,7 @@ shinyServer(function(input, output) {
     act_mat_names <- c('npod', 'nec50', 'nwauc.logit')
     
     partial <- activity_filter()
+    #print(partial[['npod']])
     # if it is data matrix input, skip 
     if (length(partial) == 2) return(partial)
     
@@ -223,12 +224,13 @@ shinyServer(function(input, output) {
     
     # make activities matrix (< 0 and NA) as 0.0001
     partial <- assign_reverse_na_number(partial, act_mat_names=act_mat_names)
-    
+    #print(partial[['npod']])
     
     # remove inconclusive label (0.0001 as 0 ) (but keep the untested ones = 0.0001)
     if (noincon_label) partial <- remove_inconclusive_label(partial, act_mat_names=act_mat_names)
 
     acts <- partial[c( act_mat_names, 'wauc.logit', 'struct', 'cv_mark', 'label')]
+    #print(partial[['npod']])
     return(acts)
   })
   

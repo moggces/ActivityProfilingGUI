@@ -95,11 +95,11 @@ filter_activity_by_type <- function(partial, type, thres=NULL, decision=FALSE, a
     ids <- matrix(FALSE, nrow(partial[[name]]), ncol(partial[[name]]))
     if (type == 'wauc_fold_change')
     {
-       tempd <- partial[[name]] 
+      tempd <- partial[[name]]
       ant_ids <- grepl("^tox21.*antagonist|^tox21-dt40-srf-agonist-p1|^tox21-dt40-dsb-agonist-p1", colnames(partial[[name]]))
       if (sum(ant_ids) > 0)
       {
-        ids <- matrix(FALSE, nrow(partial[[name]][, ant_ids]), ncol(partial[[name]][, ant_ids]))
+        ids <- matrix(FALSE, nrow(partial[[name]][, ant_ids, drop=FALSE]), ncol(partial[[name]][, ant_ids, drop=FALSE]))
         if ( thres > 1 ) 
         {
           ids <- (partial[[type]][, ant_ids]) < thres & (partial[[type]][, ant_ids]) > 0 & ! is.na(partial[[type]][, ant_ids]) & ! is.na(partial[[name]][, ant_ids]) & partial[[name]][, ant_ids] > 0.0001
@@ -114,7 +114,7 @@ filter_activity_by_type <- function(partial, type, thres=NULL, decision=FALSE, a
       ago_ids <- ago_ids[! ago_ids %in% c('tox21-dt40-srf-agonist-p1', 'tox21-dt40-dsb-agonist-p1')]
       if (length(ago_ids) > 0)
       {
-        ids <- matrix(FALSE, nrow(partial[[name]][, ago_ids]), ncol(partial[[name]][, ago_ids]))
+        ids <- matrix(FALSE, nrow(partial[[name]][, ago_ids, drop=FALSE]), ncol(partial[[name]][, ago_ids, drop=FALSE]))
         if ( thres > 1 ) 
         {
           ids <- (partial[[type]][, ago_ids]) > thres*-1 & (partial[[type]][, ago_ids]) < 0 & ! is.na(partial[[type]][, ago_ids]) & ! is.na(partial[[name]][, ago_ids]) & partial[[name]][, ago_ids] > 0.0001
@@ -131,7 +131,7 @@ filter_activity_by_type <- function(partial, type, thres=NULL, decision=FALSE, a
       ant_ids <- grepl("^tox21.*antagonist|^tox21-dt40-srf-agonist-p1|^tox21-dt40-dsb-agonist-p1", colnames(partial[[name]]))
       if (sum(ant_ids) > 0) 
       {
-        ids <- matrix(FALSE, nrow(partial[[name]][, ant_ids]), ncol(partial[[name]][, ant_ids]))
+        ids <- matrix(FALSE, nrow(partial[[name]][, ant_ids, drop=FALSE]), ncol(partial[[name]][, ant_ids, drop=FALSE]))
         if (! is.null(thres) ) ids <- (partial[[type]][, ant_ids]*-1) < thres & ! is.na(partial[[type]][, ant_ids]) & ! is.na(partial[[name]][, ant_ids]) & partial[[name]][, ant_ids] > 0.0001
         #if ( decision ) ids <- ! is.na(partial[['wauc_fold_change']][, ant_ids]) & ! is.na(partial[[name]][, ant_ids]) & partial[[name]][, ant_ids] > 0.0001
         partial[[name]][, ant_ids][ids] <- (partial[[name]][, ant_ids][ids])*-1
