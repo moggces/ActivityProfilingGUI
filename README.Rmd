@@ -1,7 +1,7 @@
 # Tox21 Activity Profiler
 
 
-This interactive application allows users to browse activity profiles from the Tox21 dataset.  The activities of chemicals (based on CASRN) are presented. 
+This interactive application allows users to browse activity profiles from the Tox21 dataset.  The activities of chemicals (based on CASRN) are presented.
 
 For a summary of data processing, see [this summary](https://www.dropbox.com/s/3s2k6258x377hid/pipeline_summary2.pdf?dl=0). The curves are available for browsing in a related application, the [Tox21 curve browser](/sandbox/tox21-curve-visualization/).
 
@@ -33,6 +33,9 @@ Paste the following data-table into the "CAS & Cluster" text-box.
 
 **Note**: paste the data AND the header column
 
+Alternatively, you can upload a data matrix file. An example data matrix
+file is <a href="example_matrix.txt" download>available for download</a>.
+
 ***
 
 
@@ -51,7 +54,7 @@ A tab-delimited dataset (with header included). Two columns are allowed: chemica
 2. column names are case sensitive: **CAS** and **Cluster**
 3. copy and paste to the text area
 
-4. exclude activity from chemicals with suboptimal QC grade: (default ON), any chemicals with F, Fns, Fc QC grade will be removed. 
+4. exclude activity from chemicals with suboptimal QC grade: (default ON), any chemicals with F, Fns, Fc QC grade will be removed.
 
 #### Data matrix
 
@@ -106,7 +109,7 @@ ac50 type is same as pod type.
 ### Other settings
 
 #### Limit activities
-The default activity results are based on Curvep-wAUC pipeline. Activities from known assay interferences are flagged and labeled as **inconclusive**. 
+The default activity results are based on Curvep-wAUC pipeline. Activities from known assay interferences are flagged and labeled as **inconclusive**.
 
 * wAUC threshold: see above, only activity > threshold will be considered as active
 * Emax threshold: half-maximal effect concentration (e.g., 30% relative to the positive control), only activity > threshold will be considered as active

@@ -1,0 +1,9 @@
+assay	clust_group	clust	n	n_p	N	N_P	pvalue
+tox21-are-bla-agonist-p1	allClust	all	2	2	7211	1125	0.155894590846047
+tox21-are-bla-agonist-p1	chemClust	0	2	2	7211	1125	0.155894590846047
+tox21-er-luc-bg1-4e2-antagonist-p2	allClust	all	2	2	7561	562	0.0742063492063492
+tox21-er-luc-bg1-4e2-antagonist-p2	chemClust	0	2	2	7561	562	0.0742063492063492
+tox21-pparg-bla-antagonist-p1	allClust	all	2	2	7211	349	0.0482662968099857
+tox21-pparg-bla-antagonist-p1	chemClust	0	2	2	7211	349	0.0482662968099857
+tox21-ror-cho-antagonist-p1	allClust	all	2	2	7561	625	0.0825396825396826
+tox21-ror-cho-antagonist-p1	chemClust	0	2	2	7561	625	0.0825396825396826
