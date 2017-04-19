@@ -1,16 +1,18 @@
-# configuration file
-config.json
+# mac
+Thumbs.db
 
 # keep data folder, but no data
 data/*
 !data/.gitkeep
-# packrat ignores
+
+# packrat
 packrat/lib*/
-packrat/bundles/*
-packrat/src/
-# Rstudio ignores
+packrat/bundles
+packrat/src
+
+# Rstudio
 .Rproj.user
 .Rhistory
 .Rprofile
 .Rdata
-Thumbs.db
+
