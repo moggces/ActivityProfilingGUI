@@ -32,14 +32,12 @@ To develop the application, use the [Rstudio](https://www.rstudio.com/) developm
 If for some reason modules are not automatically installed, can be used:
 
 ```R
-library(packrat)
 packrat::restore()
 ```
 
 To run the application:
 
 ```R
-library(shiny)
 shiny::runApp()
 ```
 
@@ -48,11 +46,11 @@ shiny::runApp()
 When using a terminal, packrat does not bootstrap the initialization scripts and install dependencies. This can be done manually:
 
 ```bash
-R -e "library(packrat); packrat::restore();"
+R -e "packrat::restore();"
 ```
 
 After dependencies have been installed, we can start the application:
 
 ```bash
-R -e "source(\"packrat/init.R\"); library(shiny); shiny::runApp(port=1234);"
+R -e "source(\"packrat/init.R\"); shiny::runApp(port=1234);"
 ```
