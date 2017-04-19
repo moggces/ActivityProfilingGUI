@@ -56,16 +56,3 @@ After dependencies have been installed, we can start the application:
 ```bash
 R -e "source(\"packrat/init.R\"); library(shiny); shiny::runApp(port=1234);"
 ```
-
-### Development details
-
-To contribute code, use [formatR](https://cran.r-project.org/web/packages/formatR/)
-to automatically take a first pass at code-formatting.
-
-```R
-formatR::tidy_source('./server.R',indent=4, width.cutoff=78, recursive=F)
-formatR::tidy_dir('./source',indent=4, width.cutoff=78)
-```
-
-Additional modification of lines is required, however, after using this tool,
-it should only be used when creating a new file.
