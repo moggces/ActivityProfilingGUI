@@ -2,7 +2,7 @@
 
 This interactive application allows users to browse activity profiles from the Tox21 dataset.  The activities of chemicals (based on CASRN) are presented.
 
-For a summary of data processing, see [this summary](https://www.dropbox.com/s/3s2k6258x377hid/pipeline_summary2.pdf?dl=0). The curves are available for browsing in a related application, the [Tox21 curve browser](/sandbox/tox21-curve-visualization/).
+For a summary of data processing, see [this summary](https://www.dropbox.com/s/3s2k6258x377hid/pipeline_summary2.pdf?dl=0). The curves are available for browsing in a related application, the [Tox21 curve browser](/tox21-curve-visualization/).
 
 ### Disclaimer:
 
